@@ -1,0 +1,8 @@
+[package]
+name = "elp-test-project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+elp_syntax = { git = "https://github.com/WhatsApp/erlang-language-platform.git" }
+hir = { git = "https://github.com/WhatsApp/erlang-language-platform.git" }
