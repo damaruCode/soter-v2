@@ -1,0 +1,1233 @@
+{
+  "anno": "",
+  "args": {
+    "attrs": [
+      [
+        {
+          "anno": [
+            [
+              1,
+              1
+            ]
+          ],
+          "args": {
+            "val": "file"
+          },
+          "type": "c_literal"
+        },
+        {
+          "anno": [
+            [
+              1,
+              1
+            ]
+          ],
+          "args": {
+            "val": [
+              [
+                "fib.erl",
+                1
+              ]
+            ]
+          },
+          "type": "c_literal"
+        }
+      ]
+    ],
+    "defs": [
+      [
+        [
+          "c_var",
+          "",
+          [
+            "fib",
+            1
+          ]
+        ],
+        [
+          "c_fun",
+          [
+            [
+              "function",
+              [
+                "fib",
+                1
+              ]
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              "file",
+              "fib.erl"
+            ]
+          ],
+          [
+            [
+              "c_var",
+              [
+                [
+                  5,
+                  1
+                ],
+                [
+                  "file",
+                  "fib.erl"
+                ]
+              ],
+              0
+            ]
+          ],
+          [
+            "c_case",
+            [
+              [
+                "function",
+                [
+                  "fib",
+                  1
+                ]
+              ],
+              [
+                5,
+                1
+              ],
+              [
+                "file",
+                "fib.erl"
+              ]
+            ],
+            [
+              "c_var",
+              [
+                [
+                  "function",
+                  [
+                    "fib",
+                    1
+                  ]
+                ],
+                [
+                  5,
+                  1
+                ],
+                [
+                  "file",
+                  "fib.erl"
+                ]
+              ],
+              0
+            ],
+            [
+              [
+                "c_clause",
+                [
+                  [
+                    5,
+                    1
+                  ],
+                  [
+                    "file",
+                    "fib.erl"
+                  ]
+                ],
+                [
+                  {
+                    "anno": [
+                      [
+                        5,
+                        5
+                      ],
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": 0
+                    },
+                    "type": "c_literal"
+                  }
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                {
+                  "anno": [
+                    [
+                      6,
+                      3
+                    ],
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  "args": {
+                    "val": 0
+                  },
+                  "type": "c_literal"
+                }
+              ],
+              [
+                "c_clause",
+                [
+                  [
+                    7,
+                    1
+                  ],
+                  [
+                    "file",
+                    "fib.erl"
+                  ]
+                ],
+                [
+                  {
+                    "anno": [
+                      [
+                        7,
+                        5
+                      ],
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": 1
+                    },
+                    "type": "c_literal"
+                  }
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                {
+                  "anno": [
+                    [
+                      8,
+                      3
+                    ],
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  "args": {
+                    "val": 1
+                  },
+                  "type": "c_literal"
+                }
+              ],
+              [
+                "c_clause",
+                [
+                  [
+                    9,
+                    1
+                  ],
+                  [
+                    "file",
+                    "fib.erl"
+                  ]
+                ],
+                [
+                  [
+                    "c_var",
+                    [
+                      [
+                        9,
+                        5
+                      ],
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "N"
+                  ]
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_let",
+                  "",
+                  [
+                    [
+                      "c_var",
+                      [
+                        [
+                          10,
+                          9
+                        ],
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      3
+                    ]
+                  ],
+                  [
+                    "c_call",
+                    [
+                      [
+                        10,
+                        9
+                      ],
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    {
+                      "anno": [
+                        [
+                          10,
+                          9
+                        ],
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "args": {
+                        "val": "erlang"
+                      },
+                      "type": "c_literal"
+                    },
+                    {
+                      "anno": [
+                        [
+                          10,
+                          9
+                        ],
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "args": {
+                        "val": "-"
+                      },
+                      "type": "c_literal"
+                    },
+                    [
+                      [
+                        "c_var",
+                        [
+                          [
+                            10,
+                            7
+                          ],
+                          [
+                            "file",
+                            "fib.erl"
+                          ]
+                        ],
+                        "N"
+                      ],
+                      {
+                        "anno": [
+                          [
+                            10,
+                            11
+                          ],
+                          [
+                            "file",
+                            "fib.erl"
+                          ]
+                        ],
+                        "args": {
+                          "val": 1
+                        },
+                        "type": "c_literal"
+                      }
+                    ]
+                  ],
+                  [
+                    "c_let",
+                    "",
+                    [
+                      [
+                        "c_var",
+                        [
+                          [
+                            10,
+                            3
+                          ],
+                          [
+                            "file",
+                            "fib.erl"
+                          ]
+                        ],
+                        4
+                      ]
+                    ],
+                    [
+                      "c_apply",
+                      [
+                        [
+                          10,
+                          3
+                        ],
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      [
+                        "c_var",
+                        [
+                          [
+                            10,
+                            3
+                          ],
+                          [
+                            "file",
+                            "fib.erl"
+                          ]
+                        ],
+                        [
+                          "fib",
+                          1
+                        ]
+                      ],
+                      [
+                        [
+                          "c_var",
+                          [
+                            [
+                              10,
+                              9
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          3
+                        ]
+                      ]
+                    ],
+                    [
+                      "c_let",
+                      "",
+                      [
+                        [
+                          "c_var",
+                          [
+                            [
+                              10,
+                              22
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          1
+                        ]
+                      ],
+                      [
+                        "c_call",
+                        [
+                          [
+                            10,
+                            22
+                          ],
+                          [
+                            "file",
+                            "fib.erl"
+                          ]
+                        ],
+                        {
+                          "anno": [
+                            [
+                              10,
+                              22
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          "args": {
+                            "val": "erlang"
+                          },
+                          "type": "c_literal"
+                        },
+                        {
+                          "anno": [
+                            [
+                              10,
+                              22
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          "args": {
+                            "val": "-"
+                          },
+                          "type": "c_literal"
+                        },
+                        [
+                          [
+                            "c_var",
+                            [
+                              [
+                                10,
+                                20
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            "N"
+                          ],
+                          {
+                            "anno": [
+                              [
+                                10,
+                                24
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            "args": {
+                              "val": 2
+                            },
+                            "type": "c_literal"
+                          }
+                        ]
+                      ],
+                      [
+                        "c_let",
+                        "",
+                        [
+                          [
+                            "c_var",
+                            [
+                              [
+                                10,
+                                16
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            2
+                          ]
+                        ],
+                        [
+                          "c_apply",
+                          [
+                            [
+                              10,
+                              16
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          [
+                            "c_var",
+                            [
+                              [
+                                10,
+                                16
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            [
+                              "fib",
+                              1
+                            ]
+                          ],
+                          [
+                            [
+                              "c_var",
+                              [
+                                [
+                                  10,
+                                  22
+                                ],
+                                [
+                                  "file",
+                                  "fib.erl"
+                                ]
+                              ],
+                              1
+                            ]
+                          ]
+                        ],
+                        [
+                          "c_call",
+                          [
+                            [
+                              10,
+                              14
+                            ],
+                            [
+                              "file",
+                              "fib.erl"
+                            ]
+                          ],
+                          {
+                            "anno": [
+                              [
+                                10,
+                                14
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            "args": {
+                              "val": "erlang"
+                            },
+                            "type": "c_literal"
+                          },
+                          {
+                            "anno": [
+                              [
+                                10,
+                                14
+                              ],
+                              [
+                                "file",
+                                "fib.erl"
+                              ]
+                            ],
+                            "args": {
+                              "val": "+"
+                            },
+                            "type": "c_literal"
+                          },
+                          [
+                            [
+                              "c_var",
+                              [
+                                [
+                                  10,
+                                  3
+                                ],
+                                [
+                                  "file",
+                                  "fib.erl"
+                                ]
+                              ],
+                              4
+                            ],
+                            [
+                              "c_var",
+                              [
+                                [
+                                  10,
+                                  16
+                                ],
+                                [
+                                  "file",
+                                  "fib.erl"
+                                ]
+                              ],
+                              2
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "c_clause",
+                [
+                  "compiler_generated"
+                ],
+                [
+                  [
+                    "c_var",
+                    "",
+                    5
+                  ]
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_primop",
+                  [
+                    [
+                      "function",
+                      [
+                        "fib",
+                        1
+                      ]
+                    ],
+                    [
+                      5,
+                      1
+                    ],
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  {
+                    "anno": "",
+                    "args": {
+                      "val": "match_fail"
+                    },
+                    "type": "c_literal"
+                  },
+                  [
+                    [
+                      "c_tuple",
+                      [
+                        [
+                          "function",
+                          [
+                            "fib",
+                            1
+                          ]
+                        ],
+                        [
+                          5,
+                          1
+                        ],
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      [
+                        {
+                          "anno": "",
+                          "args": {
+                            "val": "function_clause"
+                          },
+                          "type": "c_literal"
+                        },
+                        [
+                          "c_var",
+                          "",
+                          5
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        [
+          "c_var",
+          "",
+          [
+            "module_info",
+            0
+          ]
+        ],
+        [
+          "c_fun",
+          [
+            [
+              "function",
+              [
+                "module_info",
+                0
+              ]
+            ],
+            0,
+            [
+              "file",
+              "fib.erl"
+            ]
+          ],
+          "",
+          [
+            "c_case",
+            [
+              [
+                "function",
+                [
+                  "module_info",
+                  0
+                ]
+              ],
+              0,
+              [
+                "file",
+                "fib.erl"
+              ]
+            ],
+            [
+              "c_values",
+              [
+                [
+                  "function",
+                  [
+                    "module_info",
+                    0
+                  ]
+                ],
+                0,
+                [
+                  "file",
+                  "fib.erl"
+                ]
+              ],
+              ""
+            ],
+            [
+              [
+                "c_clause",
+                [
+                  0,
+                  [
+                    "file",
+                    "fib.erl"
+                  ]
+                ],
+                "",
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_call",
+                  [
+                    0,
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  {
+                    "anno": [
+                      0,
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": "erlang"
+                    },
+                    "type": "c_literal"
+                  },
+                  {
+                    "anno": [
+                      0,
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": "get_module_info"
+                    },
+                    "type": "c_literal"
+                  },
+                  [
+                    {
+                      "anno": [
+                        0,
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "args": {
+                        "val": "fib"
+                      },
+                      "type": "c_literal"
+                    }
+                  ]
+                ]
+              ],
+              [
+                "c_clause",
+                [
+                  "compiler_generated"
+                ],
+                "",
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_primop",
+                  [
+                    [
+                      "function",
+                      [
+                        "module_info",
+                        0
+                      ]
+                    ],
+                    0,
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  {
+                    "anno": "",
+                    "args": {
+                      "val": "match_fail"
+                    },
+                    "type": "c_literal"
+                  },
+                  [
+                    {
+                      "anno": [
+                        [
+                          "function",
+                          [
+                            "module_info",
+                            0
+                          ]
+                        ],
+                        0,
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "args": {
+                        "val": [
+                          "function_clause"
+                        ]
+                      },
+                      "type": "c_literal"
+                    }
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ],
+      [
+        [
+          "c_var",
+          "",
+          [
+            "module_info",
+            1
+          ]
+        ],
+        [
+          "c_fun",
+          [
+            [
+              "function",
+              [
+                "module_info",
+                1
+              ]
+            ],
+            0,
+            [
+              "file",
+              "fib.erl"
+            ]
+          ],
+          [
+            [
+              "c_var",
+              [
+                0,
+                [
+                  "file",
+                  "fib.erl"
+                ]
+              ],
+              0
+            ]
+          ],
+          [
+            "c_case",
+            [
+              [
+                "function",
+                [
+                  "module_info",
+                  1
+                ]
+              ],
+              0,
+              [
+                "file",
+                "fib.erl"
+              ]
+            ],
+            [
+              "c_var",
+              [
+                [
+                  "function",
+                  [
+                    "module_info",
+                    1
+                  ]
+                ],
+                0,
+                [
+                  "file",
+                  "fib.erl"
+                ]
+              ],
+              0
+            ],
+            [
+              [
+                "c_clause",
+                [
+                  0,
+                  [
+                    "file",
+                    "fib.erl"
+                  ]
+                ],
+                [
+                  [
+                    "c_var",
+                    [
+                      0,
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "X"
+                  ]
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_call",
+                  [
+                    0,
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  {
+                    "anno": [
+                      0,
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": "erlang"
+                    },
+                    "type": "c_literal"
+                  },
+                  {
+                    "anno": [
+                      0,
+                      [
+                        "file",
+                        "fib.erl"
+                      ]
+                    ],
+                    "args": {
+                      "val": "get_module_info"
+                    },
+                    "type": "c_literal"
+                  },
+                  [
+                    {
+                      "anno": [
+                        0,
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "args": {
+                        "val": "fib"
+                      },
+                      "type": "c_literal"
+                    },
+                    [
+                      "c_var",
+                      [
+                        0,
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      "X"
+                    ]
+                  ]
+                ]
+              ],
+              [
+                "c_clause",
+                [
+                  "compiler_generated"
+                ],
+                [
+                  [
+                    "c_var",
+                    "",
+                    1
+                  ]
+                ],
+                {
+                  "anno": "",
+                  "args": {
+                    "val": true
+                  },
+                  "type": "c_literal"
+                },
+                [
+                  "c_primop",
+                  [
+                    [
+                      "function",
+                      [
+                        "module_info",
+                        1
+                      ]
+                    ],
+                    0,
+                    [
+                      "file",
+                      "fib.erl"
+                    ]
+                  ],
+                  {
+                    "anno": "",
+                    "args": {
+                      "val": "match_fail"
+                    },
+                    "type": "c_literal"
+                  },
+                  [
+                    [
+                      "c_tuple",
+                      [
+                        [
+                          "function",
+                          [
+                            "module_info",
+                            1
+                          ]
+                        ],
+                        0,
+                        [
+                          "file",
+                          "fib.erl"
+                        ]
+                      ],
+                      [
+                        {
+                          "anno": "",
+                          "args": {
+                            "val": "function_clause"
+                          },
+                          "type": "c_literal"
+                        },
+                        [
+                          "c_var",
+                          "",
+                          1
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    "exports": [
+      [
+        "c_var",
+        "",
+        [
+          "fib",
+          1
+        ]
+      ],
+      [
+        "c_var",
+        "",
+        [
+          "module_info",
+          0
+        ]
+      ],
+      [
+        "c_var",
+        "",
+        [
+          "module_info",
+          1
+        ]
+      ]
+    ],
+    "name": {
+      "anno": "",
+      "args": {
+        "val": "fib"
+      },
+      "type": "c_literal"
+    }
+  },
+  "type": "c_module"
+}

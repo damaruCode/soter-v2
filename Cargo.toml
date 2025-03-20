@@ -4,6 +4,3 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hir = { git = "https://github.com/WhatsApp/erlang-language-platform.git" }
-elp_base_db = { git = "https://github.com/WhatsApp/erlang-language-platform.git" }
-elp_types_db = { git = "https://github.com/WhatsApp/erlang-language-platform.git" }
