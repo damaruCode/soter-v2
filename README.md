@@ -16,7 +16,7 @@ Cargo currently does the entire work. To run one of the test cases "fib.erl" exe
 ```
 cargo run --release test/fib.erl
 ```
-Rust starts the erlang processies that compile and run the erlang code in "<repo>/erlang".
+Rust starts the erlang processies that compile and run the erlang code in "\<repo\>/erlang".
 
 ### Output
-"<repo>/core.json"
+"\<repo\>/core.json"
