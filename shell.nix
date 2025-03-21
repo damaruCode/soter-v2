@@ -3,8 +3,9 @@
 }:
 pkgs.mkShell {
   buildInputs = with pkgs; [
-    rust_analayzer
     erlang_27
+
+    rust_analayzer
     rustc
     cargo
   ];
