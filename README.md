@@ -3,10 +3,10 @@
 Installing the [nix](https://nixos.org/download/) package manager allows for easy dependency management and
 prevents polluting your own system with packages you otherwise wouldn't need.
 
-### Nix shell
+### Nix Dev Shell
 To create an environment with all the necessary dependencies call:
 ```
-cd <repo> && nix-shell
+cd <repo> && nix develop
 ``` 
 This will download the packages into the so called "nix store" and symlink them into the
 created environment.
