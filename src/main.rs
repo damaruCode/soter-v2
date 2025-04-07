@@ -1,4 +1,4 @@
-pub mod ast;
+mod ast;
 mod erlang;
 
 use std::env;
@@ -6,6 +6,12 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
     assert_eq!(args.len(), 2, "cargo run --release <file_path>.erl");
-    let module = erlang::get_core(&args[1]);
-    dbg!(module);
+
+    erlang::compile();
+    erlang::run(&args[1]);
+
+    let core = erlang::get_core();
+    dbg!(&core);
+    let typed_core = ast::type_core(core);
+    dbg!(&typed_core);
 }
