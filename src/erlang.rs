@@ -1,9 +1,25 @@
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::BufReader;
 use std::process::Command;
 
-pub fn get_core(file: &String) {
+use serde_json;
+
+//use crate::ast;
+
+pub fn get_core(file: &String) -> serde_json::Value {
     compile();
     run(file);
-    deserialize();
+
+    let json = File::open("core.json").expect("core.json could not be opened");
+    let mut buf_reader = BufReader::new(json);
+    let mut contents = String::new();
+    buf_reader
+        .read_to_string(&mut contents)
+        .expect("core.json could not be read");
+
+    //ast::deserialize(&contents)
+    deserialize(&contents)
 }
 
 fn compile() {
@@ -30,6 +46,6 @@ fn run(file: &String) {
     assert!(r.status.success());
 }
 
-fn deserialize() {
-    // TODO
+fn deserialize(json: &String) -> serde_json::Value {
+    serde_json::from_str(json).expect("input json could not be parsed into serde_json::Value enum")
 }

@@ -1,0 +1,556 @@
+Object {
+    "anno": String(""),
+    "args": Object {
+        "attrs": Array [
+            Array [
+                Object {
+                    "anno": Array [
+                        Array [
+                            Number(1),
+                            Number(1),
+                        ],
+                    ],
+                    "args": Object {
+                        "val": String("file"),
+                    },
+                    "type": String("c_literal"),
+                },
+                Object {
+                    "anno": Array [
+                        Array [
+                            Number(1),
+                            Number(1),
+                        ],
+                    ],
+                    "args": Object {
+                        "val": Array [
+                            Array [
+                                String("test/test.erl"),
+                                Number(1),
+                            ],
+                        ],
+                    },
+                    "type": String("c_literal"),
+                },
+            ],
+        ],
+        "defs": Array [
+            Array [
+                Object {
+                    "anno": String(""),
+                    "args": Object {
+                        "name": Array [
+                            String("module_info"),
+                            Number(0),
+                        ],
+                    },
+                    "type": String("c_var"),
+                },
+                Object {
+                    "anno": Array [
+                        Array [
+                            String("function"),
+                            Array [
+                                String("module_info"),
+                                Number(0),
+                            ],
+                        ],
+                        Number(0),
+                        Array [
+                            String("file"),
+                            String("test/test.erl"),
+                        ],
+                    ],
+                    "args": Object {
+                        "body": Object {
+                            "anno": Array [
+                                Array [
+                                    String("function"),
+                                    Array [
+                                        String("module_info"),
+                                        Number(0),
+                                    ],
+                                ],
+                                Number(0),
+                                Array [
+                                    String("file"),
+                                    String("test/test.erl"),
+                                ],
+                            ],
+                            "args": Object {
+                                "arg": Object {
+                                    "anno": Array [
+                                        Array [
+                                            String("function"),
+                                            Array [
+                                                String("module_info"),
+                                                Number(0),
+                                            ],
+                                        ],
+                                        Number(0),
+                                        Array [
+                                            String("file"),
+                                            String("test/test.erl"),
+                                        ],
+                                    ],
+                                    "args": Object {
+                                        "es": String(""),
+                                    },
+                                    "type": String("c_values"),
+                                },
+                                "clauses": Array [
+                                    Object {
+                                        "anno": Array [
+                                            Number(0),
+                                            Array [
+                                                String("file"),
+                                                String("test/test.erl"),
+                                            ],
+                                        ],
+                                        "args": Object {
+                                            "body": Object {
+                                                "anno": Array [
+                                                    Number(0),
+                                                    Array [
+                                                        String("file"),
+                                                        String("test/test.erl"),
+                                                    ],
+                                                ],
+                                                "args": Object {
+                                                    "args": Array [
+                                                        Object {
+                                                            "anno": Array [
+                                                                Number(0),
+                                                                Array [
+                                                                    String("file"),
+                                                                    String("test/test.erl"),
+                                                                ],
+                                                            ],
+                                                            "args": Object {
+                                                                "val": String("test"),
+                                                            },
+                                                            "type": String("c_literal"),
+                                                        },
+                                                    ],
+                                                    "module": Object {
+                                                        "anno": Array [
+                                                            Number(0),
+                                                            Array [
+                                                                String("file"),
+                                                                String("test/test.erl"),
+                                                            ],
+                                                        ],
+                                                        "args": Object {
+                                                            "val": String("erlang"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                    "name": Object {
+                                                        "anno": Array [
+                                                            Number(0),
+                                                            Array [
+                                                                String("file"),
+                                                                String("test/test.erl"),
+                                                            ],
+                                                        ],
+                                                        "args": Object {
+                                                            "val": String("get_module_info"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                },
+                                                "type": String("c_call"),
+                                            },
+                                            "guard": Object {
+                                                "anno": String(""),
+                                                "args": Object {
+                                                    "val": Bool(true),
+                                                },
+                                                "type": String("c_literal"),
+                                            },
+                                            "pats": String(""),
+                                        },
+                                        "type": String("c_clause"),
+                                    },
+                                    Object {
+                                        "anno": Array [
+                                            String("compiler_generated"),
+                                        ],
+                                        "args": Object {
+                                            "body": Object {
+                                                "anno": Array [
+                                                    Array [
+                                                        String("function"),
+                                                        Array [
+                                                            String("module_info"),
+                                                            Number(0),
+                                                        ],
+                                                    ],
+                                                    Number(0),
+                                                    Array [
+                                                        String("file"),
+                                                        String("test/test.erl"),
+                                                    ],
+                                                ],
+                                                "args": Object {
+                                                    "args": Array [
+                                                        Object {
+                                                            "anno": Array [
+                                                                Array [
+                                                                    String("function"),
+                                                                    Array [
+                                                                        String("module_info"),
+                                                                        Number(0),
+                                                                    ],
+                                                                ],
+                                                                Number(0),
+                                                                Array [
+                                                                    String("file"),
+                                                                    String("test/test.erl"),
+                                                                ],
+                                                            ],
+                                                            "args": Object {
+                                                                "val": Array [
+                                                                    String("function_clause"),
+                                                                ],
+                                                            },
+                                                            "type": String("c_literal"),
+                                                        },
+                                                    ],
+                                                    "name": Object {
+                                                        "anno": String(""),
+                                                        "args": Object {
+                                                            "val": String("match_fail"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                },
+                                                "type": String("c_primop"),
+                                            },
+                                            "guard": Object {
+                                                "anno": String(""),
+                                                "args": Object {
+                                                    "val": Bool(true),
+                                                },
+                                                "type": String("c_literal"),
+                                            },
+                                            "pats": String(""),
+                                        },
+                                        "type": String("c_clause"),
+                                    },
+                                ],
+                            },
+                            "type": String("c_case"),
+                        },
+                        "vars": String(""),
+                    },
+                    "type": String("c_fun"),
+                },
+            ],
+            Array [
+                Object {
+                    "anno": String(""),
+                    "args": Object {
+                        "name": Array [
+                            String("module_info"),
+                            Number(1),
+                        ],
+                    },
+                    "type": String("c_var"),
+                },
+                Object {
+                    "anno": Array [
+                        Array [
+                            String("function"),
+                            Array [
+                                String("module_info"),
+                                Number(1),
+                            ],
+                        ],
+                        Number(0),
+                        Array [
+                            String("file"),
+                            String("test/test.erl"),
+                        ],
+                    ],
+                    "args": Object {
+                        "body": Object {
+                            "anno": Array [
+                                Array [
+                                    String("function"),
+                                    Array [
+                                        String("module_info"),
+                                        Number(1),
+                                    ],
+                                ],
+                                Number(0),
+                                Array [
+                                    String("file"),
+                                    String("test/test.erl"),
+                                ],
+                            ],
+                            "args": Object {
+                                "arg": Object {
+                                    "anno": Array [
+                                        Array [
+                                            String("function"),
+                                            Array [
+                                                String("module_info"),
+                                                Number(1),
+                                            ],
+                                        ],
+                                        Number(0),
+                                        Array [
+                                            String("file"),
+                                            String("test/test.erl"),
+                                        ],
+                                    ],
+                                    "args": Object {
+                                        "name": Number(0),
+                                    },
+                                    "type": String("c_var"),
+                                },
+                                "clauses": Array [
+                                    Object {
+                                        "anno": Array [
+                                            Number(0),
+                                            Array [
+                                                String("file"),
+                                                String("test/test.erl"),
+                                            ],
+                                        ],
+                                        "args": Object {
+                                            "body": Object {
+                                                "anno": Array [
+                                                    Number(0),
+                                                    Array [
+                                                        String("file"),
+                                                        String("test/test.erl"),
+                                                    ],
+                                                ],
+                                                "args": Object {
+                                                    "args": Array [
+                                                        Object {
+                                                            "anno": Array [
+                                                                Number(0),
+                                                                Array [
+                                                                    String("file"),
+                                                                    String("test/test.erl"),
+                                                                ],
+                                                            ],
+                                                            "args": Object {
+                                                                "val": String("test"),
+                                                            },
+                                                            "type": String("c_literal"),
+                                                        },
+                                                        Object {
+                                                            "anno": Array [
+                                                                Number(0),
+                                                                Array [
+                                                                    String("file"),
+                                                                    String("test/test.erl"),
+                                                                ],
+                                                            ],
+                                                            "args": Object {
+                                                                "name": String("X"),
+                                                            },
+                                                            "type": String("c_var"),
+                                                        },
+                                                    ],
+                                                    "module": Object {
+                                                        "anno": Array [
+                                                            Number(0),
+                                                            Array [
+                                                                String("file"),
+                                                                String("test/test.erl"),
+                                                            ],
+                                                        ],
+                                                        "args": Object {
+                                                            "val": String("erlang"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                    "name": Object {
+                                                        "anno": Array [
+                                                            Number(0),
+                                                            Array [
+                                                                String("file"),
+                                                                String("test/test.erl"),
+                                                            ],
+                                                        ],
+                                                        "args": Object {
+                                                            "val": String("get_module_info"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                },
+                                                "type": String("c_call"),
+                                            },
+                                            "guard": Object {
+                                                "anno": String(""),
+                                                "args": Object {
+                                                    "val": Bool(true),
+                                                },
+                                                "type": String("c_literal"),
+                                            },
+                                            "pats": Array [
+                                                Object {
+                                                    "anno": Array [
+                                                        Number(0),
+                                                        Array [
+                                                            String("file"),
+                                                            String("test/test.erl"),
+                                                        ],
+                                                    ],
+                                                    "args": Object {
+                                                        "name": String("X"),
+                                                    },
+                                                    "type": String("c_var"),
+                                                },
+                                            ],
+                                        },
+                                        "type": String("c_clause"),
+                                    },
+                                    Object {
+                                        "anno": Array [
+                                            String("compiler_generated"),
+                                        ],
+                                        "args": Object {
+                                            "body": Object {
+                                                "anno": Array [
+                                                    Array [
+                                                        String("function"),
+                                                        Array [
+                                                            String("module_info"),
+                                                            Number(1),
+                                                        ],
+                                                    ],
+                                                    Number(0),
+                                                    Array [
+                                                        String("file"),
+                                                        String("test/test.erl"),
+                                                    ],
+                                                ],
+                                                "args": Object {
+                                                    "args": Array [
+                                                        Object {
+                                                            "anno": Array [
+                                                                Array [
+                                                                    String("function"),
+                                                                    Array [
+                                                                        String("module_info"),
+                                                                        Number(1),
+                                                                    ],
+                                                                ],
+                                                                Number(0),
+                                                                Array [
+                                                                    String("file"),
+                                                                    String("test/test.erl"),
+                                                                ],
+                                                            ],
+                                                            "args": Object {
+                                                                "es": Array [
+                                                                    Object {
+                                                                        "anno": String(""),
+                                                                        "args": Object {
+                                                                            "val": String("function_clause"),
+                                                                        },
+                                                                        "type": String("c_literal"),
+                                                                    },
+                                                                    Object {
+                                                                        "anno": String(""),
+                                                                        "args": Object {
+                                                                            "name": Number(1),
+                                                                        },
+                                                                        "type": String("c_var"),
+                                                                    },
+                                                                ],
+                                                            },
+                                                            "type": String("c_tuple"),
+                                                        },
+                                                    ],
+                                                    "name": Object {
+                                                        "anno": String(""),
+                                                        "args": Object {
+                                                            "val": String("match_fail"),
+                                                        },
+                                                        "type": String("c_literal"),
+                                                    },
+                                                },
+                                                "type": String("c_primop"),
+                                            },
+                                            "guard": Object {
+                                                "anno": String(""),
+                                                "args": Object {
+                                                    "val": Bool(true),
+                                                },
+                                                "type": String("c_literal"),
+                                            },
+                                            "pats": Array [
+                                                Object {
+                                                    "anno": String(""),
+                                                    "args": Object {
+                                                        "name": Number(1),
+                                                    },
+                                                    "type": String("c_var"),
+                                                },
+                                            ],
+                                        },
+                                        "type": String("c_clause"),
+                                    },
+                                ],
+                            },
+                            "type": String("c_case"),
+                        },
+                        "vars": Array [
+                            Object {
+                                "anno": Array [
+                                    Number(0),
+                                    Array [
+                                        String("file"),
+                                        String("test/test.erl"),
+                                    ],
+                                ],
+                                "args": Object {
+                                    "name": Number(0),
+                                },
+                                "type": String("c_var"),
+                            },
+                        ],
+                    },
+                    "type": String("c_fun"),
+                },
+            ],
+        ],
+        "exports": Array [
+            Object {
+                "anno": String(""),
+                "args": Object {
+                    "name": Array [
+                        String("module_info"),
+                        Number(0),
+                    ],
+                },
+                "type": String("c_var"),
+            },
+            Object {
+                "anno": String(""),
+                "args": Object {
+                    "name": Array [
+                        String("module_info"),
+                        Number(1),
+                    ],
+                },
+                "type": String("c_var"),
+            },
+        ],
+        "name": Object {
+            "anno": String(""),
+            "args": Object {
+                "val": String("test"),
+            },
+            "type": String("c_literal"),
+        },
+    },
+    "type": String("c_module"),
+}
