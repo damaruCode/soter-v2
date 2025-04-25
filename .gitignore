@@ -28,6 +28,10 @@ Cargo.lock
 *.o
 *.beam
 *.plt
+*.E
+*.P
+*.S
+*.core
 erl_crash.dump
 .concrete/DEV_MODE
 

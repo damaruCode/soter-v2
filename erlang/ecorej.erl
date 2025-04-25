@@ -1,6 +1,12 @@
 -module(ecorej).
 
--export([to_corej/1]).
+-export([to_corej/1, to_core/1]).
+
+to_core(Module) ->
+  compile:file(Module, ['E']),
+  compile:file(Module, ['P']),
+  compile:file(Module, ['S']),
+  compile:file(Module, [to_core]).
 
 to_corej(Module) ->
   case compile:file(Module, [to_core, binary, no_copt]) of
