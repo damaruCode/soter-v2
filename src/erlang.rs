@@ -4,7 +4,7 @@ use std::io::BufReader;
 use std::process::Command;
 
 pub fn get_core() -> serde_json::Value {
-    let json = File::open("core_test.json").expect("core.json could not be opened");
+    let json = File::open("core.json").expect("core.json could not be opened");
     let mut buf_reader = BufReader::new(json);
     let mut contents = String::new();
     buf_reader

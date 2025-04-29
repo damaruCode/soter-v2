@@ -12,12 +12,21 @@ pub enum TypedCore {
     String(String),
 
     //
-    Tupel(Tupel<TypedCore>),
+    Tuple(Tuple<TypedCore>),
     List(List<TypedCore>),
 
     //
+    Apply(Apply),
+    Call(Call),
+    Case(Case),
+    CoreTuple(CoreTuple),
+    Clause(Clause),
+    Fun(Fun),
+    Let(Let),
     Literal(Literal),
     Module(Module),
+    PrimOp(PrimOp),
+    Values(Values),
     Var(Var),
 }
 
@@ -27,7 +36,7 @@ pub struct List<T> {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Tupel<T> {
+pub struct Tuple<T> {
     frst: Box<T>,
     scnd: Box<T>,
 }
@@ -134,7 +143,7 @@ pub struct Let {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LetRec {
     anno: List<TypedCore>,
-    defs: List<Tupel<TypedCore>>,
+    defs: List<Tuple<TypedCore>>,
     body: Box<TypedCore>,
 }
 //-record(c_literal, {anno=[] :: list(), val :: any()}).
@@ -175,8 +184,8 @@ pub struct Module {
     anno: List<TypedCore>,
     name: Box<TypedCore>,
     exports: List<TypedCore>,
-    attrs: List<Tupel<TypedCore>>,
-    defs: List<Tupel<TypedCore>>,
+    attrs: List<Tuple<TypedCore>>,
+    defs: List<Tuple<TypedCore>>,
 }
 //-record(c_opaque, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug)]
@@ -227,7 +236,7 @@ pub struct Try {
 //-record(c_tuple, {anno=[] :: list(), es :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 // TODO naming ???
-pub struct CoreTupel {
+pub struct CoreTuple {
     anno: List<TypedCore>,
     es: List<TypedCore>,
 }
@@ -255,11 +264,11 @@ pub fn type_core(core: Value) -> TypedCore {
     }
 }
 
-fn type_tupel(tupel: Vec<Value>) -> Tupel<TypedCore> {
-    assert!(tupel.len() == 2);
-    Tupel {
-        frst: Box::new(type_core(tupel.get(0).unwrap().clone())),
-        scnd: Box::new(type_core(tupel.get(1).unwrap().clone())),
+fn type_tuple(tuple: Vec<Value>) -> Tuple<TypedCore> {
+    assert!(tuple.len() == 2);
+    Tuple {
+        frst: Box::new(type_core(tuple.get(0).unwrap().clone())),
+        scnd: Box::new(type_core(tuple.get(1).unwrap().clone())),
     }
 }
 
@@ -271,16 +280,74 @@ fn type_array(vec: Vec<Value>) -> List<TypedCore> {
     List { inner: list }
 }
 
-fn type_array_of_tuple(vec: Vec<Value>) -> List<Tupel<TypedCore>> {
+fn type_array_of_tuple(vec: Vec<Value>) -> List<Tuple<TypedCore>> {
     let mut list = Vec::new();
     for val in vec {
-        list.push(type_tupel(val.as_array().unwrap().to_vec()));
+        list.push(type_tuple(val.as_array().unwrap().to_vec()));
     }
     List { inner: list }
 }
 
 fn type_object(map: Map<String, Value>) -> TypedCore {
     match map.get("type").unwrap().as_str().unwrap() {
+        "c_apply" => {
+            let a = Apply {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                op: Box::new(type_core(map.get("op").unwrap().clone())),
+                args: type_array(map.get("args").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::Apply(a);
+        }
+        "c_call" => {
+            let c = Call {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                module: Box::new(type_core(map.get("module").unwrap().clone())),
+                name: Box::new(type_core(map.get("name").unwrap().clone())),
+                args: type_array(map.get("args").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::Call(c);
+        }
+        "c_case" => {
+            let c = Case {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                arg: Box::new(type_core(map.get("arg").unwrap().clone())),
+                clauses: type_array(map.get("clauses").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::Case(c);
+        }
+        "c_tuple" => {
+            let ct = CoreTuple {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                es: type_array(map.get("es").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::CoreTuple(ct);
+        }
+        "c_clause" => {
+            let c = Clause {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                pats: type_array(map.get("pats").unwrap().as_array().unwrap().clone()),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+                guard: Box::new(type_core(map.get("guard").unwrap().clone())),
+            };
+            return TypedCore::Clause(c);
+        }
+        "c_fun" => {
+            let f = Fun {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                vars: type_array(map.get("vars").unwrap().as_array().unwrap().clone()),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+            };
+            return TypedCore::Fun(f);
+        }
+        "c_let" => {
+            let l = Let {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                vars: type_array(map.get("vars").unwrap().as_array().unwrap().clone()),
+                arg: Box::new(type_core(map.get("arg").unwrap().clone())),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+            };
+            return TypedCore::Let(l);
+        }
         "c_literal" => {
             let l = Literal {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
@@ -298,6 +365,21 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             };
             return TypedCore::Module(m);
         }
+        "c_primop" => {
+            let p = PrimOp {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                name: Box::new(type_core(map.get("name").unwrap().clone())),
+                args: type_array(map.get("args").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::PrimOp(p);
+        }
+        "c_values" => {
+            let v = Values {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                es: type_array(map.get("es").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::Values(v);
+        }
         "c_var" => {
             let v = Var {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
@@ -305,6 +387,6 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             };
             return TypedCore::Var(v);
         }
-        _ => panic!("obj not impled"),
+        type_name => panic!("{} not impled", type_name),
     };
 }

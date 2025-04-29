@@ -11,7 +11,6 @@ fn main() {
     erlang::run(&args[1]);
 
     let core = erlang::get_core();
-    dbg!(&core);
     let typed_core = ast::type_core(core);
-    dbg!(&typed_core);
+    dbg!(typed_core);
 }
