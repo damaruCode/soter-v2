@@ -1,4 +1,4 @@
--module(fib).
+-module(function).
 
 -export([fib/1]).
 

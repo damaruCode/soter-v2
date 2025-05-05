@@ -16,16 +16,28 @@ pub enum TypedCore {
     List(List<TypedCore>),
 
     //
+    Alias(Alias),
     Apply(Apply),
+    Binary(Binary),
+    BitStr(BitStr),
     Call(Call),
     Case(Case),
+    Catch(Catch),
     CoreTuple(CoreTuple),
+    CoreMap(CoreMap),
     Clause(Clause),
+    Cons(Cons),
     Fun(Fun),
     Let(Let),
+    LetRec(LetRec),
     Literal(Literal),
+    MapPair(MapPair),
     Module(Module),
+    Opaque(Opaque),
     PrimOp(PrimOp),
+    Receive(Receive),
+    Seq(Seq),
+    Try(Try),
     Values(Values),
     Var(Var),
 }
@@ -171,6 +183,7 @@ pub struct CoreMap {
 #[derive(Serialize, Deserialize, Debug)]
 // TODO op ???
 pub struct MapPair {
+    anno: List<TypedCore>,
     op: Literal,
     key: Box<TypedCore>,
     val: Box<TypedCore>,
@@ -280,6 +293,22 @@ fn type_array(vec: Vec<Value>) -> List<TypedCore> {
     List { inner: list }
 }
 
+fn type_bool(value: Value) -> bool {
+    value.as_bool().unwrap()
+}
+
+fn type_bitstr(value: Value) -> BitStr {
+    BitStr::deserialize(value).unwrap()
+}
+
+fn type_literal(value: Value) -> Literal {
+    Literal::deserialize(value).unwrap()
+}
+
+fn type_mappair(value: Value) -> MapPair {
+    MapPair::deserialize(value).unwrap()
+}
+
 fn type_array_of_tuple(vec: Vec<Value>) -> List<Tuple<TypedCore>> {
     let mut list = Vec::new();
     for val in vec {
@@ -288,8 +317,32 @@ fn type_array_of_tuple(vec: Vec<Value>) -> List<Tuple<TypedCore>> {
     List { inner: list }
 }
 
+fn type_array_of_bitstr(vec: Vec<Value>) -> List<BitStr> {
+    let mut list = Vec::new();
+    for val in vec {
+        list.push(type_bitstr(val));
+    }
+    List { inner: list }
+}
+
+fn type_array_of_mappair(vec: Vec<Value>) -> List<MapPair> {
+    let mut list = Vec::new();
+    for val in vec {
+        list.push(type_mappair(val));
+    }
+    List { inner: list }
+}
+
 fn type_object(map: Map<String, Value>) -> TypedCore {
     match map.get("type").unwrap().as_str().unwrap() {
+        "c_alias" => {
+            let a = Alias {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                var: Box::new(type_core(map.get("var").unwrap().clone())),
+                pat: Box::new(type_core(map.get("pat").unwrap().clone())),
+            };
+            return TypedCore::Alias(a);
+        }
         "c_apply" => {
             let a = Apply {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
@@ -297,6 +350,26 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
                 args: type_array(map.get("args").unwrap().as_array().unwrap().clone()),
             };
             return TypedCore::Apply(a);
+        }
+        "c_binary" => {
+            let b = Binary {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                segments: type_array_of_bitstr(
+                    map.get("segments").unwrap().as_array().unwrap().clone(),
+                ),
+            };
+            return TypedCore::Binary(b);
+        }
+        "c_bitstr" => {
+            let bs = BitStr {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                val: Box::new(type_core(map.get("val").unwrap().clone())),
+                size: Box::new(type_core(map.get("size").unwrap().clone())),
+                unit: Box::new(type_core(map.get("unit").unwrap().clone())),
+                r#type: Box::new(type_core(map.get("type").unwrap().clone())),
+                flags: Box::new(type_core(map.get("flags").unwrap().clone())),
+            };
+            return TypedCore::BitStr(bs);
         }
         "c_call" => {
             let c = Call {
@@ -315,12 +388,12 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             };
             return TypedCore::Case(c);
         }
-        "c_tuple" => {
-            let ct = CoreTuple {
+        "c_catch" => {
+            let c = Catch {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
-                es: type_array(map.get("es").unwrap().as_array().unwrap().clone()),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
             };
-            return TypedCore::CoreTuple(ct);
+            return TypedCore::Catch(c);
         }
         "c_clause" => {
             let c = Clause {
@@ -330,6 +403,14 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
                 guard: Box::new(type_core(map.get("guard").unwrap().clone())),
             };
             return TypedCore::Clause(c);
+        }
+        "c_cons" => {
+            let c = Cons {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                hd: Box::new(type_core(map.get("hd").unwrap().clone())),
+                tl: Box::new(type_core(map.get("tl").unwrap().clone())),
+            };
+            return TypedCore::Cons(c);
         }
         "c_fun" => {
             let f = Fun {
@@ -348,12 +429,38 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             };
             return TypedCore::Let(l);
         }
+        "c_letrec" => {
+            let lr = LetRec {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                defs: type_array_of_tuple(map.get("defs").unwrap().as_array().unwrap().clone()),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+            };
+            return TypedCore::LetRec(lr);
+        }
         "c_literal" => {
             let l = Literal {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
                 val: Box::new(type_core(map.get("val").unwrap().clone())),
             };
             return TypedCore::Literal(l);
+        }
+        "c_map" => {
+            let cm = CoreMap {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+                arg: type_literal(map.get("arg").unwrap().clone()),
+                es: type_array_of_mappair(map.get("es").unwrap().as_array().unwrap().to_vec()),
+                is_pat: type_bool(map.get("is_pat").unwrap().clone()),
+            };
+            return TypedCore::CoreMap(cm);
+        }
+        "c_map_pair" => {
+            let m = MapPair {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+                op: type_literal(map.get("op").unwrap().clone()),
+                key: Box::new(type_core(map.get("key").unwrap().clone())),
+                val: Box::new(type_core(map.get("val").unwrap().clone())),
+            };
+            return TypedCore::MapPair(m);
         }
         "c_module" => {
             let m = Module {
@@ -365,6 +472,13 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             };
             return TypedCore::Module(m);
         }
+        "c_opaque" => {
+            let o = Opaque {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                val: Box::new(type_core(map.get("val").unwrap().clone())),
+            };
+            return TypedCore::Opaque(o);
+        }
         "c_primop" => {
             let p = PrimOp {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
@@ -372,6 +486,41 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
                 args: type_array(map.get("args").unwrap().as_array().unwrap().clone()),
             };
             return TypedCore::PrimOp(p);
+        }
+        "c_receive" => {
+            let r = Receive {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                clauses: type_array(map.get("clauses").unwrap().as_array().unwrap().clone()),
+                timeout: Box::new(type_core(map.get("timeout").unwrap().clone())),
+                action: Box::new(type_core(map.get("action").unwrap().clone())),
+            };
+            return TypedCore::Receive(r);
+        }
+        "c_seq" => {
+            let t = Seq {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                arg: Box::new(type_core(map.get("arg").unwrap().clone())),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+            };
+            return TypedCore::Seq(t);
+        }
+        "c_try" => {
+            let t = Try {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                arg: Box::new(type_core(map.get("arg").unwrap().clone())),
+                vars: type_array(map.get("vars").unwrap().as_array().unwrap().clone()),
+                body: Box::new(type_core(map.get("body").unwrap().clone())),
+                evars: type_array(map.get("evars").unwrap().as_array().unwrap().clone()),
+                handler: Box::new(type_core(map.get("handler").unwrap().clone())),
+            };
+            return TypedCore::Try(t);
+        }
+        "c_tuple" => {
+            let ct = CoreTuple {
+                anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
+                es: type_array(map.get("es").unwrap().as_array().unwrap().clone()),
+            };
+            return TypedCore::CoreTuple(ct);
         }
         "c_values" => {
             let v = Values {
