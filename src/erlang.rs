@@ -30,17 +30,6 @@ pub fn run(file: &String) {
     //erl -noshell -s ecorej to_core <file_path> -s init stop
     let r = Command::new("erl")
         .args([
-            "-noshell", "-s", "ecorej", "to_core", file, "-s", "init", "stop",
-        ])
-        .output()
-        .expect("failed to run erlang");
-
-    println!("erlang_run_status: {}", r.status);
-    assert!(r.status.success());
-
-    //erl -noshell -s ecorej to_corej <file_path> -s init stop
-    let r = Command::new("erl")
-        .args([
             "-noshell", "-s", "ecorej", "to_corej", file, "-s", "init", "stop",
         ])
         .output()

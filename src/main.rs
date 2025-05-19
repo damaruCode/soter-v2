@@ -14,3 +14,181 @@ fn main() {
     let typed_core = ast::type_core(core);
     dbg!(typed_core);
 }
+
+#[cfg(test)]
+mod benchmarks {
+    use crate::ast;
+    use crate::erlang;
+
+    fn run_and_check(erl_file: &str) {
+        erlang::compile();
+        erlang::run(&format!("test/{}.erl", erl_file));
+        let core = erlang::get_core();
+        let _typed_core = ast::type_core(core);
+    }
+
+    #[test]
+    fn test_bigring() {
+        run_and_check("bigring");
+    }
+
+    #[test]
+    fn test_concdb() {
+        run_and_check("concdb");
+    }
+
+    #[test]
+    fn test_dynlockb() {
+        run_and_check("dynlockb");
+    }
+
+    #[test]
+    fn test_finite_leader() {
+        run_and_check("finite_leader");
+    }
+
+    #[test]
+    fn test_finite_leader2() {
+        run_and_check("finite_leader2");
+    }
+
+    #[test]
+    fn test_firewall() {
+        run_and_check("firewall");
+    }
+
+    #[test]
+    fn test_howait() {
+        run_and_check("howait");
+    }
+
+    #[test]
+    fn test_huch() {
+        run_and_check("huch");
+    }
+
+    #[test]
+    fn test_lockb() {
+        run_and_check("lockb");
+    }
+
+    #[test]
+    fn test_luke() {
+        run_and_check("luke");
+    }
+
+    #[test]
+    fn test_match() {
+        run_and_check("match");
+    }
+
+    #[test]
+    fn test_match2() {
+        run_and_check("match2");
+    }
+
+    #[test]
+    fn test_match2_eeehhh() {
+        run_and_check("match2_eeehhh");
+    }
+
+    #[test]
+    fn test_parikh() {
+        run_and_check("parikh");
+    }
+
+    #[test]
+    fn test_pipe() {
+        run_and_check("pipe");
+    }
+
+    #[test]
+    fn test_race() {
+        run_and_check("race");
+    }
+
+    #[test]
+    fn test_reslockbeh() {
+        run_and_check("reslockbeh");
+    }
+
+    #[test]
+    fn test_ring() {
+        run_and_check("ring");
+    }
+
+    #[test]
+    fn test_safe_send() {
+        run_and_check("safe_send");
+    }
+
+    #[test]
+    fn test_scalaris() {
+        run_and_check("scalaris");
+    }
+
+    #[test]
+    fn test_sieve() {
+        run_and_check("sieve");
+    }
+
+    #[test]
+    fn test_sieve2() {
+        run_and_check("sieve2");
+    }
+
+    #[test]
+    fn test_simple_leader() {
+        run_and_check("simple_leader");
+    }
+
+    #[test]
+    fn test_soter() {
+        run_and_check("soter");
+    }
+
+    #[test]
+    fn test_state_factory() {
+        run_and_check("state_factory");
+    }
+
+    #[test]
+    fn test_stutter() {
+        run_and_check("stutter");
+    }
+
+    #[test]
+    fn test_test() {
+        run_and_check("test");
+    }
+
+    #[test]
+    fn test_test_core() {
+        run_and_check("test_core");
+    }
+
+    #[test]
+    fn test_thesis() {
+        run_and_check("thesis");
+    }
+
+    #[test]
+    fn test_thesis2() {
+        run_and_check("thesis2");
+    }
+
+    #[test]
+    fn test_ufirewall() {
+        run_and_check("ufirewall");
+    }
+
+    #[test]
+    fn test_unsafe_send() {
+        run_and_check("unsafe_send");
+    }
+
+    #[test]
+    fn test_workers() {
+        run_and_check("workers");
+    }
+}
