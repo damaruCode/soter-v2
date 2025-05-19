@@ -6,14 +6,14 @@ use serde_json::Value;
 #[derive(Serialize, Deserialize, Debug)]
 pub enum TypedCore {
     //
+    AstTuple(AstTuple<TypedCore>),
+    AstList(AstList<TypedCore>),
+
+    //
     Null,
     Bool(bool),
     Number(Number),
     String(String),
-
-    //
-    Tuple(Tuple<TypedCore>),
-    List(List<TypedCore>),
 
     //
     Alias(Alias),
@@ -23,14 +23,13 @@ pub enum TypedCore {
     Call(Call),
     Case(Case),
     Catch(Catch),
-    CoreTuple(CoreTuple),
-    CoreMap(CoreMap),
     Clause(Clause),
     Cons(Cons),
     Fun(Fun),
     Let(Let),
     LetRec(LetRec),
     Literal(Literal),
+    LiteralMap(LiteralMap),
     MapPair(MapPair),
     Module(Module),
     Opaque(Opaque),
@@ -38,17 +37,19 @@ pub enum TypedCore {
     Receive(Receive),
     Seq(Seq),
     Try(Try),
+    Tuple(Tuple),
     Values(Values),
     Var(Var),
+    VarMap(VarMap),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct List<T> {
+pub struct AstList<T> {
     inner: Vec<T>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Tuple<T> {
+pub struct AstTuple<T> {
     frst: Box<T>,
     scnd: Box<T>,
 }
@@ -57,7 +58,7 @@ pub struct Tuple<T> {
 //		  pat :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Alias {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     var: Box<TypedCore>,
     pat: Box<TypedCore>,
 }
@@ -65,15 +66,15 @@ pub struct Alias {
 //		  args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Apply {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     op: Box<TypedCore>,
-    args: List<TypedCore>,
+    args: AstList<TypedCore>,
 }
 //-record(c_binary, {anno=[] :: list(), segments :: [cerl:c_bitstr()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Binary {
-    anno: List<TypedCore>,
-    segments: List<BitStr>,
+    anno: AstList<TypedCore>,
+    segments: AstList<BitStr>,
 }
 //-record(c_bitstr, {anno=[] :: list(), val :: cerl:cerl(),
 //		   size :: cerl:cerl(),
@@ -82,7 +83,7 @@ pub struct Binary {
 //		   flags :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BitStr {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     val: Box<TypedCore>,
     size: Box<TypedCore>,
     unit: Box<TypedCore>,
@@ -94,23 +95,23 @@ pub struct BitStr {
 //		 args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Call {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     module: Box<TypedCore>,
     name: Box<TypedCore>,
-    args: List<TypedCore>,
+    args: AstList<TypedCore>,
 }
 //-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
 //		 clauses :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Case {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     arg: Box<TypedCore>,
-    clauses: List<TypedCore>,
+    clauses: AstList<TypedCore>,
 }
 //-record(c_catch, {anno=[] :: list(), body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Catch {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     body: Box<TypedCore>,
 }
 //-record(c_clause, {anno=[] :: list(), pats :: [cerl:cerl()],
@@ -118,8 +119,8 @@ pub struct Catch {
 //		   body :: cerl:cerl() | any()}). % todo
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Clause {
-    anno: List<TypedCore>,
-    pats: List<TypedCore>,
+    anno: AstList<TypedCore>,
+    pats: AstList<TypedCore>,
     guard: Box<TypedCore>,
     body: Box<TypedCore>,
 }
@@ -127,7 +128,7 @@ pub struct Clause {
 //		 tl :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Cons {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     hd: Box<TypedCore>,
     tl: Box<TypedCore>,
 }
@@ -135,8 +136,8 @@ pub struct Cons {
 //		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Fun {
-    anno: List<TypedCore>,
-    vars: List<TypedCore>,
+    anno: AstList<TypedCore>,
+    vars: AstList<TypedCore>,
     body: Box<TypedCore>,
 }
 //-record(c_let, {anno=[] :: list(), vars :: [cerl:cerl()],
@@ -144,8 +145,8 @@ pub struct Fun {
 //		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Let {
-    anno: List<TypedCore>,
-    vars: List<TypedCore>,
+    anno: AstList<TypedCore>,
+    vars: AstList<TypedCore>,
     arg: Box<TypedCore>,
     body: Box<TypedCore>,
 }
@@ -154,26 +155,33 @@ pub struct Let {
 //		   body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LetRec {
-    anno: List<TypedCore>,
-    defs: List<Tuple<TypedCore>>,
+    anno: AstList<TypedCore>,
+    defs: AstList<AstTuple<TypedCore>>,
     body: Box<TypedCore>,
 }
 //-record(c_literal, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Literal {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     val: Box<TypedCore>,
 }
 //-record(c_map, {anno=[] :: list(),
+//		     arg=#c_literal{val=#{}} | cerl:c_var() | cerl:c_literal(), // NOTE maybe this ???
 //		     arg=#c_literal{val=#{}} :: cerl:c_var() | cerl:c_literal(),
 //		     es :: [cerl:c_map_pair()],
 //		     is_pat=false :: boolean()}).
 #[derive(Serialize, Deserialize, Debug)]
-// TODO arg, is_pat ???
-pub struct CoreMap {
-    anno: List<TypedCore>,
+pub struct LiteralMap {
+    anno: AstList<TypedCore>,
     arg: Literal,
-    es: List<MapPair>,
+    es: AstList<MapPair>,
+    is_pat: bool,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VarMap {
+    anno: AstList<TypedCore>,
+    arg: Var,
+    es: AstList<MapPair>,
     is_pat: bool,
 }
 //-record(c_map_pair, {anno=[] :: list(),
@@ -181,9 +189,8 @@ pub struct CoreMap {
 //		     key :: any(),              % todo
 //		     val :: any()}).            % todo
 #[derive(Serialize, Deserialize, Debug)]
-// TODO op ???
 pub struct MapPair {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     op: Literal,
     key: Box<TypedCore>,
     val: Box<TypedCore>,
@@ -194,33 +201,33 @@ pub struct MapPair {
 //		   defs :: [{cerl:cerl(), cerl:cerl()}]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Module {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     name: Box<TypedCore>,
-    exports: List<TypedCore>,
-    attrs: List<Tuple<TypedCore>>,
-    defs: List<Tuple<TypedCore>>,
+    exports: AstList<TypedCore>,
+    attrs: AstList<AstTuple<TypedCore>>,
+    defs: AstList<AstTuple<TypedCore>>,
 }
 //-record(c_opaque, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Opaque {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     val: Box<TypedCore>,
 }
 //-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
 //		   args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PrimOp {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     name: Box<TypedCore>,
-    args: List<TypedCore>,
+    args: AstList<TypedCore>,
 }
 //-record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
 //		    timeout :: cerl:cerl(),
 //		    action :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Receive {
-    anno: List<TypedCore>,
-    clauses: List<TypedCore>,
+    anno: AstList<TypedCore>,
+    clauses: AstList<TypedCore>,
     timeout: Box<TypedCore>,
     action: Box<TypedCore>,
 }
@@ -228,7 +235,7 @@ pub struct Receive {
 //		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Seq {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     arg: Box<TypedCore>,
     body: Box<TypedCore>,
 }
@@ -239,30 +246,29 @@ pub struct Seq {
 //		handler :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Try {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     arg: Box<TypedCore>,
-    vars: List<TypedCore>,
+    vars: AstList<TypedCore>,
     body: Box<TypedCore>,
-    evars: List<TypedCore>,
+    evars: AstList<TypedCore>,
     handler: Box<TypedCore>,
 }
 //-record(c_tuple, {anno=[] :: list(), es :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
-// TODO naming ???
-pub struct CoreTuple {
-    anno: List<TypedCore>,
-    es: List<TypedCore>,
+pub struct Tuple {
+    anno: AstList<TypedCore>,
+    es: AstList<TypedCore>,
 }
 //-record(c_values, {anno=[] :: list(), es :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Values {
-    anno: List<TypedCore>,
-    es: List<TypedCore>,
+    anno: AstList<TypedCore>,
+    es: AstList<TypedCore>,
 }
 //-record(c_var, {anno=[] :: list(), name :: cerl:var_name()}).
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Var {
-    anno: List<TypedCore>,
+    anno: AstList<TypedCore>,
     name: Box<TypedCore>,
 }
 
@@ -272,65 +278,69 @@ pub fn type_core(core: Value) -> TypedCore {
         Value::Bool(bool) => TypedCore::Bool(bool),
         Value::Number(number) => TypedCore::Number(number),
         Value::String(string) => TypedCore::String(string),
-        Value::Array(vec) => TypedCore::List(type_array(vec)),
+        Value::Array(vec) => TypedCore::AstList(type_array(vec)),
         Value::Object(map) => type_object(map),
     }
 }
 
-fn type_tuple(tuple: Vec<Value>) -> Tuple<TypedCore> {
+fn type_tuple(tuple: Vec<Value>) -> AstTuple<TypedCore> {
     assert!(tuple.len() == 2);
-    Tuple {
+    AstTuple {
         frst: Box::new(type_core(tuple.get(0).unwrap().clone())),
         scnd: Box::new(type_core(tuple.get(1).unwrap().clone())),
     }
 }
 
-fn type_array(vec: Vec<Value>) -> List<TypedCore> {
+fn type_array(vec: Vec<Value>) -> AstList<TypedCore> {
     let mut list = Vec::new();
     for val in vec {
         list.push(type_core(val));
     }
-    List { inner: list }
+    AstList { inner: list }
 }
 
-fn type_bool(value: Value) -> bool {
-    value.as_bool().unwrap()
+fn type_bool(value: Value) -> Option<bool> {
+    value.as_bool()
 }
 
-fn type_bitstr(value: Value) -> BitStr {
-    BitStr::deserialize(value).unwrap()
+fn type_bitstr(value: Value) -> Result<BitStr, serde_json::Error> {
+    BitStr::deserialize(value)
 }
 
-fn type_literal(value: Value) -> Literal {
-    Literal::deserialize(value).unwrap()
+fn type_literal(value: Value) -> Result<Literal, serde_json::Error> {
+    Literal::deserialize(value)
 }
 
-fn type_mappair(value: Value) -> MapPair {
-    MapPair::deserialize(value).unwrap()
+fn type_mappair(value: Value) -> Result<MapPair, serde_json::Error> {
+    MapPair::deserialize(value)
 }
 
-fn type_array_of_tuple(vec: Vec<Value>) -> List<Tuple<TypedCore>> {
+fn type_var(value: Value) -> Result<Var, serde_json::Error> {
+    Var::deserialize(value)
+}
+
+fn type_array_of_tuple(vec: Vec<Value>) -> AstList<AstTuple<TypedCore>> {
     let mut list = Vec::new();
     for val in vec {
         list.push(type_tuple(val.as_array().unwrap().to_vec()));
     }
-    List { inner: list }
+    AstList { inner: list }
 }
 
-fn type_array_of_bitstr(vec: Vec<Value>) -> List<BitStr> {
+fn type_array_of_bitstr(vec: Vec<Value>) -> AstList<BitStr> {
     let mut list = Vec::new();
     for val in vec {
-        list.push(type_bitstr(val));
+        list.push(type_bitstr(val).unwrap());
     }
-    List { inner: list }
+    AstList { inner: list }
 }
 
-fn type_array_of_mappair(vec: Vec<Value>) -> List<MapPair> {
+fn type_array_of_mappair(vec: Vec<Value>) -> AstList<MapPair> {
     let mut list = Vec::new();
     for val in vec {
-        list.push(type_mappair(val));
+        list.push(type_mappair(val).unwrap());
     }
-    List { inner: list }
+    AstList { inner: list }
 }
 
 fn type_object(map: Map<String, Value>) -> TypedCore {
@@ -445,18 +455,36 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             return TypedCore::Literal(l);
         }
         "c_map" => {
-            let cm = CoreMap {
-                anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
-                arg: type_literal(map.get("arg").unwrap().clone()),
-                es: type_array_of_mappair(map.get("es").unwrap().as_array().unwrap().to_vec()),
-                is_pat: type_bool(map.get("is_pat").unwrap().clone()),
-            };
-            return TypedCore::CoreMap(cm);
+            let lit = type_literal(map.get("arg").unwrap().clone());
+            match lit {
+                Ok(lit) => {
+                    let lm = LiteralMap {
+                        anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+                        arg: lit,
+                        es: type_array_of_mappair(
+                            map.get("es").unwrap().as_array().unwrap().to_vec(),
+                        ),
+                        is_pat: type_bool(map.get("is_pat").unwrap().clone()).unwrap(),
+                    };
+                    return TypedCore::LiteralMap(lm);
+                }
+                Err(_) => {
+                    let vm = VarMap {
+                        anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+                        arg: type_var(map.get("arg").unwrap().clone()).unwrap(),
+                        es: type_array_of_mappair(
+                            map.get("es").unwrap().as_array().unwrap().to_vec(),
+                        ),
+                        is_pat: type_bool(map.get("is_pat").unwrap().clone()).unwrap(),
+                    };
+                    return TypedCore::VarMap(vm);
+                }
+            }
         }
         "c_map_pair" => {
             let m = MapPair {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().to_vec()),
-                op: type_literal(map.get("op").unwrap().clone()),
+                op: type_literal(map.get("op").unwrap().clone()).unwrap(),
                 key: Box::new(type_core(map.get("key").unwrap().clone())),
                 val: Box::new(type_core(map.get("val").unwrap().clone())),
             };
@@ -516,11 +544,11 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
             return TypedCore::Try(t);
         }
         "c_tuple" => {
-            let ct = CoreTuple {
+            let ct = Tuple {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
                 es: type_array(map.get("es").unwrap().as_array().unwrap().clone()),
             };
-            return TypedCore::CoreTuple(ct);
+            return TypedCore::Tuple(ct);
         }
         "c_values" => {
             let v = Values {
