@@ -12,7 +12,7 @@ to_corej(Module) ->
   case compile:file(Module, [to_core, binary, no_copt]) of
     {ok, _, Ast} ->
       io:put_chars(Json = json:encode(Ast, fun(X, E) -> enc(X, E) end)),
-      file:write_file("core.json", Json),
+      file:write_file(Module ++ ".json", Json),
       erlang:halt(0);
     Err ->
       io:fwrite("ERROR:~n~w", [Err]),

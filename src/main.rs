@@ -10,9 +10,11 @@ fn main() {
     erlang::compile();
     erlang::run(&args[1]);
 
-    let core = erlang::get_core();
-    let typed_core = ast::type_core(core);
-    dbg!(typed_core);
+    let mut core_path = args[1].to_string();
+    core_path.push_str(".json");
+    let core = erlang::get_core(&core_path);
+    let _typed_core = ast::type_core(core);
+    dbg!(_typed_core);
 }
 
 #[cfg(test)]
@@ -21,9 +23,8 @@ mod benchmarks {
     use crate::erlang;
 
     fn run_and_check(erl_file: &str) {
-        erlang::compile();
         erlang::run(&format!("test/{}.erl", erl_file));
-        let core = erlang::get_core();
+        let core = erlang::get_core(&format!("test/{}.erl.json", erl_file));
         let _typed_core = ast::type_core(core);
     }
 
