@@ -1,5 +1,6 @@
-mod ast;
-mod erlang;
+pub mod ast;
+pub mod erlang;
+pub mod state_space;
 
 use std::env;
 
