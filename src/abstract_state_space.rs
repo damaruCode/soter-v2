@@ -2,17 +2,18 @@
 
 use crate::ast;
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 // State := Procs x Mailboxes x Store
 //
-// Procs := Pid -> ProcState
+// Procs := Pid -> P(ProcState)
 // Mailboxes := Pid -> Mailbox
-// Store := (VAddr -> Value) x (KAddr -> Kont)
-pub struct State {
-    procs: HashMap<Pid, usize>,
+// Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
+pub struct AbstractState {
+    procs: HashMap<Pid, HashSet<ProcState>>,
     mailboxes: HashMap<Pid, usize>,
-    value_store: HashMap<usize, usize>,
-    continuation_store: HashMap<usize, usize>,
+    value_store: HashMap<usize, HashSet<Value>>,
+    continuation_store: HashMap<usize, HashSet<Kont>>,
 }
 
 // Pid := ProgLoc x Time

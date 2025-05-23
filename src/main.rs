@@ -1,6 +1,7 @@
+pub mod abstract_state_space;
 pub mod ast;
+pub mod concrete_state_space;
 pub mod erlang;
-pub mod state_space;
 
 use std::env;
 
