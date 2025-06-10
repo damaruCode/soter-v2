@@ -8,7 +8,7 @@ use std::collections::HashMap;
 // Procs := Pid -> ProcState
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> Value) x (KAddr -> Kont)
-pub struct ConcreteState {
+pub struct State {
     procs: Procs,
     mailboxes: Mailboxes,
     value_store: ValueStore,

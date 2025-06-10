@@ -2,6 +2,7 @@ pub mod abstract_state_space;
 pub mod ast;
 pub mod concrete_state_space;
 pub mod erlang;
+pub mod scripts;
 
 use std::env;
 
@@ -15,8 +16,10 @@ fn main() {
     let mut core_path = args[1].to_string();
     core_path.push_str(".json");
     let core = erlang::get_core(&core_path);
-    let _typed_core = ast::type_core(core);
-    dbg!(_typed_core);
+    let typed_core = ast::type_core(core);
+
+    //scripts::enumerate(typed_core);
+    dbg!(typed_core);
 }
 
 #[cfg(test)]
