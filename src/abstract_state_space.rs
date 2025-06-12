@@ -1,211 +1,266 @@
 #![allow(warnings)]
 
 use crate::ast;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::hash::Hash;
+use std::hash::Hasher;
 
 // State := Procs x Mailboxes x Store
 //
 // Procs := Pid -> P(ProcState)
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
+#[derive(Clone)]
 pub struct State<'a> {
     pub procs: Procs<'a>,
     pub mailboxes: Mailboxes<'a>,
     pub value_store: ValueStore<'a>,
     pub continuation_store: ContinuationStore<'a>,
 }
+impl State<'_> {
+    fn init() -> Self {
+        State {
+            procs: Procs::init(),
+            mailboxes: Mailboxes::init(),
+            value_store: ValueStore::init(),
+            continuation_store: ContinuationStore::init(),
+        }
+    }
 
-pub fn init_state(prog_loc: &ast::TypedCore) -> State {
-    let pid = init_pid(prog_loc);
-    let time = init_time(prog_loc);
+    fn step(self) -> Self {
+        // TODO
+        let old_state = self.clone();
 
-    let procs = init_procs(pid, prog_loc, time);
-    let mailboxes = Mailboxes::init(pid.clone());
-    let val_store = ValueStore {
-        inner: HashMap::new(),
-    };
-    let kont_store = ContinuationStore {
-        inner: HashMap::new(),
-    };
+        for (pid, proc_states) in old_state.procs.inner {
+            for (proc_state) in proc_states {
+                // call step on each proc_state
+            }
+        }
 
-    return State {
-        procs: procs,
-        mailboxes: mailboxes,
-        value_store: val_store,
-        continuation_store: kont_store,
-    };
-}
-
-pub struct Procs<'a> {
-    pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
-}
-
-pub fn init_procs<'a>(
-    pid_loc: &'a Pid,
-    prog_loc: &ast::TypedCore,
-    time_loc: &'a Time<'a>,
-) -> Procs<'a> {
-    let inner = HashMap::new();
-    inner.insert(pid_loc, init_proc_state(pid_loc, prog_loc, time_loc));
-
-    return Procs { inner: inner };
-}
-
-pub struct Mailboxes<'a> {
-    pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
-}
-
-impl Mailboxes<'_> {
-    fn init(pid: Pid) -> Self {
-        let mut mailbox_map = HashMap::new();
-        mailbox_map.insert(
-            pid,
-            Mailbox {
-                inner: HashSet::new(),
-            },
-        );
-
-        return Mailboxes { inner: mailbox_map };
+        return self;
     }
 }
 
+#[derive(Clone)]
+pub struct Procs<'a> {
+    pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
+}
+impl Procs<'_> {
+    fn init() -> Self {
+        Procs {
+            inner: HashMap::from([(Pid::init(), HashSet::from([ProcState::init()]))]),
+        }
+    }
+}
+#[derive(Clone)]
+pub struct Mailboxes<'a> {
+    pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
+}
+impl<'a> Mailboxes<'a> {
+    fn init() -> Self {
+        Mailboxes {
+            inner: HashMap::new(),
+        }
+    }
+}
+#[derive(Clone)]
 pub struct ValueStore<'a> {
     pub inner: HashMap<VAddr<'a>, HashSet<Value<'a>>>,
 }
+impl<'a> ValueStore<'a> {
+    fn init() -> Self {
+        ValueStore {
+            inner: HashMap::new(),
+        }
+    }
+}
+#[derive(Clone)]
 pub struct ContinuationStore<'a> {
     pub inner: HashMap<KAddr<'a>, HashSet<Kont<'a>>>,
 }
-
-// Pid := ProgLoc x Time
-#[derive(Eq)]
-pub struct Pid<'a> {
-    //prog_loc: &'a ast::TypedCore,
-    time: Time<'a>,
+impl ContinuationStore<'_> {
+    fn init() -> Self {
+        ContinuationStore {
+            inner: HashMap::new(),
+        }
+    }
 }
 
-pub fn init_pid(prog_loc: &ast::TypedCore) -> Pid {
-    return Pid {
-        prog_loc: prog_loc,
-        time: init_time(prog_loc),
-    };
+// Pid := ProgLoc x Time
+#[derive(Eq, PartialEq, Hash, Clone)]
+pub struct Pid<'a> {
+    prog_loc: ProgLoc<'a>,
+    time: Time<'a>,
+}
+impl<'a> Pid<'a> {
+    fn init() -> Self {
+        Pid {
+            prog_loc: ProgLoc::init(),
+            time: Time::init(),
+        }
+    }
 }
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub enum ProgLocOrPid<'a> {
-    ProgLoc(&'a ast::TypedCore),
+    ProgLoc(ProgLoc<'a>),
     Pid(Pid<'a>),
 }
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct ProcState<'a> {
     prog_loc_or_pid: ProgLocOrPid<'a>,
     env: Env<'a>,
     k_addr: KAddr<'a>,
-    time: &'a Time<'a>,
+    time: Time<'a>,
 }
+impl<'a> ProcState<'a> {
+    fn init() -> Self {
+        ProcState {
+            prog_loc_or_pid: ProgLocOrPid::ProgLoc(ProgLoc::init()),
+            env: Env::init(),
+            k_addr: KAddr::init(),
+            time: Time::init(),
+        }
+    }
 
-pub fn init_proc_state<'a>(
-    pid: &'a Pid<'a>,
-    prog_loc: &'a ast::TypedCore,
-    time: &'a Time<'a>,
-) -> ProcState<'a> {
-    let env = init_env();
-    let kaddr = init_kaddr(pid, prog_loc, &env, time);
+    fn step(self) -> Self {
+        // TODO
+        let old_state = self.clone();
 
-    return ProcState {
-        prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc),
-        env: env,
-        k_addr: kaddr,
-        time: time,
-    };
+        match self.prog_loc_or_pid {
+            ProgLocOrPid::Pid(ref pid) => {} // Considered a value
+            ProgLocOrPid::ProgLoc(ref prog_loc) => {
+                match prog_loc.inner {
+                    ast::TypedCore::Apply(exp) => {}   // FunEval
+                    ast::TypedCore::Var(var) => {}     // Vars
+                    ast::TypedCore::Receive(exp) => {} // Receive
+                    _ => {}                            // most likely a value
+                                                        // there should probably be a unified
+                                                        // `handle_value` function under which all
+                                                        // transition rules on values are executed
+                                                        // if applicable
+                }
+            }
+        }
+
+        return self;
+    }
 }
 
 // Mailbox := P(Value)
+#[derive(Clone)]
 pub struct Mailbox<'a> {
     inner: HashSet<Value<'a>>,
 }
 
 // VAddr := Pid x Var x Data x Time
-#[derive(Clone, Copy)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct VAddr<'a> {
-    pid: &'a Pid<'a>,
-    var: &'a ast::Var,
+    pid: Pid<'a>,
+    var: Var<'a>,
     data: Data<'a>,
     time: Time<'a>,
 }
 
 // Value := Closure U+ Pid
+#[derive(Clone)]
 pub enum ClosureOrPid<'a> {
     Closure(Closure<'a>),
     Pid(Pid<'a>),
 }
+#[derive(Clone)]
 pub struct Value<'a> {
     inner: ClosureOrPid<'a>,
 }
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
 // NOTE * might be possible to depict in control flow rather then as a  data struct
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct KAddr<'a> {
-    pid: &'a Pid<'a>,
-    prog_loc: &'a ast::TypedCore,
-    env: &'a Env<'a>,
-    time: &'a Time<'a>,
+    pid: Pid<'a>,
+    prog_loc: ProgLoc<'a>,
+    env: Env<'a>,
+    time: Time<'a>,
 }
-
-pub fn init_kaddr<'a>(
-    pid: &'a Pid<'a>,
-    prog_loc: &'a ast::TypedCore,
-    env: &'a Env<'a>,
-    time: &'a Time<'a>,
-) -> KAddr<'a> {
-    return KAddr {
-        pid: pid,
-        prog_loc: prog_loc,
-        env: env,
-        time: time,
-    };
+impl KAddr<'_> {
+    fn init() -> Self {
+        KAddr {
+            pid: Pid::init(),
+            prog_loc: ProgLoc::init(),
+            env: Env::init(),
+            time: Time::init(),
+        }
+    }
 }
 
 // Kont := index x ProgLoc x Data* x Env x KAddr
 //       | Stop
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
+#[derive(Clone)]
 pub struct Kont<'a> {
     index: usize,
-    prog_loc: &'a ast::TypedCore,
-    vec_data: [Data<'a>; 0],
+    prog_loc: ProgLoc<'a>,
+    vec_data: Vec<Data<'a>>,
     env: Env<'a>,
     k_addr: KAddr<'a>,
 }
 
 // Time := ProgLoc^k
-#[derive(Clone, Eq)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Time<'a> {
-    inner: usize, //Vec<&'a ast::TypedCore>,
+    inner: Vec<ProgLoc<'a>>,
 }
-
-pub fn init_time(prog_loc: &ast::TypedCore) -> Time {
-    return Time { inner: [] };
+impl Time<'_> {
+    fn init() -> Self {
+        Time { inner: Vec::new() }
+    }
 }
 
 // Closure := ProgLoc x Env
+#[derive(Clone)]
 pub struct Closure<'a> {
-    prog_loc: &'a ast::TypedCore,
+    prog_loc: ProgLoc<'a>,
     env: Env<'a>,
 }
 
 // Env := Var -> VAddr
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Env<'a> {
-    inner: HashMap<&'a ast::Var, VAddr<'a>>,
+    inner: BTreeMap<Var<'a>, VAddr<'a>>, // TODO Hash or BTree ???
+}
+impl Env<'_> {
+    fn init() -> Self {
+        Env {
+            inner: BTreeMap::new(), // TODO
+        }
+    }
 }
 
-pub fn init_env<'a>() -> Env<'a> {
-    return Env {
-        inner: HashMap::new(),
-    };
+#[derive(Eq, PartialEq, Hash, Clone)]
+pub struct Var<'a> {
+    inner: &'a ast::Var, // TODO
+}
+
+// NOTE this references the Exps in the Ast
+#[derive(Eq, PartialEq, Hash, Clone)]
+pub struct ProgLoc<'a> {
+    inner: &'a ast::TypedCore, // TODO
+}
+impl ProgLoc<'_> {
+    fn init() -> Self {
+        ProgLoc {
+            inner: &ast::TypedCore::Null, // TODO
+        }
+    }
 }
 
 // NOTE the free vars of the TypedCore are replaced with the values of the higher scopes and has therefore no
 // free vars anymore
-#[derive(Clone, Copy)]
+#[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Data<'a> {
-    inner: &'a ast::TypedCore,
+    inner: &'a ast::TypedCore, // TODO
 }
