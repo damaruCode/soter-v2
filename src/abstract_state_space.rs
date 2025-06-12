@@ -20,15 +20,20 @@ pub fn init_state(prog_loc: &ast::TypedCore) -> State {
     let pid = init_pid(prog_loc);
     let time = init_time(prog_loc);
 
+    let procs = init_procs(pid, prog_loc, time);
+    let mailboxes = Mailboxes::init(pid.clone());
+    let val_store = ValueStore {
+        inner: HashMap::new(),
+    };
+    let kont_store = ContinuationStore {
+        inner: HashMap::new(),
+    };
+
     return State {
-        procs: init_procs(&pid, prog_loc, &time),
-        mailboxes: init_mailboxes(&pid),
-        value_store: ValueStore {
-            inner: HashMap::new(),
-        },
-        continuation_store: ContinuationStore {
-            inner: HashMap::new(),
-        },
+        procs: procs,
+        mailboxes: mailboxes,
+        value_store: val_store,
+        continuation_store: kont_store,
     };
 }
 
@@ -36,9 +41,13 @@ pub struct Procs<'a> {
     pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
 }
 
-pub fn init_procs<'a>(pid_loc: &Pid, prog_loc: &ast::TypedCore) -> Procs<'a> {
+pub fn init_procs<'a>(
+    pid_loc: &'a Pid,
+    prog_loc: &ast::TypedCore,
+    time_loc: &'a Time<'a>,
+) -> Procs<'a> {
     let inner = HashMap::new();
-    inner.insert(pid_loc, init_proc_state(prog_loc));
+    inner.insert(pid_loc, init_proc_state(pid_loc, prog_loc, time_loc));
 
     return Procs { inner: inner };
 }
@@ -47,16 +56,18 @@ pub struct Mailboxes<'a> {
     pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
 }
 
-pub fn init_mailboxes<'a>(pid: &Pid) -> Mailboxes<'a> {
-    let mailbox_map = HashMap::new();
-    mailbox_map.insert(
-        pid,
-        Mailbox {
-            inner: HashSet::new(),
-        },
-    );
+impl Mailboxes<'_> {
+    fn init(pid: Pid) -> Self {
+        let mut mailbox_map = HashMap::new();
+        mailbox_map.insert(
+            pid,
+            Mailbox {
+                inner: HashSet::new(),
+            },
+        );
 
-    return Mailboxes { inner: mailbox_map };
+        return Mailboxes { inner: mailbox_map };
+    }
 }
 
 pub struct ValueStore<'a> {
@@ -67,8 +78,9 @@ pub struct ContinuationStore<'a> {
 }
 
 // Pid := ProgLoc x Time
+#[derive(Eq)]
 pub struct Pid<'a> {
-    prog_loc: &'a ast::TypedCore,
+    //prog_loc: &'a ast::TypedCore,
     time: Time<'a>,
 }
 
@@ -88,22 +100,22 @@ pub struct ProcState<'a> {
     prog_loc_or_pid: ProgLocOrPid<'a>,
     env: Env<'a>,
     k_addr: KAddr<'a>,
-    time: Time<'a>,
+    time: &'a Time<'a>,
 }
 
 pub fn init_proc_state<'a>(
-    pid: Pid<'a>,
+    pid: &'a Pid<'a>,
     prog_loc: &'a ast::TypedCore,
-    time: Time<'a>,
+    time: &'a Time<'a>,
 ) -> ProcState<'a> {
     let env = init_env();
-    let kaddr = init_kaddr(pid, prog_loc, env.clone(), time.clone());
+    let kaddr = init_kaddr(pid, prog_loc, &env, time);
 
     return ProcState {
         prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc),
-        env: env.clone(),
+        env: env,
         k_addr: kaddr,
-        time: time.clone(),
+        time: time,
     };
 }
 
@@ -133,17 +145,17 @@ pub struct Value<'a> {
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
 // NOTE * might be possible to depict in control flow rather then as a  data struct
 pub struct KAddr<'a> {
-    pid: Pid<'a>,
+    pid: &'a Pid<'a>,
     prog_loc: &'a ast::TypedCore,
-    env: Env<'a>,
-    time: Time<'a>,
+    env: &'a Env<'a>,
+    time: &'a Time<'a>,
 }
 
 pub fn init_kaddr<'a>(
-    pid: Pid<'a>,
+    pid: &'a Pid<'a>,
     prog_loc: &'a ast::TypedCore,
-    env: Env<'a>,
-    time: Time<'a>,
+    env: &'a Env<'a>,
+    time: &'a Time<'a>,
 ) -> KAddr<'a> {
     return KAddr {
         pid: pid,
@@ -165,9 +177,9 @@ pub struct Kont<'a> {
 }
 
 // Time := ProgLoc^k
-#[derive(Clone, Copy)]
+#[derive(Clone, Eq)]
 pub struct Time<'a> {
-    inner: [&'a ast::TypedCore; 0],
+    inner: usize, //Vec<&'a ast::TypedCore>,
 }
 
 pub fn init_time(prog_loc: &ast::TypedCore) -> Time {
@@ -181,7 +193,6 @@ pub struct Closure<'a> {
 }
 
 // Env := Var -> VAddr
-#[derive(Clone, Copy)]
 pub struct Env<'a> {
     inner: HashMap<&'a ast::Var, VAddr<'a>>,
 }
