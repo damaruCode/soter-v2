@@ -1,6 +1,8 @@
 #![allow(warnings)]
 
 use crate::ast;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -182,12 +184,12 @@ pub struct Closure {
 // Env := Var -> VAddr
 #[derive(Eq, PartialEq, Hash)]
 pub struct Env {
-    inner: HashMap<Var, VAddr>, // TODO ??? why not work ???
+    inner: BTreeMap<Var, VAddr>, // TODO Hash or BTree ???
 }
 impl Env {
     fn init() -> Self {
         Env {
-            inner: HashMap::new(), // TODO
+            inner: BTreeMap::new(), // TODO
         }
     }
 }
