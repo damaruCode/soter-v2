@@ -18,8 +18,10 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::type_core(core);
 
+    let _lambda_actor = abstract_state_space::State::init(&typed_core);
+
     //scripts::enumerate(typed_core);
-    dbg!(typed_core);
+    //dbg!(typed_core);
 }
 
 #[cfg(test)]

@@ -5,8 +5,6 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::hash::Hash;
-use std::hash::Hasher;
 
 // State := Procs x Mailboxes x Store
 //
@@ -21,17 +19,17 @@ pub struct State<'a> {
     pub continuation_store: ContinuationStore<'a>,
 }
 impl<'a> State<'a> {
-    fn init(prog_loc: ProgLoc<'a>) -> Self {
+    pub fn init(ast: &'a ast::TypedCore) -> Self {
         State {
-            procs: Procs::init(prog_loc),
+            procs: Procs::init(ProgLoc::init(ast)),
             mailboxes: Mailboxes::init(),
             value_store: ValueStore::init(),
             continuation_store: ContinuationStore::init(),
         }
     }
 
+    // TODO
     fn step(self) -> Self {
-        // TODO
         let old_state = self.clone();
 
         for (pid, proc_states) in old_state.procs.inner {
@@ -51,7 +49,10 @@ pub struct Procs<'a> {
 impl<'a> Procs<'a> {
     fn init(prog_loc: ProgLoc<'a>) -> Self {
         Procs {
-            inner: HashMap::from([(Pid::init(prog_loc.clone()), HashSet::from([ProcState::init(prog_loc.clone())]))]),
+            inner: HashMap::from([(
+                Pid::init(prog_loc.clone()),
+                HashSet::from([ProcState::init(prog_loc.clone())]),
+            )]),
         }
     }
 }
@@ -96,28 +97,23 @@ pub struct Pid<'a> {
     time: Time<'a>,
 }
 impl<'a> Pid<'a> {
-    fn init(prog_loc: ProgLoc<'a>) -> Self {
+    fn new(&self, prog_loc: ProgLoc<'a>, time: Time<'a>) -> Self {
+        // Generated the Pid for the new ProcState using its ProgLoc and Time
+        let mut vec = time.inner;
+        vec.append(&mut self.time.tick(self.prog_loc.clone()).inner);
+
         Pid {
-            prog_loc: prog_loc,
-            time: Time::init(),
+            prog_loc,
+            time: Time::new(vec),
         }
     }
 
-    fn new(self, prog_loc: ProgLoc<'a>, time: Time<'a>) -> Self {
-        let mut pid_time = self.time.tick(self.prog_loc);
-        let mut time_inner_clone = time.inner.clone();
-
-        time_inner_clone.append(&mut pid_time.inner);
-
-        let new_time = Time {
-            inner: time_inner_clone,
-        };
-
-        return Pid {
-            prog_loc: prog_loc,
-            time: new_time,
-        };
-    } // TODO Review with David
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
+        Pid {
+            prog_loc,
+            time: Time::init(),
+        }
+    }
 }
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
@@ -143,15 +139,13 @@ impl<'a> ProcState<'a> {
         }
     }
 
-    fn step(self) -> Self {
-        // TODO
-        let old_state = self.clone();
-
+    // TODO
+    fn step(&self) -> Self {
         match self.prog_loc_or_pid {
             ProgLocOrPid::Pid(ref pid) => {} // Considered a value
             ProgLocOrPid::ProgLoc(ref prog_loc) => {
                 match prog_loc.inner {
-                    ast::TypedCore::Apply(exp) => {}   // FunEval
+                    ast::TypedCore::Literal(lit) => {if lit.val == "self"}   // FunEval
                     ast::TypedCore::Var(var) => {}     // Vars
                     ast::TypedCore::Receive(exp) => {} // Receive
                     _ => {}                            // most likely a value
@@ -163,7 +157,7 @@ impl<'a> ProcState<'a> {
             }
         }
 
-        return self;
+        return self.clone();
     }
 }
 
@@ -187,13 +181,13 @@ pub struct VAddr<'a> {
 }
 impl<'a> VAddr<'a> {
     fn new(pid: Pid<'a>, var: Var<'a>, data: Data<'a>, time: Time<'a>) -> Self {
-        return VAddr {
-            pid: pid.clone(),
-            var: var.clone(),
-            data: data.clone(),
-            time: time.clone(),
-        };
-    } // TODO Review with David
+        VAddr {
+            pid,
+            var,
+            data,
+            time,
+        }
+    }
 }
 
 // Value := Closure U+ Pid
@@ -220,26 +214,19 @@ impl<'a> KAddr<'a> {
     fn init(prog_loc: ProgLoc<'a>) -> Self {
         KAddr {
             pid: Pid::init(prog_loc.clone()),
-            prog_loc: prog_loc,
+            prog_loc,
             env: Env::init(),
             time: Time::init(),
         }
     }
-
-    fn new_push(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
-        return KAddr {
-            pid: pid.clone(),
-            prog_loc: prog_loc.clone(),
-            env: env.clone(),
-            time: time.clone(),
-        };
-    } // TODO Review with David
-    fn new_pop(pid: Pid<'a>, kont: Kont<'a>, time: Time<'a>) -> Self {
-        let next_prog_loc = // l_{i + 1} => derive from TypedCore::Call, how to look at the next
-                               // argument of a function call
-
-        return KAddr { pid: pid.clone(), prog_loc: next_prog_loc, env: kont.env.clone(), time: time.clone() }
-    } // TODO Review with David
+    fn new(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
+        KAddr {
+            pid,
+            prog_loc,
+            env,
+            time,
+        }
+    }
 }
 
 // Kont := index x ProgLoc x Data* x Env x KAddr
@@ -260,16 +247,19 @@ pub struct Time<'a> {
     inner: Vec<ProgLoc<'a>>,
 }
 impl<'a> Time<'a> {
+    fn new(time: Vec<ProgLoc<'a>>) -> Self {
+        Time { inner: time }
+    }
+
     fn init() -> Self {
         Time { inner: Vec::new() }
     }
 
-    fn tick(self, prog_loc: ProgLoc<'a>) -> Self {
-        let mut new_time = self.clone();
-        new_time.inner.push(prog_loc);
-
-        return new_time;
-    } // TODO Review with David
+    fn tick(&self, prog_loc: ProgLoc<'a>) -> Self {
+        let mut ticked_time = self.clone();
+        ticked_time.inner.push(prog_loc);
+        ticked_time
+    }
 }
 
 // Closure := ProgLoc x Env
@@ -282,12 +272,12 @@ pub struct Closure<'a> {
 // Env := Var -> VAddr
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Env<'a> {
-    inner: BTreeMap<Var<'a>, VAddr<'a>>, // TODO Hash or BTree ???
+    inner: BTreeMap<Var<'a>, VAddr<'a>>,
 }
 impl Env<'_> {
     fn init() -> Self {
         Env {
-            inner: BTreeMap::new(), // TODO
+            inner: BTreeMap::new(),
         }
     }
 }
@@ -302,10 +292,15 @@ pub struct Var<'a> {
 pub struct ProgLoc<'a> {
     inner: &'a ast::TypedCore,
 }
+impl<'a> ProgLoc<'a> {
+    fn init(ast: &'a ast::TypedCore) -> Self {
+        ProgLoc { inner: ast }
+    }
+}
 
 // NOTE the free vars of the TypedCore are replaced with the values of the higher scopes and has therefore no
 // free vars anymore
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Data<'a> {
-    inner: &'a ast::TypedCore, // TODO
+    inner: &'a ast::TypedCore,
 }
