@@ -20,10 +20,10 @@ pub struct State<'a> {
     pub value_store: ValueStore<'a>,
     pub continuation_store: ContinuationStore<'a>,
 }
-impl State<'_> {
-    fn init() -> Self {
+impl<'a> State<'a> {
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
         State {
-            procs: Procs::init(),
+            procs: Procs::init(prog_loc),
             mailboxes: Mailboxes::init(),
             value_store: ValueStore::init(),
             continuation_store: ContinuationStore::init(),
@@ -48,10 +48,10 @@ impl State<'_> {
 pub struct Procs<'a> {
     pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
 }
-impl Procs<'_> {
-    fn init() -> Self {
+impl<'a> Procs<'a> {
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
         Procs {
-            inner: HashMap::from([(Pid::init(), HashSet::from([ProcState::init()]))]),
+            inner: HashMap::from([(Pid::init(prog_loc.clone()), HashSet::from([ProcState::init(prog_loc.clone())]))]),
         }
     }
 }
@@ -96,12 +96,28 @@ pub struct Pid<'a> {
     time: Time<'a>,
 }
 impl<'a> Pid<'a> {
-    fn init() -> Self {
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
         Pid {
-            prog_loc: ProgLoc::init(),
+            prog_loc: prog_loc,
             time: Time::init(),
         }
     }
+
+    fn new(self, prog_loc: ProgLoc<'a>, time: Time<'a>) -> Self {
+        let mut pid_time = self.time.tick(self.prog_loc);
+        let mut time_inner_clone = time.inner.clone();
+
+        time_inner_clone.append(&mut pid_time.inner);
+
+        let new_time = Time {
+            inner: time_inner_clone,
+        };
+
+        return Pid {
+            prog_loc: prog_loc,
+            time: new_time,
+        };
+    } // TODO Review with David
 }
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
@@ -118,11 +134,11 @@ pub struct ProcState<'a> {
     time: Time<'a>,
 }
 impl<'a> ProcState<'a> {
-    fn init() -> Self {
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
         ProcState {
-            prog_loc_or_pid: ProgLocOrPid::ProgLoc(ProgLoc::init()),
+            prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc.clone()),
             env: Env::init(),
-            k_addr: KAddr::init(),
+            k_addr: KAddr::init(prog_loc.clone()),
             time: Time::init(),
         }
     }
@@ -156,6 +172,10 @@ impl<'a> ProcState<'a> {
 pub struct Mailbox<'a> {
     inner: HashSet<Value<'a>>,
 }
+impl Mailbox<'_> {
+    fn mmatch(self) {} // TODO
+    fn enq(self) {} // TODO
+}
 
 // VAddr := Pid x Var x Data x Time
 #[derive(Eq, PartialEq, Hash, Clone)]
@@ -164,6 +184,16 @@ pub struct VAddr<'a> {
     var: Var<'a>,
     data: Data<'a>,
     time: Time<'a>,
+}
+impl<'a> VAddr<'a> {
+    fn new(pid: Pid<'a>, var: Var<'a>, data: Data<'a>, time: Time<'a>) -> Self {
+        return VAddr {
+            pid: pid.clone(),
+            var: var.clone(),
+            data: data.clone(),
+            time: time.clone(),
+        };
+    } // TODO Review with David
 }
 
 // Value := Closure U+ Pid
@@ -186,15 +216,30 @@ pub struct KAddr<'a> {
     env: Env<'a>,
     time: Time<'a>,
 }
-impl KAddr<'_> {
-    fn init() -> Self {
+impl<'a> KAddr<'a> {
+    fn init(prog_loc: ProgLoc<'a>) -> Self {
         KAddr {
-            pid: Pid::init(),
-            prog_loc: ProgLoc::init(),
+            pid: Pid::init(prog_loc.clone()),
+            prog_loc: prog_loc,
             env: Env::init(),
             time: Time::init(),
         }
     }
+
+    fn new_push(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
+        return KAddr {
+            pid: pid.clone(),
+            prog_loc: prog_loc.clone(),
+            env: env.clone(),
+            time: time.clone(),
+        };
+    } // TODO Review with David
+    fn new_pop(pid: Pid<'a>, kont: Kont<'a>, time: Time<'a>) -> Self {
+        let next_prog_loc = // l_{i + 1} => derive from TypedCore::Call, how to look at the next
+                               // argument of a function call
+
+        return KAddr { pid: pid.clone(), prog_loc: next_prog_loc, env: kont.env.clone(), time: time.clone() }
+    } // TODO Review with David
 }
 
 // Kont := index x ProgLoc x Data* x Env x KAddr
@@ -214,10 +259,17 @@ pub struct Kont<'a> {
 pub struct Time<'a> {
     inner: Vec<ProgLoc<'a>>,
 }
-impl Time<'_> {
+impl<'a> Time<'a> {
     fn init() -> Self {
         Time { inner: Vec::new() }
     }
+
+    fn tick(self, prog_loc: ProgLoc<'a>) -> Self {
+        let mut new_time = self.clone();
+        new_time.inner.push(prog_loc);
+
+        return new_time;
+    } // TODO Review with David
 }
 
 // Closure := ProgLoc x Env
@@ -242,20 +294,13 @@ impl Env<'_> {
 
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Var<'a> {
-    inner: &'a ast::Var, // TODO
+    inner: &'a ast::Var,
 }
 
 // NOTE this references the Exps in the Ast
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub struct ProgLoc<'a> {
-    inner: &'a ast::TypedCore, // TODO
-}
-impl ProgLoc<'_> {
-    fn init() -> Self {
-        ProgLoc {
-            inner: &ast::TypedCore::Null, // TODO
-        }
-    }
+    inner: &'a ast::TypedCore,
 }
 
 // NOTE the free vars of the TypedCore are replaced with the values of the higher scopes and has therefore no
