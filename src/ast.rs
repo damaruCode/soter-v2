@@ -45,13 +45,13 @@ pub enum TypedCore {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstList<T> {
-    inner: Vec<T>,
+    pub inner: Vec<T>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstTuple<T> {
-    frst: Box<T>,
-    scnd: Box<T>,
+    pub frst: Box<T>,
+    pub scnd: Box<T>,
 }
 
 //-record(c_alias, {anno=[] :: list(), var :: cerl:cerl(),
@@ -138,7 +138,7 @@ pub struct Cons {
 pub struct Fun {
     anno: AstList<TypedCore>,
     vars: AstList<TypedCore>,
-    body: Box<TypedCore>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_let, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		arg :: cerl:cerl(),

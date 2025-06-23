@@ -11,7 +11,7 @@ use std::collections::HashSet;
 // Procs := Pid -> P(ProcState)
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct State<'a> {
     pub procs: Procs<'a>,
     pub mailboxes: Mailboxes<'a>,
@@ -29,20 +29,22 @@ impl<'a> State<'a> {
     }
 
     // TODO
-    fn step(self) -> Self {
-        let old_state = self.clone();
+    pub fn step(&self) -> Self {
+        let mut new_state = self.clone();
 
-        for (pid, proc_states) in old_state.procs.inner {
+        for (pid, proc_states) in &self.procs.inner {
+            let set = new_state.procs.inner.get_mut(pid).unwrap();
+            set.clear();
             for (proc_state) in proc_states {
-                // call step on each proc_state
+                set.insert(proc_state.step());
             }
         }
 
-        return self;
+        new_state
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Procs<'a> {
     pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
 }
@@ -56,7 +58,7 @@ impl<'a> Procs<'a> {
         }
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Mailboxes<'a> {
     pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
 }
@@ -67,7 +69,7 @@ impl<'a> Mailboxes<'a> {
         }
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ValueStore<'a> {
     pub inner: HashMap<VAddr<'a>, HashSet<Value<'a>>>,
 }
@@ -78,7 +80,7 @@ impl<'a> ValueStore<'a> {
         }
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ContinuationStore<'a> {
     pub inner: HashMap<KAddr<'a>, HashSet<Kont<'a>>>,
 }
@@ -91,7 +93,7 @@ impl ContinuationStore<'_> {
 }
 
 // Pid := ProgLoc x Time
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Pid<'a> {
     prog_loc: ProgLoc<'a>,
     time: Time<'a>,
@@ -117,12 +119,12 @@ impl<'a> Pid<'a> {
 }
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum ProgLocOrPid<'a> {
     ProgLoc(ProgLoc<'a>),
     Pid(Pid<'a>),
 }
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct ProcState<'a> {
     prog_loc_or_pid: ProgLocOrPid<'a>,
     env: Env<'a>,
@@ -130,6 +132,19 @@ pub struct ProcState<'a> {
     time: Time<'a>,
 }
 impl<'a> ProcState<'a> {
+    fn new(
+        prog_loc_or_pid: ProgLocOrPid<'a>,
+        env: Env<'a>,
+        k_addr: KAddr<'a>,
+        time: Time<'a>,
+    ) -> Self {
+        ProcState {
+            prog_loc_or_pid,
+            env,
+            k_addr,
+            time,
+        }
+    }
     fn init(prog_loc: ProgLoc<'a>) -> Self {
         ProcState {
             prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc.clone()),
@@ -142,21 +157,28 @@ impl<'a> ProcState<'a> {
     // TODO
     fn step(&self) -> Self {
         match self.prog_loc_or_pid {
-            ProgLocOrPid::Pid(ref pid) => {} // Considered a value
+            ProgLocOrPid::Pid(ref pid) => self.clone(),
             ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
-                ast::TypedCore::Module(m) => {
-                    dbg!(&m.defs);
-                }
-                _ => {}
+                // NOTE could have more than one def
+                ast::TypedCore::Module(m) => match &*m.defs.inner[0].scnd {
+                    ast::TypedCore::Fun(f) => {
+                        return ProcState::new(
+                            ProgLocOrPid::ProgLoc(ProgLoc::new(&*f.body)),
+                            self.env.clone(),
+                            self.k_addr.clone(),
+                            self.time.clone(),
+                        );
+                    }
+                    _ => self.clone(),
+                },
+                _ => self.clone(),
             },
         }
-
-        return self.clone();
     }
 }
 
 // Mailbox := P(Value)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Mailbox<'a> {
     inner: HashSet<Value<'a>>,
 }
@@ -166,7 +188,7 @@ impl Mailbox<'_> {
 }
 
 // VAddr := Pid x Var x Data x Time
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct VAddr<'a> {
     pid: Pid<'a>,
     var: Var<'a>,
@@ -185,19 +207,19 @@ impl<'a> VAddr<'a> {
 }
 
 // Value := Closure U+ Pid
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ClosureOrPid<'a> {
     Closure(Closure<'a>),
     Pid(Pid<'a>),
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Value<'a> {
     inner: ClosureOrPid<'a>,
 }
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
 // NOTE * might be possible to depict in control flow rather then as a  data struct
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct KAddr<'a> {
     pid: Pid<'a>,
     prog_loc: ProgLoc<'a>,
@@ -226,7 +248,7 @@ impl<'a> KAddr<'a> {
 // Kont := index x ProgLoc x Data* x Env x KAddr
 //       | Stop
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Kont<'a> {
     index: usize,
     prog_loc: ProgLoc<'a>,
@@ -236,7 +258,7 @@ pub struct Kont<'a> {
 }
 
 // Time := ProgLoc^k
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Time<'a> {
     inner: Vec<ProgLoc<'a>>,
 }
@@ -257,14 +279,14 @@ impl<'a> Time<'a> {
 }
 
 // Closure := ProgLoc x Env
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Closure<'a> {
     prog_loc: ProgLoc<'a>,
     env: Env<'a>,
 }
 
 // Env := Var -> VAddr
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Env<'a> {
     inner: BTreeMap<Var<'a>, VAddr<'a>>,
 }
@@ -276,17 +298,20 @@ impl Env<'_> {
     }
 }
 
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Var<'a> {
     inner: &'a ast::Var,
 }
 
 // NOTE this references the Exps in the Ast
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct ProgLoc<'a> {
     inner: &'a ast::TypedCore,
 }
 impl<'a> ProgLoc<'a> {
+    fn new(inner: &'a ast::TypedCore) -> Self {
+        ProgLoc { inner }
+    }
     fn init(ast: &'a ast::TypedCore) -> Self {
         ProgLoc { inner: ast }
     }
@@ -294,7 +319,7 @@ impl<'a> ProgLoc<'a> {
 
 // NOTE the free vars of the TypedCore are replaced with the values of the higher scopes and has therefore no
 // free vars anymore
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Data<'a> {
     inner: &'a ast::TypedCore,
 }
