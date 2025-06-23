@@ -205,7 +205,7 @@ pub struct Module {
     name: Box<TypedCore>,
     exports: AstList<TypedCore>,
     attrs: AstList<AstTuple<TypedCore>>,
-    defs: AstList<AstTuple<TypedCore>>,
+    pub defs: AstList<AstTuple<TypedCore>>,
 }
 //-record(c_opaque, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]

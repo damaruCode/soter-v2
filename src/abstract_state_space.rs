@@ -143,18 +143,12 @@ impl<'a> ProcState<'a> {
     fn step(&self) -> Self {
         match self.prog_loc_or_pid {
             ProgLocOrPid::Pid(ref pid) => {} // Considered a value
-            ProgLocOrPid::ProgLoc(ref prog_loc) => {
-                match prog_loc.inner {
-                    ast::TypedCore::Literal(lit) => {if lit.val == "self"}   // FunEval
-                    ast::TypedCore::Var(var) => {}     // Vars
-                    ast::TypedCore::Receive(exp) => {} // Receive
-                    _ => {}                            // most likely a value
-                                                        // there should probably be a unified
-                                                        // `handle_value` function under which all
-                                                        // transition rules on values are executed
-                                                        // if applicable
+            ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
+                ast::TypedCore::Module(m) => {
+                    dbg!(&m.defs);
                 }
-            }
+                _ => {}
+            },
         }
 
         return self.clone();
