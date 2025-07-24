@@ -171,6 +171,11 @@ impl<'a> ProcState<'a> {
                     }
                     _ => self.clone(),
                 },
+                ast::TypedCore::Case(c) => {
+                    log::debug!("{:#?}", c);
+
+                    self.clone()
+                }
                 _ => self.clone(),
             },
         }

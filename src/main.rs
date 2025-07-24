@@ -6,7 +6,28 @@ pub mod scripts;
 
 use std::env;
 
+use log4rs::{
+    append::file::FileAppender,
+    config::{Appender, Root},
+    encode::pattern::PatternEncoder,
+    Config,
+};
+
 fn main() {
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build("logs/output.log")
+        .unwrap();
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(
+            Root::builder()
+                .appender("logfile")
+                .build(log::LevelFilter::Debug),
+        )
+        .unwrap();
+    log4rs::init_config(config).unwrap();
+
     let args: Vec<String> = env::args().collect();
     assert_eq!(args.len(), 2, "cargo run --release <file_path>.erl");
 
@@ -18,7 +39,8 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::type_core(core);
 
-    let lambda_actor = abstract_state_space::State::init(&typed_core);
+    let mut lambda_actor = abstract_state_space::State::init(&typed_core);
+    lambda_actor = lambda_actor.step();
     lambda_actor.step();
 }
 
