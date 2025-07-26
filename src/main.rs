@@ -1,11 +1,13 @@
 pub mod abstract_state_space;
 pub mod ast;
+pub mod ast_helper;
 pub mod concrete_state_space;
 pub mod erlang;
 pub mod scripts;
 
 use std::env;
 
+use chrono::Utc;
 use log4rs::{
     append::file::FileAppender,
     config::{Appender, Root},
@@ -14,9 +16,13 @@ use log4rs::{
 };
 
 fn main() {
+    // Logging
+    let now = Utc::now();
+    let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
+
     let logfile = FileAppender::builder()
         .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build("logs/output.log")
+        .build(logfile_path)
         .unwrap();
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
@@ -28,6 +34,7 @@ fn main() {
         .unwrap();
     log4rs::init_config(config).unwrap();
 
+    // Main Logic
     let args: Vec<String> = env::args().collect();
     assert_eq!(args.len(), 2, "cargo run --release <file_path>.erl");
 

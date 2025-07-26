@@ -160,19 +160,33 @@ impl<'a> ProcState<'a> {
             ProgLocOrPid::Pid(ref pid) => self.clone(),
             ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
                 // NOTE could have more than one def
-                ast::TypedCore::Module(m) => match &*m.defs.inner[0].scnd {
-                    ast::TypedCore::Fun(f) => {
-                        return ProcState::new(
-                            ProgLocOrPid::ProgLoc(ProgLoc::new(&*f.body)),
-                            self.env.clone(),
-                            self.k_addr.clone(),
-                            self.time.clone(),
-                        );
-                    }
+                ast::TypedCore::Module(module) => match &*module.defs.inner[0].scnd {
+                    ast::TypedCore::Fun(fun) => match &*fun.body {
+                        // NOTE could have more clauses than one
+                        ast::TypedCore::Case(case) => match &case.clauses.inner[0] {
+                            ast::TypedCore::Clause(clause) => {
+                                return ProcState::new(
+                                    // NOTE the pattern and guard of the clause could be
+                                    // interesting in general
+                                    ProgLocOrPid::ProgLoc(ProgLoc::new(&clause.body)),
+                                    self.env.clone(),
+                                    self.k_addr.clone(),
+                                    self.time.clone(),
+                                );
+                            }
+                            _ => self.clone(),
+                        },
+                        _ => self.clone(),
+                    },
                     _ => self.clone(),
                 },
-                ast::TypedCore::Case(c) => {
-                    log::debug!("{:#?}", c);
+                ast::TypedCore::Let(l) => {
+                    let var_list = VarInner::from(l.vars);
+                    let arg = l.arg;
+                    let body = l.body;
+
+                    // Push-Let
+                    let klet = Kont::Let(var_list, arg, body, self.k_addr.clone());
 
                     self.clone()
                 }
@@ -250,16 +264,16 @@ impl<'a> KAddr<'a> {
     }
 }
 
-// Kont := index x ProgLoc x Data* x Env x KAddr
+// Kont :=
+//       | List<Name>, ProgLoc, Env, KAddr // Let
+//       | ProgLoc, Env, KAddr // Do
 //       | Stop
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug)]
-pub struct Kont<'a> {
-    index: usize,
-    prog_loc: ProgLoc<'a>,
-    vec_data: Vec<Data<'a>>,
-    env: Env<'a>,
-    k_addr: KAddr<'a>,
+pub enum Kont<'a> {
+    Let(Vec<ast::Var<'a>>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Stop,
 }
 
 // Time := ProgLoc^k
