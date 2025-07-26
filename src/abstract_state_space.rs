@@ -6,6 +6,8 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fmt::Debug;
+use std::hash::Hash;
 
 // State := Procs x Mailboxes x Store
 //
@@ -16,16 +18,14 @@ use std::collections::HashSet;
 pub struct State<'a> {
     pub procs: Procs<'a>,
     pub mailboxes: Mailboxes<'a>,
-    pub value_store: ValueStore<'a>,
-    pub continuation_store: ContinuationStore<'a>,
+    pub store: Store<'a>,
 }
 impl<'a> State<'a> {
     pub fn init(ast: &'a ast::TypedCore) -> Self {
         State {
             procs: Procs::init(ProgLoc::init(ast)),
             mailboxes: Mailboxes::init(),
-            value_store: ValueStore::init(),
-            continuation_store: ContinuationStore::init(),
+            store: Store::init(),
         }
     }
 
@@ -37,7 +37,7 @@ impl<'a> State<'a> {
             let set = new_state.procs.inner.get_mut(pid).unwrap();
             set.clear();
             for (proc_state) in proc_states {
-                set.insert(proc_state.step());
+                set.insert(proc_state.step(pid, &mut new_state.store));
             }
         }
 
@@ -71,24 +71,36 @@ impl<'a> Mailboxes<'a> {
     }
 }
 #[derive(Clone, Debug)]
-pub struct ValueStore<'a> {
-    pub inner: HashMap<VAddr<'a>, HashSet<Value<'a>>>,
+pub struct StoreMap<K, V> {
+    inner: HashMap<K, HashSet<V>>,
 }
-impl<'a> ValueStore<'a> {
+// NOTE Might have to revisit the actual implementation of Eq on the constituent parts; Otherwise
+// keys that should be identical will not be handled as such!
+impl<K: Clone + Eq + Hash, V: Clone + Eq + Hash> StoreMap<K, V> {
     fn init() -> Self {
-        ValueStore {
+        StoreMap {
             inner: HashMap::new(),
         }
     }
+
+    /// Inserts a new value into the value set for the given key
+    fn push(&mut self, key: K, value: V) {
+        self.inner
+            .entry(key) // Either take the existent HashSet
+            .or_insert_with(HashSet::new) // or create a new one
+            .insert(value);
+    }
 }
 #[derive(Clone, Debug)]
-pub struct ContinuationStore<'a> {
-    pub inner: HashMap<KAddr<'a>, HashSet<Kont<'a>>>,
+pub struct Store<'a> {
+    pub kont: StoreMap<KAddr<'a>, Kont<'a>>,
+    pub value: StoreMap<VAddr<'a>, Value<'a>>,
 }
-impl ContinuationStore<'_> {
+impl Store<'_> {
     fn init() -> Self {
-        ContinuationStore {
-            inner: HashMap::new(),
+        Store {
+            kont: StoreMap::init(),
+            value: StoreMap::init(),
         }
     }
 }
@@ -156,7 +168,7 @@ impl<'a> ProcState<'a> {
     }
 
     // TODO
-    fn step(&self) -> Self {
+    fn step(&self, pid: &Pid<'a>, store: &mut Store<'a>) -> Self {
         match self.prog_loc_or_pid {
             ProgLocOrPid::Pid(ref pid) => self.clone(),
             ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
@@ -182,15 +194,35 @@ impl<'a> ProcState<'a> {
                     _ => self.clone(),
                 },
                 ast::TypedCore::Let(l) => {
-                    let var_list = Vec::<VarInner>::try_from(&l.vars);
-                    log::debug!("{:#?}", var_list);
+                    // TODO handle the .expect properly (in a standard way)
+                    let var_list =
+                        Vec::<VarInner>::try_from(&l.vars).expect("Forked up conversion");
                     let arg = &l.arg;
                     let body = &l.body;
 
                     // Push-Let
-                    // let klet = Kont::Let(var_list, *arg, *body, self.k_addr.clone());
+                    let k_let = Kont::Let(
+                        var_list,
+                        ProgLoc { inner: body },
+                        self.env.clone(),
+                        self.k_addr.clone(),
+                    );
 
-                    self.clone()
+                    let k_addr = KAddr::new(
+                        pid.clone(),
+                        prog_loc.clone(),
+                        self.env.clone(),
+                        self.time.clone(),
+                    );
+
+                    store.kont.push(k_addr.clone(), k_let);
+
+                    return ProcState::new(
+                        ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
+                        self.env.clone(),
+                        k_addr,
+                        self.time.clone(),
+                    );
                 }
                 _ => self.clone(),
             },
@@ -228,12 +260,12 @@ impl<'a> VAddr<'a> {
 }
 
 // Value := Closure U+ Pid
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ClosureOrPid<'a> {
     Closure(Closure<'a>),
     Pid(Pid<'a>),
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Value<'a> {
     inner: ClosureOrPid<'a>,
 }
@@ -271,7 +303,7 @@ impl<'a> KAddr<'a> {
 //       | ProgLoc, Env, KAddr // Do
 //       | Stop
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Kont<'a> {
     Let(Vec<VarInner>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
@@ -300,7 +332,7 @@ impl<'a> Time<'a> {
 }
 
 // Closure := ProgLoc x Env
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Closure<'a> {
     prog_loc: ProgLoc<'a>,
     env: Env<'a>,

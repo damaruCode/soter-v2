@@ -13,7 +13,7 @@ use crate::ast::{AstList, TypedCore};
 pub struct ConversionError;
 
 /// Represents the possible types of var names
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum VarInner {
     String(String),
     Number(Number),

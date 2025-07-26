@@ -48,7 +48,8 @@ fn main() {
 
     let mut lambda_actor = abstract_state_space::State::init(&typed_core);
     lambda_actor = lambda_actor.step();
-    lambda_actor.step();
+    lambda_actor = lambda_actor.step();
+    log::debug!("{:#?}", lambda_actor);
 }
 
 #[cfg(test)]
