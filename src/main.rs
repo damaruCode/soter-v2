@@ -1,12 +1,40 @@
 pub mod abstract_state_space;
 pub mod ast;
+pub mod ast_helper;
 pub mod concrete_state_space;
 pub mod erlang;
 pub mod scripts;
 
 use std::env;
 
+use chrono::Utc;
+use log4rs::{
+    append::file::FileAppender,
+    config::{Appender, Root},
+    encode::pattern::PatternEncoder,
+    Config,
+};
+
 fn main() {
+    // Logging
+    let now = Utc::now();
+    let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
+
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build(logfile_path)
+        .unwrap();
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(
+            Root::builder()
+                .appender("logfile")
+                .build(log::LevelFilter::Debug),
+        )
+        .unwrap();
+    log4rs::init_config(config).unwrap();
+
+    // Main Logic
     let args: Vec<String> = env::args().collect();
     assert_eq!(args.len(), 2, "cargo run --release <file_path>.erl");
 
@@ -18,8 +46,10 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::type_core(core);
 
-    //scripts::enumerate(typed_core);
-    dbg!(typed_core);
+    let mut lambda_actor = abstract_state_space::State::init(&typed_core);
+    lambda_actor = lambda_actor.step();
+    lambda_actor = lambda_actor.step();
+    log::debug!("{:#?}", lambda_actor);
 }
 
 #[cfg(test)]

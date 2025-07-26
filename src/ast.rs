@@ -3,7 +3,7 @@ use serde_json::Map;
 use serde_json::Number;
 use serde_json::Value;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub enum TypedCore {
     //
     AstTuple(AstTuple<TypedCore>),
@@ -43,233 +43,234 @@ pub enum TypedCore {
     VarMap(VarMap),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstList<T> {
-    inner: Vec<T>,
+    pub inner: Vec<T>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstTuple<T> {
-    frst: Box<T>,
-    scnd: Box<T>,
+    pub frst: Box<T>,
+    pub scnd: Box<T>,
 }
 
 //-record(c_alias, {anno=[] :: list(), var :: cerl:cerl(),
 //		  pat :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Alias {
-    anno: AstList<TypedCore>,
-    var: Box<TypedCore>,
-    pat: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub var: Box<TypedCore>,
+    pub pat: Box<TypedCore>,
 }
 //-record(c_apply, {anno=[] :: list(), op :: cerl:cerl(),
 //		  args :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Apply {
-    anno: AstList<TypedCore>,
-    op: Box<TypedCore>,
-    args: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub op: Box<TypedCore>,
+    pub args: AstList<TypedCore>,
 }
 //-record(c_binary, {anno=[] :: list(), segments :: [cerl:c_bitstr()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Binary {
-    anno: AstList<TypedCore>,
-    segments: AstList<BitStr>,
+    pub anno: AstList<TypedCore>,
+    pub segments: AstList<BitStr>,
 }
 //-record(c_bitstr, {anno=[] :: list(), val :: cerl:cerl(),
 //		   size :: cerl:cerl(),
 //		   unit :: cerl:cerl(),
 //		   type :: cerl:cerl(),
 //		   flags :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct BitStr {
-    anno: AstList<TypedCore>,
-    val: Box<TypedCore>,
-    size: Box<TypedCore>,
-    unit: Box<TypedCore>,
-    r#type: Box<TypedCore>,
-    flags: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub val: Box<TypedCore>,
+    pub size: Box<TypedCore>,
+    pub unit: Box<TypedCore>,
+    pub r#type: Box<TypedCore>,
+    pub flags: Box<TypedCore>,
 }
 //-record(c_call, {anno=[] :: list(), module :: cerl:cerl(),
 //		 name :: cerl:cerl(),
 //		 args :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Call {
-    anno: AstList<TypedCore>,
-    module: Box<TypedCore>,
-    name: Box<TypedCore>,
-    args: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub module: Box<TypedCore>,
+    pub name: Box<TypedCore>,
+    pub args: AstList<TypedCore>,
 }
 //-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
 //		 clauses :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Case {
-    anno: AstList<TypedCore>,
-    arg: Box<TypedCore>,
-    clauses: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub arg: Box<TypedCore>,
+    pub clauses: AstList<TypedCore>,
 }
 //-record(c_catch, {anno=[] :: list(), body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Catch {
-    anno: AstList<TypedCore>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_clause, {anno=[] :: list(), pats :: [cerl:cerl()],
 //		   guard :: cerl:cerl(),
 //		   body :: cerl:cerl() | any()}). % todo
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Clause {
-    anno: AstList<TypedCore>,
-    pats: AstList<TypedCore>,
-    guard: Box<TypedCore>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub pats: AstList<TypedCore>,
+    pub guard: Box<TypedCore>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_cons, {anno=[] :: list(), hd :: cerl:cerl(),
 //		 tl :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Cons {
-    anno: AstList<TypedCore>,
-    hd: Box<TypedCore>,
-    tl: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub hd: Box<TypedCore>,
+    pub tl: Box<TypedCore>,
 }
 //-record(c_fun, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Fun {
-    anno: AstList<TypedCore>,
-    vars: AstList<TypedCore>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub vars: AstList<TypedCore>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_let, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		arg :: cerl:cerl(),
 //		body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Let {
-    anno: AstList<TypedCore>,
-    vars: AstList<TypedCore>,
-    arg: Box<TypedCore>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub vars: AstList<TypedCore>,
+    pub arg: Box<TypedCore>,
+    pub body: Box<TypedCore>,
 }
+
 //-record(c_letrec, {anno=[] :: list(),
 //       defs :: [{cerl:cerl(), cerl:cerl()}],
 //		   body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct LetRec {
-    anno: AstList<TypedCore>,
-    defs: AstList<AstTuple<TypedCore>>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub defs: AstList<AstTuple<TypedCore>>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_literal, {anno=[] :: list(), val :: any()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Literal {
-    anno: AstList<TypedCore>,
-    val: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub val: Box<TypedCore>,
 }
 //-record(c_map, {anno=[] :: list(),
 //		     arg=#c_literal{val=#{}} | cerl:c_var() | cerl:c_literal(), // NOTE maybe this ???
 //		     arg=#c_literal{val=#{}} :: cerl:c_var() | cerl:c_literal(),
 //		     es :: [cerl:c_map_pair()],
 //		     is_pat=false :: boolean()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct LiteralMap {
-    anno: AstList<TypedCore>,
-    arg: Literal,
-    es: AstList<MapPair>,
-    is_pat: bool,
+    pub anno: AstList<TypedCore>,
+    pub arg: Literal,
+    pub es: AstList<MapPair>,
+    pub is_pat: bool,
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct VarMap {
-    anno: AstList<TypedCore>,
-    arg: Var,
-    es: AstList<MapPair>,
-    is_pat: bool,
+    pub anno: AstList<TypedCore>,
+    pub arg: Var,
+    pub es: AstList<MapPair>,
+    pub is_pat: bool,
 }
 //-record(c_map_pair, {anno=[] :: list(),
 //	       op :: #c_literal{val::'assoc'} | #c_literal{val::'exact'},
 //		     key :: any(),              % todo
 //		     val :: any()}).            % todo
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct MapPair {
-    anno: AstList<TypedCore>,
-    op: Literal,
-    key: Box<TypedCore>,
-    val: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub op: Literal,
+    pub key: Box<TypedCore>,
+    pub val: Box<TypedCore>,
 }
 //-record(c_module, {anno=[] :: list(), name :: cerl:cerl(),
 //		   exports :: [cerl:cerl()],
 //		   attrs :: [{cerl:cerl(), cerl:cerl()}],
 //		   defs :: [{cerl:cerl(), cerl:cerl()}]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Module {
-    anno: AstList<TypedCore>,
-    name: Box<TypedCore>,
-    exports: AstList<TypedCore>,
-    attrs: AstList<AstTuple<TypedCore>>,
-    defs: AstList<AstTuple<TypedCore>>,
+    pub anno: AstList<TypedCore>,
+    pub name: Box<TypedCore>,
+    pub exports: AstList<TypedCore>,
+    pub attrs: AstList<AstTuple<TypedCore>>,
+    pub defs: AstList<AstTuple<TypedCore>>,
 }
 //-record(c_opaque, {anno=[] :: list(), val :: any()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Opaque {
-    anno: AstList<TypedCore>,
-    val: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub val: Box<TypedCore>,
 }
 //-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
 //		   args :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct PrimOp {
-    anno: AstList<TypedCore>,
-    name: Box<TypedCore>,
-    args: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub name: Box<TypedCore>,
+    pub args: AstList<TypedCore>,
 }
 //-record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
 //		    timeout :: cerl:cerl(),
 //		    action :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Receive {
-    anno: AstList<TypedCore>,
-    clauses: AstList<TypedCore>,
-    timeout: Box<TypedCore>,
-    action: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub clauses: AstList<TypedCore>,
+    pub timeout: Box<TypedCore>,
+    pub action: Box<TypedCore>,
 }
 //-record(c_seq, {anno=[] :: list(), arg :: cerl:cerl() | any(), % todo
 //		body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Seq {
-    anno: AstList<TypedCore>,
-    arg: Box<TypedCore>,
-    body: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub arg: Box<TypedCore>,
+    pub body: Box<TypedCore>,
 }
 //-record(c_try, {anno=[] :: list(), arg :: cerl:cerl(),
 //		vars :: [cerl:cerl()],
 //		body :: cerl:cerl(),
 //		evars :: [cerl:cerl()],
 //		handler :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Try {
-    anno: AstList<TypedCore>,
-    arg: Box<TypedCore>,
-    vars: AstList<TypedCore>,
-    body: Box<TypedCore>,
-    evars: AstList<TypedCore>,
-    handler: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub arg: Box<TypedCore>,
+    pub vars: AstList<TypedCore>,
+    pub body: Box<TypedCore>,
+    pub evars: AstList<TypedCore>,
+    pub handler: Box<TypedCore>,
 }
 //-record(c_tuple, {anno=[] :: list(), es :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Tuple {
-    anno: AstList<TypedCore>,
-    es: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub es: AstList<TypedCore>,
 }
 //-record(c_values, {anno=[] :: list(), es :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Values {
-    anno: AstList<TypedCore>,
-    es: AstList<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub es: AstList<TypedCore>,
 }
 //-record(c_var, {anno=[] :: list(), name :: cerl:var_name()}).
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Var {
-    anno: AstList<TypedCore>,
-    name: Box<TypedCore>,
+    pub anno: AstList<TypedCore>,
+    pub name: Box<TypedCore>,
 }
 
 pub fn type_core(core: Value) -> TypedCore {

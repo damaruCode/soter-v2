@@ -1,0 +1,84 @@
+module 'example' ['main'/0,
+                  'module_info'/0,
+                  'module_info'/1]
+    attributes [%% Line 1
+                'file' =
+                    %% Line 1
+                    [{[101|[120|[97|[109|[112|[108|[101|[46|[101|[114|[108]]]]]]]]]]],1}],
+                %% Line 3
+                'compile' =
+                    %% Line 3
+                    ['export_all']]
+'main'/0 =
+    %% Line 5
+    ( fun () ->
+          let <_0> =
+              fun () ->
+                  ( letrec
+                        'recv$^1'/0 =
+                            fun () ->
+                                let <_5,_3> =
+                                    primop 'recv_peek_message'
+                                        ()
+                                in  case _5 of
+                                      <'true'> when 'true' ->
+                                          %% Line 6
+                                          case _3 of
+                                            <{'a',X}> when 'true' ->
+                                                do  primop 'remove_message'
+                                                        ()
+                                                    call 'erlang':'!'
+                                                        (X, 'ok')
+                                            ( <Other> when 'true' ->
+                                                  do  primop 'recv_next'
+                                                          ()
+                                                      ( apply 'recv$^1'/0
+                                                            ()
+                                                        -| ['dialyzer_ignore'] )                                              -| ['compiler_generated','dialyzer_ignore'] )
+                                          end
+                                      ( <'false'> when 'true' ->
+                                            let <_4> =
+                                                primop 'recv_wait_timeout'
+                                                    ('infinity')
+                                            in  case _4 of
+                                                  <'true'> when 'true' ->
+                                                      'true'
+                                                  ( <'false'> when 'true' ->
+                                                        ( apply 'recv$^1'/0
+                                                              ()
+                                                          -| ['dialyzer_ignore'] )
+                                                    -| ['dialyzer_ignore'] )
+                                                end
+                                        -| ['dialyzer_ignore'] )
+                                    end
+                    in  ( apply 'recv$^1'/0
+                              ()
+                          -| ['dialyzer_ignore'] )
+                    -| ['letrec_goto','no_inline'] )
+          in  let <P> =
+                  call %% Line 6
+                       'erlang':%% Line 6
+                                'spawn'
+                      (%% Line 6
+                       _0)
+              in  let <_2> =
+                      call %% Line 7
+                           'erlang':%% Line 7
+                                    'self'
+                          ()
+                  in  %% Line 7
+                      call 'erlang':'!'
+                          (P, {'a',_2})
+      -| [{'function',{'main',0}}] )
+'module_info'/0 =
+    ( fun () ->
+          call 'erlang':'get_module_info'
+              ('example')
+      -| [{'function',{'module_info',0}}] )
+'module_info'/1 =
+    ( fun (_0) ->
+          call 'erlang':'get_module_info'
+              ('example', ( _0
+                            -| [{'function',{'module_info',1}}] ))
+      -| [{'function',{'module_info',1}}] )
+end
