@@ -1,6 +1,7 @@
 #![allow(warnings)]
 
 use crate::ast;
+use crate::ast_helper::VarInner;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -181,12 +182,13 @@ impl<'a> ProcState<'a> {
                     _ => self.clone(),
                 },
                 ast::TypedCore::Let(l) => {
-                    let var_list = VarInner::from(l.vars);
-                    let arg = l.arg;
-                    let body = l.body;
+                    let var_list = Vec::<VarInner>::try_from(&l.vars);
+                    log::debug!("{:#?}", var_list);
+                    let arg = &l.arg;
+                    let body = &l.body;
 
                     // Push-Let
-                    let klet = Kont::Let(var_list, arg, body, self.k_addr.clone());
+                    // let klet = Kont::Let(var_list, *arg, *body, self.k_addr.clone());
 
                     self.clone()
                 }
@@ -271,7 +273,7 @@ impl<'a> KAddr<'a> {
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug)]
 pub enum Kont<'a> {
-    Let(Vec<ast::Var<'a>>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Let(Vec<VarInner>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Stop,
 }
