@@ -14,7 +14,7 @@ use std::hash::Hash;
 // Procs := Pid -> P(ProcState)
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct State<'a> {
     pub procs: Procs<'a>,
     pub mailboxes: Mailboxes<'a>,
@@ -33,33 +33,31 @@ impl<'a> State<'a> {
     pub fn step(&self) -> Self {
         let mut new_state = self.clone();
 
-        for (pid, proc_states) in &self.procs.inner {
+        for (pid, proc_state) in &self.procs.inner {
             let set = new_state.procs.inner.get_mut(pid).unwrap();
             set.clear();
-            for (proc_state) in proc_states {
-                set.insert(proc_state.step(pid, &mut new_state.store));
-            }
+            set.insert(proc_state.step(pid, &mut new_state.store));
         }
 
         new_state
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Procs<'a> {
-    pub inner: HashMap<Pid<'a>, HashSet<ProcState<'a>>>,
+    pub inner: SetMap<Pid<'a>, ProcState<'a>>,
 }
 impl<'a> Procs<'a> {
     fn init(prog_loc: ProgLoc<'a>) -> Self {
         Procs {
-            inner: HashMap::from([(
+            inner: SetMap::from([(
                 Pid::init(prog_loc.clone()),
                 HashSet::from([ProcState::init(prog_loc.clone())]),
             )]),
         }
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mailboxes<'a> {
     pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
 }
@@ -70,15 +68,19 @@ impl<'a> Mailboxes<'a> {
         }
     }
 }
-#[derive(Clone, Debug)]
-pub struct StoreMap<K, V> {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SetMap<K, V>
+where
+    K: PartialEq + Eq + Hash,
+    V: PartialEq + Eq + Hash,
+{
     inner: HashMap<K, HashSet<V>>,
 }
 // NOTE Might have to revisit the actual implementation of Eq on the constituent parts; Otherwise
 // keys that should be identical will not be handled as such!
-impl<K: Clone + Eq + Hash, V: Clone + Eq + Hash> StoreMap<K, V> {
+impl<K: Clone + Eq + Hash, V: Clone + Eq + Hash> SetMap<K, V> {
     fn init() -> Self {
-        StoreMap {
+        SetMap {
             inner: HashMap::new(),
         }
     }
@@ -90,17 +92,86 @@ impl<K: Clone + Eq + Hash, V: Clone + Eq + Hash> StoreMap<K, V> {
             .or_insert_with(HashSet::new) // or create a new one
             .insert(value);
     }
+
+    fn get(&self, key: &K) -> Option<&HashSet<V>> {
+        self.inner.get(key)
+    }
+
+    fn get_mut(&mut self, key: &K) -> Option<&mut HashSet<V>> {
+        self.inner.get_mut(key)
+    }
 }
-#[derive(Clone, Debug)]
+impl<K, V, const N: usize> From<[(K, HashSet<V>); N]> for SetMap<K, V>
+where
+    K: Eq + Hash,
+    V: Eq + Hash,
+{
+    fn from(value: [(K, HashSet<V>); N]) -> Self {
+        SetMap {
+            inner: HashMap::from(value),
+        }
+    }
+}
+pub struct SetMapIterator<'a, K, V> {
+    map_iter: std::collections::hash_map::Iter<'a, K, HashSet<V>>,
+    set_iter: Option<std::collections::hash_set::Iter<'a, V>>,
+    current_key: Option<&'a K>,
+}
+impl<'a, K, V> Iterator for SetMapIterator<'a, K, V>
+where
+    V: Eq + Hash,
+    K: Eq + Hash,
+{
+    type Item = (&'a K, &'a V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(iter) = &mut self.set_iter {
+                if let Some(value) = iter.next() {
+                    return Some((self.current_key.unwrap(), value));
+                } else {
+                    self.set_iter = None; // Move to next key
+                }
+            }
+
+            if let Some((key, set)) = self.map_iter.next() {
+                self.current_key = Some(key);
+                self.set_iter = Some(set.iter());
+            } else {
+                return None; // No more elements
+            }
+        }
+    }
+}
+
+impl<'a, K, V> IntoIterator for &'a SetMap<K, V>
+where
+    K: 'a + Eq + Hash,
+    V: 'a + Eq + Hash,
+{
+    type Item = (&'a K, &'a V);
+    type IntoIter = SetMapIterator<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let map_iter = self.inner.iter();
+        SetMapIterator {
+            map_iter,
+            set_iter: None,
+            current_key: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Store<'a> {
-    pub kont: StoreMap<KAddr<'a>, Kont<'a>>,
-    pub value: StoreMap<VAddr<'a>, Value<'a>>,
+    pub kont: SetMap<KAddr<'a>, Kont<'a>>,
+    pub value: SetMap<VAddr<'a>, Value<'a>>,
 }
 impl Store<'_> {
     fn init() -> Self {
         Store {
-            kont: StoreMap::init(),
-            value: StoreMap::init(),
+            kont: SetMap::init(),
+            value: SetMap::init(),
         }
     }
 }
@@ -224,6 +295,20 @@ impl<'a> ProcState<'a> {
                         self.time.clone(),
                     );
                 }
+                ast::TypedCore::Fun(f) => {
+                    // NOTE think through what the proper handling of this option type should be in
+                    // this scenario
+                    let konts = store.kont.get(&self.k_addr);
+                    match konts {
+                        Some(set) => {
+                            // NOTE need to consider each possible continuation
+                            // non-deterministically
+                        }
+                        None => panic!("Dafuq"),
+                    }
+
+                    self.clone()
+                }
                 _ => self.clone(),
             },
         }
@@ -231,7 +316,7 @@ impl<'a> ProcState<'a> {
 }
 
 // Mailbox := P(Value)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Mailbox<'a> {
     inner: HashSet<Value<'a>>,
 }
