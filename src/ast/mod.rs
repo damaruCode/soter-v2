@@ -1,3 +1,5 @@
+pub mod helper;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
 use serde_json::Number;

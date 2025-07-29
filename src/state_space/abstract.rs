@@ -1,7 +1,7 @@
 #![allow(warnings)]
 
 use crate::ast;
-use crate::ast_helper::VarInner;
+use crate::ast::helper::VarInner;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;

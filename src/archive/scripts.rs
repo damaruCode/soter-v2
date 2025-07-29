@@ -1,5 +1,5 @@
-use crate::abstract_state_space;
 use crate::ast::TypedCore;
+use crate::state_space::r#abstract;
 
 use std::collections::HashMap;
 use std::collections::HashSet;

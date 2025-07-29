@@ -1,6 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use crate::abstract_state_space::ProcState;
+//use crate::abstract_state_space::ProcState;
+//
+pub enum TransitionError {
+    InvalidTransition,
+}
 
 pub trait State<'a>: Clone + Debug + PartialEq {}
 impl<'a, T: Clone + Debug + PartialEq> State<'a> for T {}
@@ -9,9 +13,8 @@ pub trait Transition<'a, S: State<'a>> {
     type Error;
 
     fn try_apply(&self, s: &S) -> Result<S, Self::Error>;
-
-    fn is_valid(&self, s: &S) -> bool;
 }
+
 pub struct TypedTransition<'a, S, F>
 where
     S: State<'a>,
@@ -42,13 +45,6 @@ where
     fn try_apply(&self, s: &S) -> Result<S, Self::Error> {
         (self.transition_fn)(s)
     }
-
-    fn is_valid(&self, s: &S) -> bool {
-        match (self.transition_fn)(s) {
-            Ok(_) => true,
-            Err(_) => false,
-        }
-    }
 }
 
 pub struct TransitionSystem<'a, S, F>
@@ -75,19 +71,13 @@ where
 
     fn try_apply(&self, s: &S) -> Result<S, TransitionError> {
         for transition in &self.transitions {
-            if transition.is_valid(s) {
-                match transition.try_apply(s) {
-                    Ok(new_state) => {
-                        return Ok(new_state);
-                    }
-                    Err(e) => return Err(e),
+            match transition.try_apply(s) {
+                Ok(new_state) => {
+                    return Ok(new_state);
                 }
+                Err(_e) => {}
             }
         }
         Err(TransitionError::InvalidTransition)
     }
-}
-
-pub enum TransitionError {
-    InvalidTransition,
 }

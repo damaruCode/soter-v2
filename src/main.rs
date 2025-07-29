@@ -1,9 +1,7 @@
-pub mod abstract_state_space;
 pub mod ast;
-pub mod ast_helper;
-pub mod concrete_state_space;
 pub mod erlang;
-pub mod scripts;
+pub mod state_space;
+pub mod transition_systems;
 
 use std::env;
 
@@ -16,6 +14,9 @@ use log4rs::{
 };
 
 fn main() {
+    //TEST
+    //let test = transition_systems::transition_system::TransitionSystem::init();
+
     // Logging
     let now = Utc::now();
     let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
@@ -46,7 +47,7 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::type_core(core);
 
-    let mut lambda_actor = abstract_state_space::State::init(&typed_core);
+    let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
     lambda_actor = lambda_actor.step();
     lambda_actor = lambda_actor.step();
     log::debug!("{:#?}", lambda_actor);
