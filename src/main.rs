@@ -49,6 +49,8 @@ fn main() {
     lambda_actor = lambda_actor.step();
     lambda_actor = lambda_actor.step();
     log::debug!("{:#?}", lambda_actor);
+
+    let _analyzer = analyzer::Analyzer::new();
 }
 
 #[cfg(test)]

@@ -28,7 +28,7 @@ where
     S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
-    fn new(transition_fn: F) -> Self {
+    pub fn new(transition_fn: F) -> Self {
         Self {
             transition_fn,
             _state: PhantomData,
@@ -73,7 +73,7 @@ where
         self.transitions.push(transition);
     }
 
-    fn try_apply(&self, s: &S) -> Result<S, TransitionError> {
+    pub fn try_apply(&self, s: &S) -> Result<S, TransitionError> {
         for transition in &self.transitions {
             match transition.apply(s) {
                 Ok(new_state) => {
