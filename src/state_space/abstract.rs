@@ -28,19 +28,6 @@ impl<'a> State<'a> {
             store: Store::init(),
         }
     }
-
-    // TODO
-    pub fn step(&self) -> Self {
-        let mut new_state = self.clone();
-
-        for (pid, proc_state) in &self.procs.inner {
-            let set = new_state.procs.inner.get_mut(pid).unwrap();
-            set.clear();
-            set.insert(proc_state.step(pid, &mut new_state.store));
-        }
-
-        new_state
-    }
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -79,25 +66,28 @@ where
 // NOTE Might have to revisit the actual implementation of Eq on the constituent parts; Otherwise
 // keys that should be identical will not be handled as such!
 impl<K: Clone + Eq + Hash, V: Clone + Eq + Hash> SetMap<K, V> {
-    fn init() -> Self {
+    pub fn init() -> Self {
         SetMap {
             inner: HashMap::new(),
         }
     }
 
     /// Inserts a new value into the value set for the given key
-    fn push(&mut self, key: K, value: V) {
+    pub fn push(&mut self, key: K, value: V) {
         self.inner
             .entry(key) // Either take the existent HashSet
             .or_insert_with(HashSet::new) // or create a new one
             .insert(value);
     }
 
-    fn get(&self, key: &K) -> Option<&HashSet<V>> {
+    /// Returns a reference to the set of values associated with a given key, if the key exists
+    pub fn get(&self, key: &K) -> Option<&HashSet<V>> {
         self.inner.get(key)
     }
 
-    fn get_mut(&mut self, key: &K) -> Option<&mut HashSet<V>> {
+    /// Returns a mutable reference to the the set of values associated with a given key, if the
+    /// key exists
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut HashSet<V>> {
         self.inner.get_mut(key)
     }
 }

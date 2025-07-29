@@ -45,12 +45,12 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::type_core(core);
 
-    let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
-    lambda_actor = lambda_actor.step();
-    lambda_actor = lambda_actor.step();
-    log::debug!("{:#?}", lambda_actor);
+    // let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
+    // lambda_actor = lambda_actor.step();
+    // lambda_actor = lambda_actor.step();
+    // log::debug!("{:#?}", lambda_actor);
 
-    let _analyzer = analyzer::Analyzer::new();
+    let _analyzer = analyzer::Analyzer::new(&typed_core);
 }
 
 #[cfg(test)]
