@@ -1,29 +1,31 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 pub enum TransitionError {
-    InvalidTransition,
+    ErroneousTransition,
+    NoValidTransition,
 }
 
-pub trait State<'a>: Clone + Debug + PartialEq {}
-impl<'a, T: Clone + Debug + PartialEq> State<'a> for T {}
+pub trait State: Clone + Debug + PartialEq {}
+impl<T: Clone + Debug + PartialEq> State for T {}
 
-pub trait Transition<'a, S: State<'a>> {
+pub trait Transition<S: State> {
     type Error;
 
-    fn try_apply(&self, s: &S) -> Result<S, Self::Error>;
+    fn apply(&self, s: &S) -> Result<S, Self::Error>;
+    fn is_valid(&self, s: &S) -> bool;
 }
 
-pub struct TypedTransition<'a, S, F>
+pub struct TypedTransition<S, F>
 where
-    S: State<'a>,
+    S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
     transition_fn: F,
-    _state: PhantomData<&'a S>,
+    _state: PhantomData<S>,
 }
-impl<'a, S, F> TypedTransition<'a, S, F>
+impl<S, F> TypedTransition<S, F>
 where
-    S: State<'a>,
+    S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
     fn new(transition_fn: F) -> Self {
@@ -33,28 +35,32 @@ where
         }
     }
 }
-impl<'a, S, F> Transition<'a, S> for TypedTransition<'a, S, F>
+impl<S, F> Transition<S> for TypedTransition<S, F>
 where
-    S: State<'a>,
+    S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
     type Error = TransitionError;
 
-    fn try_apply(&self, s: &S) -> Result<S, Self::Error> {
+    fn apply(&self, s: &S) -> Result<S, Self::Error> {
         (self.transition_fn)(s)
+    }
+
+    fn is_valid(&self, s: &S) -> bool {
+        (self.transition_fn)(s).is_ok()
     }
 }
 
-pub struct TransitionSystem<'a, S, F>
+pub struct TransitionSystem<S, F>
 where
-    S: State<'a>,
+    S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
-    transitions: Vec<TypedTransition<'a, S, F>>,
+    transitions: Vec<TypedTransition<S, F>>,
 }
-impl<'a, S, F> TransitionSystem<'a, S, F>
+impl<S, F> TransitionSystem<S, F>
 where
-    S: State<'a>,
+    S: State,
     F: Fn(&S) -> Result<S, TransitionError>,
 {
     pub fn init() -> Self {
@@ -63,19 +69,19 @@ where
         }
     }
 
-    pub fn register_transition(&mut self, transition: TypedTransition<'a, S, F>) {
+    pub fn register_transition(&mut self, transition: TypedTransition<S, F>) {
         self.transitions.push(transition);
     }
 
     fn try_apply(&self, s: &S) -> Result<S, TransitionError> {
         for transition in &self.transitions {
-            match transition.try_apply(s) {
+            match transition.apply(s) {
                 Ok(new_state) => {
                     return Ok(new_state);
                 }
-                Err(_e) => {}
+                Err(e) => return Err(e),
             }
         }
-        Err(TransitionError::InvalidTransition)
+        Err(TransitionError::NoValidTransition)
     }
 }
