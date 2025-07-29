@@ -1,7 +1,8 @@
+pub mod analyzer;
 pub mod ast;
 pub mod erlang;
 pub mod state_space;
-pub mod transition_systems;
+pub mod transition_system;
 
 use std::env;
 
@@ -14,9 +15,6 @@ use log4rs::{
 };
 
 fn main() {
-    //TEST
-    //let test = transition_systems::transition_system::TransitionSystem::init();
-
     // Logging
     let now = Utc::now();
     let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());

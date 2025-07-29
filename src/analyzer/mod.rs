@@ -1,6 +1,6 @@
 use crate::{
     state_space::r#abstract::ProcState,
-    transition_systems::transition_system::{TransitionError, TransitionSystem},
+    transition_system::{TransitionError, TransitionSystem},
 };
 
 // pub const PROC_TRANSITION_SYSTEM: TransitionSystem<

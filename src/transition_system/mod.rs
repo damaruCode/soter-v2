@@ -1,7 +1,5 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-//use crate::abstract_state_space::ProcState;
-//
 pub enum TransitionError {
     InvalidTransition,
 }
