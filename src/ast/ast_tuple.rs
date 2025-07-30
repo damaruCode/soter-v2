@@ -10,8 +10,8 @@ impl From<Vec<Value>> for AstTuple<TypedCore> {
     fn from(tuple: Vec<Value>) -> Self {
         assert!(tuple.len() == 2);
         AstTuple {
-            frst: Box::new(type_core(tuple.get(0).unwrap().clone())),
-            scnd: Box::new(type_core(tuple.get(1).unwrap().clone())),
+            frst: Box::new(TypedCore::from(tuple.get(0).unwrap().clone())),
+            scnd: Box::new(TypedCore::from(tuple.get(1).unwrap().clone())),
         }
     }
 }

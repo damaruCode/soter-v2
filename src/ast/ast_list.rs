@@ -40,7 +40,7 @@ impl From<Vec<Value>> for AstList<BitStr> {
     fn from(vec: Vec<Value>) -> AstList<BitStr> {
         let mut list = Vec::new();
         for val in vec {
-            list.push(type_bitstr(val).unwrap());
+            list.push(BitStr::from(val));
         }
         AstList { inner: list }
     }
@@ -50,7 +50,7 @@ impl From<Vec<Value>> for AstList<MapPair> {
     fn from(vec: Vec<Value>) -> AstList<MapPair> {
         let mut list = Vec::new();
         for val in vec {
-            list.push(type_mappair(val).unwrap());
+            list.push(MapPair::from(val));
         }
         AstList { inner: list }
     }
