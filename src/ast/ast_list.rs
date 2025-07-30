@@ -1,3 +1,4 @@
+use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -12,5 +13,35 @@ impl<T> AstList<T> {
 
     pub fn push(&mut self, value: T) {
         self.inner.push(value);
+    }
+}
+
+impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
+    fn from(vec: Vec<Value>) -> AstList<AstTuple<TypedCore>> {
+        let mut list = Vec::new();
+        for val in vec {
+            list.push(AstTuple::from(val.as_array().unwrap().to_vec()));
+        }
+        AstList { inner: list }
+    }
+}
+
+impl From<Vec<Value>> for AstList<BitStr> {
+    fn from(vec: Vec<Value>) -> AstList<BitStr> {
+        let mut list = Vec::new();
+        for val in vec {
+            list.push(type_bitstr(val).unwrap());
+        }
+        AstList { inner: list }
+    }
+}
+
+impl From<Vec<Value>> for AstList<MapPair> {
+    fn from(vec: Vec<Value>) -> AstList<MapPair> {
+        let mut list = Vec::new();
+        for val in vec {
+            list.push(type_mappair(val).unwrap());
+        }
+        AstList { inner: list }
     }
 }
