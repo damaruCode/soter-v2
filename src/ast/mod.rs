@@ -102,6 +102,10 @@ pub enum TypedCore {
     VarMap(VarMap),
 }
 
+fn type_bool(value: Value) -> Option<bool> {
+    value.as_bool()
+}
+
 impl From<Value> for TypedCore {
     fn from(core: Value) -> Self {
         match core {
@@ -230,7 +234,7 @@ impl From<Map<String, Value>> for TypedCore {
                 return TypedCore::Literal(l);
             }
             "c_map" => {
-                let lit = Literal::from(map.get("arg").unwrap().clone());
+                let lit = Literal::try_from(map.get("arg").unwrap().clone());
                 match lit {
                     Ok(lit) => {
                         let lm = LiteralMap {
@@ -355,8 +359,4 @@ impl From<Map<String, Value>> for TypedCore {
             type_name => panic!("{} not impled", type_name),
         };
     }
-}
-
-fn type_bool(value: Value) -> Option<bool> {
-    value.as_bool()
 }
