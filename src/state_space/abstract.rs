@@ -1,6 +1,6 @@
 #![allow(warnings)]
 
-use crate::ast;
+use crate::ast::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -20,7 +20,7 @@ pub struct State<'a> {
     pub store: Store<'a>,
 }
 impl<'a> State<'a> {
-    pub fn init(ast: &'a ast::TypedCore) -> Self {
+    pub fn init(ast: &'a TypedCore) -> Self {
         State {
             procs: Procs::init(ProgLoc::init(ast)),
             mailboxes: Mailboxes::init(),
@@ -237,11 +237,11 @@ impl<'a> ProcState<'a> {
     //         ProgLocOrPid::Pid(ref pid) => self.clone(),
     //         ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
     //             // NOTE could have more than one def
-    //             ast::TypedCore::Module(module) => match &*module.defs.inner[0].scnd {
-    //                 ast::TypedCore::Fun(fun) => match &*fun.body {
+    //             TypedCore::Module(module) => match &*module.defs.inner[0].scnd {
+    //                 TypedCore::Fun(fun) => match &*fun.body {
     //                     // NOTE could have more clauses than one
-    //                     ast::TypedCore::Case(case) => match &case.clauses.inner[0] {
-    //                         ast::TypedCore::Clause(clause) => {
+    //                     TypedCore::Case(case) => match &case.clauses.inner[0] {
+    //                         TypedCore::Clause(clause) => {
     //                             return ProcState::new(
     //                                 // NOTE the pattern and guard of the clause could be
     //                                 // interesting in general
@@ -257,7 +257,7 @@ impl<'a> ProcState<'a> {
     //                 },
     //                 _ => self.clone(),
     //             },
-    //             ast::TypedCore::Let(l) => {
+    //             TypedCore::Let(l) => {
     //                 // TODO handle the .expect properly (in a standard way)
     //                 let var_list =
     //                     Vec::<VarInner>::try_from(&l.vars).expect("Forked up conversion");
@@ -288,7 +288,7 @@ impl<'a> ProcState<'a> {
     //                     self.time.clone(),
     //                 );
     //             }
-    //             ast::TypedCore::Fun(f) => {
+    //             TypedCore::Fun(f) => {
     //                 // NOTE think through what the proper handling of this option type should be in
     //                 // this scenario
     //                 let konts = store.kont.get(&self.k_addr);
@@ -383,7 +383,7 @@ impl<'a> KAddr<'a> {
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Kont<'a> {
-    Let(Vec<Var<'a>>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Let(Vec<VarInner>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Stop,
 }
@@ -431,22 +431,22 @@ impl Env<'_> {
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Var<'a> {
-    inner: &'a ast::Var,
+    inner: VarInner,
 }
 
 // NOTE this references the Exps in the Ast
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct ProgLoc<'a> {
-    inner: &'a ast::TypedCore,
+    inner: &'a TypedCore,
 }
 impl<'a> ProgLoc<'a> {
-    pub fn new(inner: &'a ast::TypedCore) -> Self {
+    pub fn new(inner: &'a TypedCore) -> Self {
         ProgLoc { inner }
     }
-    pub fn init(ast: &'a ast::TypedCore) -> Self {
+    pub fn init(ast: &'a TypedCore) -> Self {
         ProgLoc { inner: ast }
     }
-    pub fn get(&self) -> &'a ast::TypedCore {
+    pub fn get(&self) -> &'a TypedCore {
         self.inner
     }
 }
@@ -455,5 +455,5 @@ impl<'a> ProgLoc<'a> {
 // free vars anymore
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Data<'a> {
-    inner: &'a ast::TypedCore,
+    inner: &'a TypedCore,
 }
