@@ -1,44 +1,49 @@
-use crate::ast::TypedCore;
-use crate::state_space::r#abstract::{KAddr, Kont, ProcState, ProgLoc, ProgLocOrPid, State};
-use crate::transition_system::{TransitionError, TransitionSystem, TypedTransition};
+mod abs_push_let;
+
+use abs_push_let::AbsPushLet;
+
+use crate::state_space::r#abstract::{ProcState, SetMap, State};
+use crate::transition_system::{TransitionError, TransitionSystem};
 
 pub struct Analyzer<'a> {
     current_program_state: State<'a>,
-    process_transition_system: TransitionSystem<
-        ProcState<'a>,
-        fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
-    >,
+    transition_system: TransitionSystem<TransitionState<'a>>,
 }
-
 impl<'a> Analyzer<'a> {
-    pub fn new(&self, ast: &'a TypedCore) -> Self {
-        let mut process_transition_system: TransitionSystem<
-            ProcState<'a>,
-            fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
-        > = TransitionSystem::init();
+    pub fn new(program_state: State<'static>) -> Self {
+        let mut transition_system: TransitionSystem<TransitionState<'a>> = TransitionSystem::init();
 
-        process_transition_system.register_transition(TypedTransition::new(/* NOTE dafuq */));
+        // let t_push_let = AbsPushLet::new();
+        // transition_system.register_transition(t_push_let);
 
         Analyzer {
-            current_program_state: State::init(ast),
-            process_transition_system,
+            current_program_state: program_state,
+            transition_system,
         }
     }
 
     pub fn step(&self) -> Result<State, TransitionError> {
-        let mut new_state = self.current_program_state.clone();
+        let mut next_program_state = self.current_program_state.clone();
+        next_program_state.procs.inner = SetMap::init(); // clear the setmap; we will refill it
+                                                         // with the new process states
 
         for (pid, proc_state) in &self.current_program_state.procs.inner {
-            let set = new_state.procs.inner.get_mut(pid).unwrap();
-            set.clear();
+            let transition_state =
+                TransitionState::new(proc_state.clone(), next_program_state.clone());
 
-            match self.process_transition_system.try_apply(proc_state) {
-                Ok(new_proc_state) => set.insert(new_proc_state),
+            match self.transition_system.try_apply(&transition_state) {
+                Ok(new_transition_state) => {
+                    next_program_state = new_transition_state.program_state;
+                    next_program_state
+                        .procs
+                        .inner
+                        .push(pid.clone(), new_transition_state.process_state);
+                }
                 Err(e) => return Err(e),
             };
         }
 
-        Ok(new_state)
+        Ok(next_program_state)
     }
 
     // ABS_NAME
@@ -53,46 +58,22 @@ impl<'a> Analyzer<'a> {
     // ABS_PUSH_DO
     // ABS_POP_DO
     // ABS_PUSH_LET
-    fn t_push_let(proc_state: &'a ProcState) -> Result<ProcState<'a>, TransitionError> {
-        if let ProgLocOrPid::ProgLoc(ref prog_loc) = proc_state.prog_loc_or_pid {
-            if let TypedCore::Let(l) = prog_loc.get() {
-                // TODO handle the .expect properly (in a standard way)
-                let var_list = l.vars;
-                let arg = &l.arg;
-                let body = &l.body;
-
-                // Push-Let
-                let k_let = Kont::Let(
-                    var_list,
-                    ProgLoc::new(body),
-                    proc_state.env.clone(),
-                    proc_state.k_addr.clone(),
-                );
-
-                let k_addr = KAddr::new(
-                    proc_state.pid.clone(),
-                    prog_loc.clone(),
-                    proc_state.env.clone(),
-                    proc_state.time.clone(),
-                );
-
-                store.kont.push(k_addr.clone(), k_let); // TODO think about how to reference the
-                                                        // new state
-
-                return Ok(ProcState::new(
-                    proc_state.pid.clone(),
-                    ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
-                    proc_state.env.clone(),
-                    k_addr,
-                    proc_state.time.clone(),
-                ));
-            }
-        }
-
-        Err(TransitionError::ErroneousTransition)
-    }
     // ABS_POP_LET_CLOSURE
     // ABS_POP_LET_PID
     // ABS_POP_LET_VALUEADDR
     // ABS_POP_LET_VALUELIST
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TransitionState<'a> {
+    pub process_state: ProcState<'a>,
+    pub program_state: State<'a>,
+}
+impl<'a> TransitionState<'a> {
+    fn new(process_state: ProcState<'a>, program_state: State<'a>) -> Self {
+        TransitionState {
+            process_state,
+            program_state,
+        }
+    }
 }
