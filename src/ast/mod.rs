@@ -109,7 +109,7 @@ impl From<Value> for TypedCore {
             Value::Bool(bool) => TypedCore::Bool(bool),
             Value::Number(number) => TypedCore::Number(number),
             Value::String(string) => TypedCore::String(string),
-            Value::Array(vec) => TypedCore::AstList(AstList::<TypedCore>::from(vec)),
+            Value::Array(vec) => TypedCore::AstList(AstList::from(vec)),
             Value::Object(map) => TypedCore::from(map),
         }
     }
@@ -120,9 +120,7 @@ impl From<Map<String, Value>> for TypedCore {
         match map.get("type").unwrap().as_str().unwrap() {
             "c_alias" => {
                 let a = Alias {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     var: Box::new(TypedCore::from(map.get("var").unwrap().clone())),
                     pat: Box::new(TypedCore::from(map.get("pat").unwrap().clone())),
                 };
@@ -130,21 +128,15 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_apply" => {
                 let a = Apply {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     op: Box::new(TypedCore::from(map.get("op").unwrap().clone())),
-                    args: AstList::<TypedCore>::from(
-                        map.get("args").unwrap().as_array().unwrap().clone(),
-                    ),
+                    args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::Apply(a);
             }
             "c_binary" => {
                 let b = Binary {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     segments: AstList::<BitStr>::from(
                         map.get("segments").unwrap().as_array().unwrap().clone(),
                     ),
@@ -153,9 +145,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_bitstr" => {
                 let bs = BitStr {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
                     size: Box::new(TypedCore::from(map.get("size").unwrap().clone())),
                     unit: Box::new(TypedCore::from(map.get("unit").unwrap().clone())),
@@ -166,46 +156,32 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_call" => {
                 let c = Call {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     module: Box::new(TypedCore::from(map.get("module").unwrap().clone())),
                     name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
-                    args: AstList::<TypedCore>::from(
-                        map.get("args").unwrap().as_array().unwrap().clone(),
-                    ),
+                    args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::Call(c);
             }
             "c_case" => {
                 let c = Case {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
-                    clauses: AstList::<TypedCore>::from(
-                        map.get("clauses").unwrap().as_array().unwrap().clone(),
-                    ),
+                    clauses: AstList::from(map.get("clauses").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::Case(c);
             }
             "c_catch" => {
                 let c = Catch {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
                 };
                 return TypedCore::Catch(c);
             }
             "c_clause" => {
                 let c = Clause {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
-                    pats: AstList::<TypedCore>::from(
-                        map.get("pats").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+                    pats: AstList::from(map.get("pats").unwrap().as_array().unwrap().clone()),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
                     guard: Box::new(TypedCore::from(map.get("guard").unwrap().clone())),
                 };
@@ -213,9 +189,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_cons" => {
                 let c = Cons {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     hd: Box::new(TypedCore::from(map.get("hd").unwrap().clone())),
                     tl: Box::new(TypedCore::from(map.get("tl").unwrap().clone())),
                 };
@@ -223,21 +197,15 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_fun" => {
                 let f = Fun {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
-                    vars: AstList::<TypedCore>::from(
-                        map.get("vars").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+                    vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
                 };
                 return TypedCore::Fun(f);
             }
             "c_let" => {
                 let l = Let {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     vars: map.get("vars").unwrap().as_array().unwrap().clone().into(),
                     arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
@@ -246,9 +214,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_letrec" => {
                 let lr = LetRec {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     defs: AstList::<AstTuple<TypedCore>>::from(
                         map.get("defs").unwrap().as_array().unwrap().clone(),
                     ),
@@ -258,9 +224,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_literal" => {
                 let l = Literal {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
                 };
                 return TypedCore::Literal(l);
@@ -270,7 +234,7 @@ impl From<Map<String, Value>> for TypedCore {
                 match lit {
                     Ok(lit) => {
                         let lm = LiteralMap {
-                            anno: AstList::<TypedCore>::from(
+                            anno: AstList::from(
                                 map.get("anno").unwrap().as_array().unwrap().to_vec(),
                             ),
                             arg: lit,
@@ -283,7 +247,7 @@ impl From<Map<String, Value>> for TypedCore {
                     }
                     Err(_) => {
                         let vm = VarMap {
-                            anno: AstList::<TypedCore>::from(
+                            anno: AstList::from(
                                 map.get("anno").unwrap().as_array().unwrap().to_vec(),
                             ),
                             arg: type_var(map.get("arg").unwrap().clone()).unwrap(),
@@ -298,9 +262,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_map_pair" => {
                 let m = MapPair {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().to_vec(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
                     op: type_literal(map.get("op").unwrap().clone()).unwrap(),
                     key: Box::new(TypedCore::from(map.get("key").unwrap().clone())),
                     val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
@@ -309,11 +271,9 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_module" => {
                 let m = Module {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().to_vec(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
                     name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
-                    exports: AstList::<TypedCore>::from(
+                    exports: AstList::from(
                         map.get("exports").unwrap().as_array().unwrap().to_vec(),
                     ),
                     attrs: AstList::<AstTuple<TypedCore>>::from(
@@ -327,33 +287,23 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_opaque" => {
                 let o = Opaque {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
                 };
                 return TypedCore::Opaque(o);
             }
             "c_primop" => {
                 let p = PrimOp {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
-                    args: AstList::<TypedCore>::from(
-                        map.get("args").unwrap().as_array().unwrap().clone(),
-                    ),
+                    args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::PrimOp(p);
             }
             "c_receive" => {
                 let r = Receive {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
-                    clauses: AstList::<TypedCore>::from(
-                        map.get("clauses").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+                    clauses: AstList::from(map.get("clauses").unwrap().as_array().unwrap().clone()),
                     timeout: Box::new(TypedCore::from(map.get("timeout").unwrap().clone())),
                     action: Box::new(TypedCore::from(map.get("action").unwrap().clone())),
                 };
@@ -361,9 +311,7 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_seq" => {
                 let t = Seq {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
                 };
@@ -371,48 +319,32 @@ impl From<Map<String, Value>> for TypedCore {
             }
             "c_try" => {
                 let t = Try {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
-                    vars: AstList::<TypedCore>::from(
-                        map.get("vars").unwrap().as_array().unwrap().clone(),
-                    ),
+                    vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
                     body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
-                    evars: AstList::<TypedCore>::from(
-                        map.get("evars").unwrap().as_array().unwrap().clone(),
-                    ),
+                    evars: AstList::from(map.get("evars").unwrap().as_array().unwrap().clone()),
                     handler: Box::new(TypedCore::from(map.get("handler").unwrap().clone())),
                 };
                 return TypedCore::Try(t);
             }
             "c_tuple" => {
                 let ct = Tuple {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
-                    es: AstList::<TypedCore>::from(
-                        map.get("es").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+                    es: AstList::from(map.get("es").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::Tuple(ct);
             }
             "c_values" => {
                 let v = Values {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
-                    es: AstList::<TypedCore>::from(
-                        map.get("es").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+                    es: AstList::from(map.get("es").unwrap().as_array().unwrap().clone()),
                 };
                 return TypedCore::Values(v);
             }
             "c_var" => {
                 let v = Var {
-                    anno: AstList::<TypedCore>::from(
-                        map.get("anno").unwrap().as_array().unwrap().clone(),
-                    ),
+                    anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
                     name: match VarInner::try_from(map.get("name").unwrap().clone()) {
                         Ok(v) => v,
                         Err(e) => panic!("{:?}", e),
