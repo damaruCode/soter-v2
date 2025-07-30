@@ -16,6 +16,16 @@ impl<T> AstList<T> {
     }
 }
 
+impl From<Vec<Value>> for AstList<TypedCore> {
+    fn from(vec: Vec<Value>) -> AstList<TypedCore> {
+        let mut list = Vec::new();
+        for val in vec {
+            list.push(TypedCore::from(val));
+        }
+        AstList { inner: list }
+    }
+}
+
 impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
     fn from(vec: Vec<Value>) -> AstList<AstTuple<TypedCore>> {
         let mut list = Vec::new();
