@@ -43,14 +43,14 @@ fn main() {
     let mut core_path = args[1].to_string();
     core_path.push_str(".json");
     let core = erlang::get_core(&core_path);
-    let typed_core = ast::type_core(core);
+    let _typed_core = ast::TypedCore::from(core);
 
     // let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
     // lambda_actor = lambda_actor.step();
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    let _analyzer = analyzer::Analyzer::new(&typed_core);
+    //let _analyzer = analyzer::Analyzer::new(&typed_core);
 }
 
 #[cfg(test)]
@@ -61,7 +61,7 @@ mod benchmarks {
     fn run_and_check(erl_file: &str) {
         erlang::run(&format!("test/{}.erl", erl_file));
         let core = erlang::get_core(&format!("test/{}.erl.json", erl_file));
-        let _typed_core = ast::type_core(core);
+        let _typed_core = ast::TypedCore::from(core);
     }
 
     #[test]
