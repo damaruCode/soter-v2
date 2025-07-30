@@ -8,3 +8,12 @@ pub struct Fun {
     pub vars: AstList<TypedCore>,
     pub body: Box<TypedCore>,
 }
+impl From<Map<String, Value>> for Fun {
+    fn from(map: Map<String, Value>) -> Self {
+        Fun {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+            vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
+            body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+        }
+    }
+}
