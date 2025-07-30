@@ -6,11 +6,11 @@ pub struct AstList<T> {
 }
 
 impl<T> AstList<T> {
-    fn new() -> Self {
+    pub fn new() -> Self {
         AstList { inner: Vec::new() }
     }
 
-    fn push(&mut self, value: T) {
+    pub fn push(&mut self, value: T) {
         self.inner.push(value);
     }
 }
