@@ -1,5 +1,5 @@
 use crate::ast::*;
-use serde_json::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 //-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
 //		   args :: [cerl:cerl()]}).

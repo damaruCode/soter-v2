@@ -1,5 +1,5 @@
 use crate::ast::*;
-use serde_json::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 //-record(c_module, {anno=[] :: list(), name :: cerl:cerl(),
 //		   exports :: [cerl:cerl()],

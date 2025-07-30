@@ -1,5 +1,5 @@
 use crate::ast::*;
-use serde_json::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 //-record(c_let, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		arg :: cerl:cerl(),

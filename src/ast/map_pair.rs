@@ -1,5 +1,5 @@
 use crate::ast::*;
-use serde_json::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 //-record(c_map_pair, {anno=[] :: list(),
 //	       op :: #c_literal{val::'assoc'} | #c_literal{val::'exact'},

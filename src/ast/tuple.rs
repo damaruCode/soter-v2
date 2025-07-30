@@ -1,5 +1,5 @@
 use crate::ast::*;
-use serde_json::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 //-record(c_tuple, {anno=[] :: list(), es :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
