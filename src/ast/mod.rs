@@ -102,10 +102,6 @@ pub enum TypedCore {
     VarMap(VarMap),
 }
 
-fn type_bool(value: Value) -> Option<bool> {
-    value.as_bool()
-}
-
 impl From<Value> for TypedCore {
     fn from(core: Value) -> Self {
         match core {
@@ -245,7 +241,7 @@ impl From<Map<String, Value>> for TypedCore {
                             es: AstList::<MapPair>::from(
                                 map.get("es").unwrap().as_array().unwrap().to_vec(),
                             ),
-                            is_pat: type_bool(map.get("is_pat").unwrap().clone()).unwrap(),
+                            is_pat: map.get("is_pat").unwrap().as_bool().unwrap(),
                         };
                         return TypedCore::LiteralMap(lm);
                     }
@@ -258,7 +254,7 @@ impl From<Map<String, Value>> for TypedCore {
                             es: AstList::<MapPair>::from(
                                 map.get("es").unwrap().as_array().unwrap().to_vec(),
                             ),
-                            is_pat: type_bool(map.get("is_pat").unwrap().clone()).unwrap(),
+                            is_pat: map.get("is_pat").unwrap().as_bool().unwrap(),
                         };
                         return TypedCore::VarMap(vm);
                     }
