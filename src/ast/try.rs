@@ -15,3 +15,15 @@ pub struct Try {
     pub evars: AstList<TypedCore>,
     pub handler: Box<TypedCore>,
 }
+impl From<Map<String, Value>> for Try {
+    fn from(map: Map<String, Value>) -> Self {
+        Try {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+            arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
+            vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
+            body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+            evars: AstList::from(map.get("evars").unwrap().as_array().unwrap().clone()),
+            handler: Box::new(TypedCore::from(map.get("handler").unwrap().clone())),
+        }
+    }
+}

@@ -9,3 +9,12 @@ pub struct Seq {
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
 }
+impl From<Map<String, Value>> for Seq {
+    fn from(map: Map<String, Value>) -> Self {
+        Seq {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+            arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
+            body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+        }
+    }
+}

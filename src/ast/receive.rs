@@ -11,3 +11,13 @@ pub struct Receive {
     pub timeout: Box<TypedCore>,
     pub action: Box<TypedCore>,
 }
+impl From<Map<String, Value>> for Receive {
+    fn from(map: Map<String, Value>) -> Self {
+        Receive {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
+            clauses: AstList::from(map.get("clauses").unwrap().as_array().unwrap().clone()),
+            timeout: Box::new(TypedCore::from(map.get("timeout").unwrap().clone())),
+            action: Box::new(TypedCore::from(map.get("action").unwrap().clone())),
+        }
+    }
+}

@@ -12,9 +12,18 @@ pub struct MapPair {
     pub key: Box<TypedCore>,
     pub val: Box<TypedCore>,
 }
-
 impl From<Value> for MapPair {
     fn from(value: Value) -> MapPair {
         MapPair::deserialize(value).unwrap()
+    }
+}
+impl From<Map<String, Value>> for MapPair {
+    fn from(map: Map<String, Value>) -> Self {
+        MapPair {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+            op: Literal::from(map.get("op").unwrap().clone()),
+            key: Box::new(TypedCore::from(map.get("key").unwrap().clone())),
+            val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
+        }
     }
 }

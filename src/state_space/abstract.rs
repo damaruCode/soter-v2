@@ -1,5 +1,6 @@
 #![allow(warnings)]
 
+use crate::ast::ast_list::AstList;
 use crate::ast::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -383,7 +384,12 @@ impl<'a> KAddr<'a> {
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Kont<'a> {
-    Let(Vec<VarInner>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Let(
+        &'a AstList<crate::ast::var::Var>,
+        ProgLoc<'a>,
+        Env<'a>,
+        KAddr<'a>,
+    ),
     Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Stop,
 }
@@ -431,7 +437,7 @@ impl Env<'_> {
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Var<'a> {
-    inner: VarInner,
+    inner: &'a Var<'a>,
 }
 
 // NOTE this references the Exps in the Ast

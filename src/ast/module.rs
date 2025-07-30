@@ -13,3 +13,14 @@ pub struct Module {
     pub attrs: AstList<AstTuple<TypedCore>>,
     pub defs: AstList<AstTuple<TypedCore>>,
 }
+impl From<Map<String, Value>> for Module {
+    fn from(map: Map<String, Value>) -> Self {
+        Module {
+            anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
+            name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
+            exports: AstList::from(map.get("exports").unwrap().as_array().unwrap().to_vec()),
+            attrs: AstList::from(map.get("attrs").unwrap().as_array().unwrap().to_vec()),
+            defs: AstList::from(map.get("defs").unwrap().as_array().unwrap().to_vec()),
+        }
+    }
+}
