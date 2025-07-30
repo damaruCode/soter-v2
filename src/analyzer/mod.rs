@@ -3,8 +3,8 @@ use crate::state_space::r#abstract::{KAddr, Kont, ProcState, ProgLoc, ProgLocOrP
 use crate::transition_system::{TransitionError, TransitionSystem, TypedTransition};
 
 pub struct Analyzer<'a> {
-    curr_state: State<'a>,
-    proc_transition_system: TransitionSystem<
+    current_program_state: State<'a>,
+    process_transition_system: TransitionSystem<
         ProcState<'a>,
         fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
     >,
@@ -12,27 +12,27 @@ pub struct Analyzer<'a> {
 
 impl<'a> Analyzer<'a> {
     pub fn new(&self, ast: &'a TypedCore) -> Self {
-        let mut proc_transition_system: TransitionSystem<
+        let mut process_transition_system: TransitionSystem<
             ProcState<'a>,
             fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
         > = TransitionSystem::init();
 
-        proc_transition_system.register_transition(TypedTransition::new(/* NOTE dafuq */));
+        process_transition_system.register_transition(TypedTransition::new(/* NOTE dafuq */));
 
         Analyzer {
-            curr_state: State::init(ast),
-            proc_transition_system,
+            current_program_state: State::init(ast),
+            process_transition_system,
         }
     }
 
     pub fn step(&self) -> Result<State, TransitionError> {
-        let mut new_state = self.curr_state.clone();
+        let mut new_state = self.current_program_state.clone();
 
-        for (pid, proc_state) in &self.curr_state.procs.inner {
+        for (pid, proc_state) in &self.current_program_state.procs.inner {
             let set = new_state.procs.inner.get_mut(pid).unwrap();
             set.clear();
 
-            match self.proc_transition_system.try_apply(proc_state) {
+            match self.process_transition_system.try_apply(proc_state) {
                 Ok(new_proc_state) => set.insert(new_proc_state),
                 Err(e) => return Err(e),
             };
