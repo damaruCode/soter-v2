@@ -230,7 +230,7 @@ impl From<Map<String, Value>> for TypedCore {
                 return TypedCore::Literal(l);
             }
             "c_map" => {
-                let lit = type_literal(map.get("arg").unwrap().clone());
+                let lit = Literal::from(map.get("arg").unwrap().clone());
                 match lit {
                     Ok(lit) => {
                         let lm = LiteralMap {
@@ -250,7 +250,7 @@ impl From<Map<String, Value>> for TypedCore {
                             anno: AstList::from(
                                 map.get("anno").unwrap().as_array().unwrap().to_vec(),
                             ),
-                            arg: type_var(map.get("arg").unwrap().clone()).unwrap(),
+                            arg: Var::from(map.get("arg").unwrap().clone()),
                             es: AstList::<MapPair>::from(
                                 map.get("es").unwrap().as_array().unwrap().to_vec(),
                             ),
@@ -263,7 +263,7 @@ impl From<Map<String, Value>> for TypedCore {
             "c_map_pair" => {
                 let m = MapPair {
                     anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
-                    op: type_literal(map.get("op").unwrap().clone()).unwrap(),
+                    op: Literal::from(map.get("op").unwrap().clone()),
                     key: Box::new(TypedCore::from(map.get("key").unwrap().clone())),
                     val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
                 };
@@ -359,20 +359,4 @@ impl From<Map<String, Value>> for TypedCore {
 
 fn type_bool(value: Value) -> Option<bool> {
     value.as_bool()
-}
-
-fn type_bitstr(value: Value) -> Result<BitStr, serde_json::Error> {
-    BitStr::deserialize(value)
-}
-
-fn type_literal(value: Value) -> Result<Literal, serde_json::Error> {
-    Literal::deserialize(value)
-}
-
-fn type_mappair(value: Value) -> Result<MapPair, serde_json::Error> {
-    MapPair::deserialize(value)
-}
-
-fn type_var(value: Value) -> Result<Var, serde_json::Error> {
-    Var::deserialize(value)
 }

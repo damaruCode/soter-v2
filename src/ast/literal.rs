@@ -7,3 +7,9 @@ pub struct Literal {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,
 }
+
+impl From<Value> for Literal {
+    fn from(value: Value) -> Literal {
+        Literal::deserialize(value).unwrap()
+    }
+}

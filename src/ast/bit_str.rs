@@ -15,3 +15,9 @@ pub struct BitStr {
     pub r#type: Box<TypedCore>,
     pub flags: Box<TypedCore>,
 }
+
+impl From<Value> for BitStr {
+    fn from(value: Value) -> BitStr {
+        BitStr::deserialize(value).unwrap()
+    }
+}
