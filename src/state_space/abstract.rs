@@ -1,7 +1,6 @@
 #![allow(warnings)]
 
 use crate::ast;
-use crate::ast::helper::VarInner;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -200,27 +199,31 @@ pub enum ProgLocOrPid<'a> {
 }
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct ProcState<'a> {
-    prog_loc_or_pid: ProgLocOrPid<'a>,
-    env: Env<'a>,
-    k_addr: KAddr<'a>,
-    time: Time<'a>,
+    pub pid: Pid<'a>,
+    pub prog_loc_or_pid: ProgLocOrPid<'a>,
+    pub env: Env<'a>,
+    pub k_addr: KAddr<'a>,
+    pub time: Time<'a>,
 }
 impl<'a> ProcState<'a> {
-    fn new(
+    pub fn new(
+        pid: Pid<'a>,
         prog_loc_or_pid: ProgLocOrPid<'a>,
         env: Env<'a>,
         k_addr: KAddr<'a>,
         time: Time<'a>,
     ) -> Self {
         ProcState {
+            pid,
             prog_loc_or_pid,
             env,
             k_addr,
             time,
         }
     }
-    fn init(prog_loc: ProgLoc<'a>) -> Self {
+    pub fn init(prog_loc: ProgLoc<'a>) -> Self {
         ProcState {
+            pid: Pid::init(prog_loc.clone()),
             prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc.clone()),
             env: Env::init(),
             k_addr: KAddr::init(prog_loc.clone()),
@@ -229,80 +232,80 @@ impl<'a> ProcState<'a> {
     }
 
     // TODO
-    fn step(&self, pid: &Pid<'a>, store: &mut Store<'a>) -> Self {
-        match self.prog_loc_or_pid {
-            ProgLocOrPid::Pid(ref pid) => self.clone(),
-            ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
-                // NOTE could have more than one def
-                ast::TypedCore::Module(module) => match &*module.defs.inner[0].scnd {
-                    ast::TypedCore::Fun(fun) => match &*fun.body {
-                        // NOTE could have more clauses than one
-                        ast::TypedCore::Case(case) => match &case.clauses.inner[0] {
-                            ast::TypedCore::Clause(clause) => {
-                                return ProcState::new(
-                                    // NOTE the pattern and guard of the clause could be
-                                    // interesting in general
-                                    ProgLocOrPid::ProgLoc(ProgLoc::new(&clause.body)),
-                                    self.env.clone(),
-                                    self.k_addr.clone(),
-                                    self.time.clone(),
-                                );
-                            }
-                            _ => self.clone(),
-                        },
-                        _ => self.clone(),
-                    },
-                    _ => self.clone(),
-                },
-                ast::TypedCore::Let(l) => {
-                    // TODO handle the .expect properly (in a standard way)
-                    let var_list =
-                        Vec::<VarInner>::try_from(&l.vars).expect("Forked up conversion");
-                    let arg = &l.arg;
-                    let body = &l.body;
+    // fn step(&self, pid: &Pid<'a>, store: &mut Store<'a>) -> Self {
+    //     match self.prog_loc_or_pid {
+    //         ProgLocOrPid::Pid(ref pid) => self.clone(),
+    //         ProgLocOrPid::ProgLoc(ref prog_loc) => match prog_loc.inner {
+    //             // NOTE could have more than one def
+    //             ast::TypedCore::Module(module) => match &*module.defs.inner[0].scnd {
+    //                 ast::TypedCore::Fun(fun) => match &*fun.body {
+    //                     // NOTE could have more clauses than one
+    //                     ast::TypedCore::Case(case) => match &case.clauses.inner[0] {
+    //                         ast::TypedCore::Clause(clause) => {
+    //                             return ProcState::new(
+    //                                 // NOTE the pattern and guard of the clause could be
+    //                                 // interesting in general
+    //                                 ProgLocOrPid::ProgLoc(ProgLoc::new(&clause.body)),
+    //                                 self.env.clone(),
+    //                                 self.k_addr.clone(),
+    //                                 self.time.clone(),
+    //                             );
+    //                         }
+    //                         _ => self.clone(),
+    //                     },
+    //                     _ => self.clone(),
+    //                 },
+    //                 _ => self.clone(),
+    //             },
+    //             ast::TypedCore::Let(l) => {
+    //                 // TODO handle the .expect properly (in a standard way)
+    //                 let var_list =
+    //                     Vec::<VarInner>::try_from(&l.vars).expect("Forked up conversion");
+    //                 let arg = &l.arg;
+    //                 let body = &l.body;
 
-                    // Push-Let
-                    let k_let = Kont::Let(
-                        var_list,
-                        ProgLoc { inner: body },
-                        self.env.clone(),
-                        self.k_addr.clone(),
-                    );
+    //                 // Push-Let
+    //                 let k_let = Kont::Let(
+    //                     var_list,
+    //                     ProgLoc { inner: body },
+    //                     self.env.clone(),
+    //                     self.k_addr.clone(),
+    //                 );
 
-                    let k_addr = KAddr::new(
-                        pid.clone(),
-                        prog_loc.clone(),
-                        self.env.clone(),
-                        self.time.clone(),
-                    );
+    //                 let k_addr = KAddr::new(
+    //                     pid.clone(),
+    //                     prog_loc.clone(),
+    //                     self.env.clone(),
+    //                     self.time.clone(),
+    //                 );
 
-                    store.kont.push(k_addr.clone(), k_let);
+    //                 store.kont.push(k_addr.clone(), k_let);
 
-                    return ProcState::new(
-                        ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
-                        self.env.clone(),
-                        k_addr,
-                        self.time.clone(),
-                    );
-                }
-                ast::TypedCore::Fun(f) => {
-                    // NOTE think through what the proper handling of this option type should be in
-                    // this scenario
-                    let konts = store.kont.get(&self.k_addr);
-                    match konts {
-                        Some(set) => {
-                            // NOTE need to consider each possible continuation
-                            // non-deterministically
-                        }
-                        None => panic!("Dafuq"),
-                    }
+    //                 return ProcState::new(
+    //                     ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
+    //                     self.env.clone(),
+    //                     k_addr,
+    //                     self.time.clone(),
+    //                 );
+    //             }
+    //             ast::TypedCore::Fun(f) => {
+    //                 // NOTE think through what the proper handling of this option type should be in
+    //                 // this scenario
+    //                 let konts = store.kont.get(&self.k_addr);
+    //                 match konts {
+    //                     Some(set) => {
+    //                         // NOTE need to consider each possible continuation
+    //                         // non-deterministically
+    //                     }
+    //                     None => panic!("Dafuq"),
+    //                 }
 
-                    self.clone()
-                }
-                _ => self.clone(),
-            },
-        }
-    }
+    //                 self.clone()
+    //             }
+    //             _ => self.clone(),
+    //         },
+    //     }
+    // }
 }
 
 // Mailbox := P(Value)
@@ -355,7 +358,7 @@ pub struct KAddr<'a> {
     time: Time<'a>,
 }
 impl<'a> KAddr<'a> {
-    fn init(prog_loc: ProgLoc<'a>) -> Self {
+    pub fn init(prog_loc: ProgLoc<'a>) -> Self {
         KAddr {
             pid: Pid::init(prog_loc.clone()),
             prog_loc,
@@ -363,7 +366,7 @@ impl<'a> KAddr<'a> {
             time: Time::init(),
         }
     }
-    fn new(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
+    pub fn new(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
         KAddr {
             pid,
             prog_loc,
@@ -380,7 +383,7 @@ impl<'a> KAddr<'a> {
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Kont<'a> {
-    Let(Vec<VarInner>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
+    Let(Vec<Var<'a>>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
     Stop,
 }
@@ -437,11 +440,14 @@ pub struct ProgLoc<'a> {
     inner: &'a ast::TypedCore,
 }
 impl<'a> ProgLoc<'a> {
-    fn new(inner: &'a ast::TypedCore) -> Self {
+    pub fn new(inner: &'a ast::TypedCore) -> Self {
         ProgLoc { inner }
     }
-    fn init(ast: &'a ast::TypedCore) -> Self {
+    pub fn init(ast: &'a ast::TypedCore) -> Self {
         ProgLoc { inner: ast }
+    }
+    pub fn get(&self) -> &'a ast::TypedCore {
+        self.inner
     }
 }
 

@@ -23,7 +23,6 @@ impl TryFrom<&TypedCore> for VarInner {
 
     fn try_from(tc: &TypedCore) -> Result<Self, Self::Error> {
         match tc {
-            TypedCore::Var(v) => VarInner::try_from(&*v.name),
             TypedCore::String(s) => Ok(VarInner::String(s.clone())),
             TypedCore::Number(n) => Ok(VarInner::Number(n.clone())),
             _ => Err(ConversionError),

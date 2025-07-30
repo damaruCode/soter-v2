@@ -5,6 +5,9 @@ use serde_json::Map;
 use serde_json::Number;
 use serde_json::Value;
 
+#[derive(Debug)]
+pub struct ConversionError;
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub enum TypedCore {
     //
@@ -48,6 +51,15 @@ pub enum TypedCore {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstList<T> {
     pub inner: Vec<T>,
+}
+impl<T> AstList<T> {
+    fn new() -> Self {
+        AstList { inner: Vec::new() }
+    }
+
+    fn push(&mut self, value: T) {
+        self.inner.push(value);
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
@@ -148,7 +160,7 @@ pub struct Fun {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Let {
     pub anno: AstList<TypedCore>,
-    pub vars: AstList<TypedCore>,
+    pub vars: AstList<Var>,
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
 }
@@ -272,7 +284,44 @@ pub struct Values {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Var {
     pub anno: AstList<TypedCore>,
-    pub name: Box<TypedCore>,
+    pub name: VarInner,
+}
+impl From<&Value> for Var {
+    fn from(value: &Value) -> Self {
+        Var::deserialize(value).unwrap()
+    }
+}
+impl From<Vec<Value>> for AstList<Var> {
+    fn from(vv: Vec<Value>) -> Self {
+        vv.iter() // turn it into an iterable
+            /* and do a fold on it with return type Result<Vec<Var>, ConversionError> */
+            .fold(
+                AstList::new(), /* base case is Ok( ) on the empty list */
+                |mut acc,  /* accumulator */
+                 curr_val  /* current element of iterable */| {
+                    // if the accumulator is Ok( ) until now, continue conversion
+                    acc.push(Var::from(curr_val));
+                    acc
+                },
+            )
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+pub enum VarInner {
+    String(String),
+    Number(Number),
+}
+impl TryFrom<serde_json::Value> for VarInner {
+    type Error = ConversionError;
+
+    fn try_from(value: serde_json::Value) -> Result<Self, Self::Error> {
+        match value {
+            Value::String(s) => Ok(VarInner::String(s.clone())),
+            Value::Number(n) => Ok(VarInner::Number(n.clone())),
+            _ => Err(ConversionError),
+        }
+    }
 }
 
 pub fn type_core(core: Value) -> TypedCore {
@@ -436,7 +485,7 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
         "c_let" => {
             let l = Let {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
-                vars: type_array(map.get("vars").unwrap().as_array().unwrap().clone()),
+                vars: map.get("vars").unwrap().as_array().unwrap().clone().into(),
                 arg: Box::new(type_core(map.get("arg").unwrap().clone())),
                 body: Box::new(type_core(map.get("body").unwrap().clone())),
             };
@@ -563,7 +612,10 @@ fn type_object(map: Map<String, Value>) -> TypedCore {
         "c_var" => {
             let v = Var {
                 anno: type_array(map.get("anno").unwrap().as_array().unwrap().clone()),
-                name: Box::new(type_core(map.get("name").unwrap().clone())),
+                name: match VarInner::try_from(map.get("name").unwrap().clone()) {
+                    Ok(v) => v,
+                    Err(e) => panic!("{:?}", e),
+                },
             };
             return TypedCore::Var(v);
         }

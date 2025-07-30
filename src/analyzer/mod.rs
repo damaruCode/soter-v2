@@ -1,11 +1,6 @@
 use crate::ast::TypedCore;
-use crate::state_space::r#abstract::{ProcState, State};
+use crate::state_space::r#abstract::{KAddr, Kont, ProcState, ProgLoc, ProgLocOrPid, State};
 use crate::transition_system::{TransitionError, TransitionSystem, TypedTransition};
-
-// pub const PROC_TRANSITION_SYSTEM: TransitionSystem<
-//     ProcState<'static>,
-//     fn(&ProcState) -> Result<ProcState<'static>, TransitionError>,
-// > = TransitionSystem::init();
 
 pub struct Analyzer<'a> {
     curr_state: State<'a>,
@@ -16,16 +11,13 @@ pub struct Analyzer<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-    pub fn new(ast: &'a TypedCore) -> Self {
+    pub fn new(&self, ast: &'a TypedCore) -> Self {
         let mut proc_transition_system: TransitionSystem<
             ProcState<'a>,
             fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
         > = TransitionSystem::init();
-        let basic_transition: TypedTransition<
-            ProcState,
-            fn(&ProcState<'a>) -> Result<ProcState<'a>, TransitionError>,
-        > = TypedTransition::new(|s| Ok(s.clone()));
-        proc_transition_system.register_transition(basic_transition);
+
+        proc_transition_system.register_transition(TypedTransition::new(/* NOTE dafuq */));
 
         Analyzer {
             curr_state: State::init(ast),
@@ -48,4 +40,59 @@ impl<'a> Analyzer<'a> {
 
         Ok(new_state)
     }
+
+    // ABS_NAME
+    // ABS_APPLY
+    // ABS_CALL
+    // ABS_LETREC
+    // ABS_CASE
+    // ABS_RECEIVE
+    // ABS_SELF
+    // ABS_SPAWN
+    // ABS_SEND
+    // ABS_PUSH_DO
+    // ABS_POP_DO
+    // ABS_PUSH_LET
+    fn t_push_let(proc_state: &'a ProcState) -> Result<ProcState<'a>, TransitionError> {
+        if let ProgLocOrPid::ProgLoc(ref prog_loc) = proc_state.prog_loc_or_pid {
+            if let TypedCore::Let(l) = prog_loc.get() {
+                // TODO handle the .expect properly (in a standard way)
+                let var_list = l.vars;
+                let arg = &l.arg;
+                let body = &l.body;
+
+                // Push-Let
+                let k_let = Kont::Let(
+                    var_list,
+                    ProgLoc::new(body),
+                    proc_state.env.clone(),
+                    proc_state.k_addr.clone(),
+                );
+
+                let k_addr = KAddr::new(
+                    proc_state.pid.clone(),
+                    prog_loc.clone(),
+                    proc_state.env.clone(),
+                    proc_state.time.clone(),
+                );
+
+                store.kont.push(k_addr.clone(), k_let); // TODO think about how to reference the
+                                                        // new state
+
+                return Ok(ProcState::new(
+                    proc_state.pid.clone(),
+                    ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
+                    proc_state.env.clone(),
+                    k_addr,
+                    proc_state.time.clone(),
+                ));
+            }
+        }
+
+        Err(TransitionError::ErroneousTransition)
+    }
+    // ABS_POP_LET_CLOSURE
+    // ABS_POP_LET_PID
+    // ABS_POP_LET_VALUEADDR
+    // ABS_POP_LET_VALUELIST
 }
