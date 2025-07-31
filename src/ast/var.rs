@@ -32,6 +32,25 @@ impl From<Vec<Value>> for AstList<Var> {
         ast_list
     }
 }
+impl PartialOrd for Var {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match &self.name {
+            VarInner::String(s1) => match &other.name {
+                VarInner::String(s2) => Some(s1.cmp(s2)),
+                VarInner::Number(_n2) => Some(std::cmp::Ordering::Less),
+            },
+            VarInner::Number(n1) => match &other.name {
+                VarInner::String(_s2) => Some(std::cmp::Ordering::Greater),
+                VarInner::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
+            },
+        }
+    }
+}
+impl Ord for Var {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub enum VarInner {

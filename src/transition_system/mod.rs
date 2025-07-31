@@ -51,21 +51,26 @@ where
     }
 }
 
-pub struct TransitionSystem<S: State> {
-    transitions: Vec<Box<dyn Transition<S, Error = TransitionError>>>,
+pub struct TransitionSystem<S, F>
+where
+    S: State,
+    F: Fn(&S) -> Result<S, TransitionError>,
+{
+    transitions: Vec<TypedTransition<S, F>>,
 }
-impl<S: State> TransitionSystem<S> {
+impl<S, F> TransitionSystem<S, F>
+where
+    S: State,
+    F: Fn(&S) -> Result<S, TransitionError>,
+{
     pub fn init() -> Self {
         Self {
             transitions: Vec::new(),
         }
     }
 
-    pub fn register_transition<T>(&mut self, transition: T)
-    where
-        T: Transition<S, Error = TransitionError> + 'static,
-    {
-        self.transitions.push(Box::new(transition));
+    pub fn register_transition(&mut self, transition: TypedTransition<S, F>) {
+        self.transitions.push(transition);
     }
 
     pub fn try_apply(&self, s: &S) -> Result<S, TransitionError> {

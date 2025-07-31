@@ -7,11 +7,17 @@ use crate::transition_system::{TransitionError, TransitionSystem};
 
 pub struct Analyzer<'a> {
     current_program_state: State<'a>,
-    transition_system: TransitionSystem<TransitionState<'a>>,
+    transition_system: TransitionSystem<
+        TransitionState<'a>,
+        fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
+    >,
 }
 impl<'a> Analyzer<'a> {
     pub fn new(program_state: State<'static>) -> Self {
-        let mut transition_system: TransitionSystem<TransitionState<'a>> = TransitionSystem::init();
+        let mut transition_system: TransitionSystem<
+            TransitionState<'a>,
+            fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
+        > = TransitionSystem::init();
 
         // let t_push_let = AbsPushLet::new();
         // transition_system.register_transition(t_push_let);

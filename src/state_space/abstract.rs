@@ -1,6 +1,7 @@
 #![allow(warnings)]
 
 use crate::ast::ast_list::AstList;
+use crate::ast::var::Var as AstVar;
 use crate::ast::*;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
@@ -433,11 +434,25 @@ impl Env<'_> {
             inner: BTreeMap::new(),
         }
     }
+
+    pub fn get(&self, var: &Var) -> Option<VAddr> {
+        self.inner.get(var).cloned()
+    }
 }
 
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialOrd, Ord, Hash, Clone, Debug)]
 pub struct Var<'a> {
-    inner: &'a Var<'a>,
+    inner: &'a AstVar,
+}
+impl<'a> Var<'a> {
+    pub fn new(ast_var: &'a AstVar) -> Self {
+        Var { inner: ast_var }
+    }
+}
+impl<'a> PartialEq for Var<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner.name == other.inner.name
+    }
 }
 
 // NOTE this references the Exps in the Ast

@@ -1,0 +1,158 @@
+mod abs_push_let;
+
+use abs_push_let::AbsPushLet;
+
+use crate::ast::TypedCore;
+use crate::state_space::r#abstract::{
+    KAddr, Kont, ProcState, ProgLoc, ProgLocOrPid, SetMap, State, Var,
+};
+use crate::transition_system::{TransitionError, TransitionSystem, TypedTransition};
+
+pub struct Analyzer<'a> {
+    current_program_state: State<'a>,
+    transition_system: TransitionSystem<
+        TransitionState<'a>,
+        fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
+    >,
+}
+impl<'a> Analyzer<'a> {
+    pub fn new(program_state: State<'a>) -> Self {
+        let mut transition_system: TransitionSystem<
+            TransitionState<'a>,
+            fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
+        > = TransitionSystem::init();
+
+        // ABS_NAME
+        // transition_system.register_transition(TypedTransition::new(
+        //     |transition_state: &TransitionState<'a>| {
+        //         if let ProgLocOrPid::ProgLoc(ref prog_loc) =
+        //             transition_state.process_state.prog_loc_or_pid
+        //         {
+        //             if let TypedCore::Var(v) = prog_loc.get() {
+        //                 let vaddr = transition_state
+        //                     .process_state
+        //                     .env
+        //                     .get(&Var::new(v))
+        //                     .unwrap(); // NOTE may panic
+        //                 let values = transition_state
+        //                     .program_state
+        //                     .store
+        //                     .value
+        //                     .get(&vaddr)
+        //                     .unwrap(); // NOTE may panic
+
+        //                 let mut new_transition_state = transition_state.clone();
+        //                 for value in values {
+        //                     let
+        //                 }
+        //             }
+        //         }
+        //         Err(TransitionError::ErroneousTransition)
+        //     },
+        // ));
+
+        // ABS_PUSH_LET
+        let t_push_let = TypedTransition::new(|transition_state: &TransitionState<'a>| {
+            let mut new_program_state = transition_state.program_state.clone();
+
+            if let ProgLocOrPid::ProgLoc(ref prog_loc) =
+                transition_state.process_state.prog_loc_or_pid
+            {
+                if let TypedCore::Let(l) = prog_loc.get() {
+                    let var_list = &l.vars;
+                    let arg = &l.arg;
+                    let body = &l.body;
+
+                    // Push-Let
+                    let k_let = Kont::Let(
+                        var_list,
+                        ProgLoc::new(body),
+                        transition_state.process_state.env.clone(),
+                        transition_state.process_state.k_addr.clone(),
+                    );
+
+                    let k_addr = KAddr::new(
+                        transition_state.process_state.pid.clone(),
+                        prog_loc.clone(),
+                        transition_state.process_state.env.clone(),
+                        transition_state.process_state.time.clone(),
+                    );
+
+                    new_program_state.store.kont.push(k_addr.clone(), k_let);
+                    let new_process_state = ProcState::new(
+                        transition_state.process_state.pid.clone(),
+                        ProgLocOrPid::ProgLoc(ProgLoc::new(arg)),
+                        transition_state.process_state.env.clone(),
+                        k_addr,
+                        transition_state.process_state.time.clone(),
+                    );
+
+                    new_program_state.procs.inner.push(
+                        transition_state.process_state.pid.clone(),
+                        new_process_state.clone(),
+                    );
+
+                    return Ok(TransitionState {
+                        process_state: new_process_state,
+                        program_state: new_program_state,
+                    });
+                }
+            }
+
+            Err(TransitionError::ErroneousTransition)
+        });
+        transition_system.register_transition(t_push_let);
+
+        Analyzer {
+            current_program_state: program_state,
+            transition_system,
+        }
+    }
+
+    pub fn step(&self) -> Result<State, TransitionError> {
+        let mut next_program_state = self.current_program_state.clone();
+        next_program_state.procs.inner = SetMap::init(); // clear the setmap; we will refill it
+                                                         // with the new process :states
+
+        for (_pid, proc_state) in &self.current_program_state.procs.inner {
+            let transition_state =
+                TransitionState::new(proc_state.clone(), next_program_state.clone());
+
+            match self.transition_system.try_apply(&transition_state) {
+                Err(e) => return Err(e),
+                _ => {}
+            };
+        }
+
+        Ok(next_program_state)
+    }
+
+    // ABS_PPLY
+    // ABS_CALL
+    // ABS_LETREC
+    // ABS_CASE
+    // ABS_RECEIVE
+    // ABS_SELF
+    // ABS_SPAWN
+    // ABS_SEND
+    // ABS_PUSH_DO
+    // ABS_POP_DO
+    // ABS_POP_LET_CLOSURE
+    // ABS_POP_LET_PID
+    // ABS_POP_LET_VALUEADDR
+    // ABS_POP_LET_VALUELIST
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TransitionState<'a> {
+    pub process_state: ProcState<'a>,
+    pub program_state: State<'a>,
+}
+impl<'a> TransitionState<'a> {
+    fn new(process_state: ProcState<'a>, program_state: State<'a>) -> Self {
+        TransitionState {
+            process_state,
+            program_state,
+        }
+    }
+}
