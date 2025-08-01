@@ -3,6 +3,7 @@ pub mod ast;
 pub mod erlang;
 pub mod state_space;
 pub mod transition_system;
+pub mod util;
 
 use std::env;
 

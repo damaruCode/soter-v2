@@ -1,5 +1,5 @@
 use crate::ast::TypedCore;
-use crate::state_space::r#abstract::{Kont, ProgLocOrPid, State};
+use crate::state_space::r#abstract::*;
 
 pub enum TransitionError {
     ErroneousTransition,
@@ -17,7 +17,7 @@ impl<'a> Analyzer<'a> {
     }
 
     pub fn step(&self) -> Result<State, TransitionError> {
-        for (_pid, proc_state) in &self.current_program_state.procs.inner {
+        for (_pid, proc_state) in &self.current_program_state.procs {
             let _state = match &proc_state.prog_loc_or_pid {
                 ProgLocOrPid::Pid(_pid) => {
                     // ABS_POP_LET_PID
@@ -60,8 +60,7 @@ impl<'a> Analyzer<'a> {
                     _ => match self
                         .current_program_state
                         .store
-                        .kont
-                        .get(&proc_state.k_addr)
+                        .get_kont(&proc_state.k_addr)
                     {
                         Some(konts) => {
                             // consider each possible continuation
