@@ -1,85 +1,95 @@
-mod abs_push_let;
+use crate::ast::TypedCore;
+use crate::state_space::r#abstract::{Kont, ProgLocOrPid, State};
 
-use abs_push_let::AbsPushLet;
-
-use crate::state_space::r#abstract::{ProcState, SetMap, State};
-use crate::transition_system::{TransitionError, TransitionSystem};
+pub enum TransitionError {
+    ErroneousTransition,
+    NoValidTransition,
+}
 
 pub struct Analyzer<'a> {
     current_program_state: State<'a>,
-    transition_system: TransitionSystem<
-        TransitionState<'a>,
-        fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
-    >,
 }
 impl<'a> Analyzer<'a> {
-    pub fn new(program_state: State<'static>) -> Self {
-        let mut transition_system: TransitionSystem<
-            TransitionState<'a>,
-            fn(&TransitionState<'a>) -> Result<TransitionState<'a>, TransitionError>,
-        > = TransitionSystem::init();
-
-        // let t_push_let = AbsPushLet::new();
-        // transition_system.register_transition(t_push_let);
-
+    pub fn new(ast: &'a TypedCore) -> Self {
         Analyzer {
-            current_program_state: program_state,
-            transition_system,
+            current_program_state: State::init(ast),
         }
     }
 
     pub fn step(&self) -> Result<State, TransitionError> {
-        let mut next_program_state = self.current_program_state.clone();
-        next_program_state.procs.inner = SetMap::init(); // clear the setmap; we will refill it
-                                                         // with the new process states
-
-        for (pid, proc_state) in &self.current_program_state.procs.inner {
-            let transition_state =
-                TransitionState::new(proc_state.clone(), next_program_state.clone());
-
-            match self.transition_system.try_apply(&transition_state) {
-                Ok(new_transition_state) => {
-                    next_program_state = new_transition_state.program_state;
-                    next_program_state
-                        .procs
-                        .inner
-                        .push(pid.clone(), new_transition_state.process_state);
+        for (_pid, proc_state) in &self.current_program_state.procs.inner {
+            let _state = match &proc_state.prog_loc_or_pid {
+                ProgLocOrPid::Pid(_pid) => {
+                    // ABS_POP_LET_PID
                 }
-                Err(e) => return Err(e),
+                ProgLocOrPid::ProgLoc(prog_loc) => match prog_loc.get() {
+                    TypedCore::Var(_var) => {
+                        // ABS_NAME
+                    }
+                    TypedCore::Apply(_apply) => {
+                        // ABS_APPLY
+                    }
+                    TypedCore::Call(_call) => {
+                        // ABS_CALL
+                    }
+                    TypedCore::LetRec(_let_rec) => {
+                        // ABS_LETREC
+                    }
+                    TypedCore::Case(_case) => {
+                        // ABS_CASE
+                    }
+                    TypedCore::Receive(_receive) => {
+                        // ABS_RECEIVE
+                    }
+                    TypedCore::PrimOp(_prim_op) => {
+                        // NOTE This would require another
+                        // match on the name. However, the PrimOps: self, spawn and send are the only
+                        // ones being considered, so parsing them in the ast module would probably be
+                        // more sensible
+
+                        // ABS_SELF
+                        // ABS_SPAWN
+                        // ABS_SEND
+                    }
+                    // ABS_PUSH_DO
+                    TypedCore::Let(_let) => {
+                        // ABS_PUSH_LET
+                    }
+                    // ProgLoc is irreducible via the previous transition rules; we call it a value
+                    // We need to look at the continuation for the next computation
+                    _ => match self
+                        .current_program_state
+                        .store
+                        .kont
+                        .get(&proc_state.k_addr)
+                    {
+                        Some(konts) => {
+                            // consider each possible continuation
+                            for kont in konts {
+                                match kont {
+                                    Kont::Let(_val_list, _body, _env, _k_addr) => {
+                                        // ABS_POP_LET_CLOSURE
+                                        // ABS_POP_LET_PID
+                                        // ABS_POP_LET_VALUEADDR
+                                        // ABS_POP_LET_VALUELIST
+                                    }
+                                    Kont::Do(_body, _env, _k_addr) => {
+                                        // ABS_POP_DO
+                                    }
+                                    Kont::Stop => {
+                                        // NOTE halt (successful)
+                                    }
+                                }
+                            }
+                        }
+                        None => {
+                            // NOTE fail
+                        }
+                    },
+                },
             };
         }
 
-        Ok(next_program_state)
-    }
-
-    // ABS_NAME
-    // ABS_APPLY
-    // ABS_CALL
-    // ABS_LETREC
-    // ABS_CASE
-    // ABS_RECEIVE
-    // ABS_SELF
-    // ABS_SPAWN
-    // ABS_SEND
-    // ABS_PUSH_DO
-    // ABS_POP_DO
-    // ABS_PUSH_LET
-    // ABS_POP_LET_CLOSURE
-    // ABS_POP_LET_PID
-    // ABS_POP_LET_VALUEADDR
-    // ABS_POP_LET_VALUELIST
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct TransitionState<'a> {
-    pub process_state: ProcState<'a>,
-    pub program_state: State<'a>,
-}
-impl<'a> TransitionState<'a> {
-    fn new(process_state: ProcState<'a>, program_state: State<'a>) -> Self {
-        TransitionState {
-            process_state,
-            program_state,
-        }
+        Ok(self.current_program_state.clone())
     }
 }

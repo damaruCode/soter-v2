@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Var {
     pub anno: AstList<TypedCore>,
-    pub name: VarInner,
+    pub name: VarName,
 }
 impl From<Value> for Var {
     fn from(value: Value) -> Self {
@@ -16,7 +16,7 @@ impl From<Map<String, Value>> for Var {
     fn from(map: Map<String, Value>) -> Self {
         Var {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
-            name: match VarInner::try_from(map.get("name").unwrap().clone()) {
+            name: match VarName::try_from(map.get("name").unwrap().clone()) {
                 Ok(v) => v,
                 Err(e) => panic!("{:?}", e),
             },
@@ -35,13 +35,13 @@ impl From<Vec<Value>> for AstList<Var> {
 impl PartialOrd for Var {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         match &self.name {
-            VarInner::String(s1) => match &other.name {
-                VarInner::String(s2) => Some(s1.cmp(s2)),
-                VarInner::Number(_n2) => Some(std::cmp::Ordering::Less),
+            VarName::String(s1) => match &other.name {
+                VarName::String(s2) => Some(s1.cmp(s2)),
+                VarName::Number(_n2) => Some(std::cmp::Ordering::Less),
             },
-            VarInner::Number(n1) => match &other.name {
-                VarInner::String(_s2) => Some(std::cmp::Ordering::Greater),
-                VarInner::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
+            VarName::Number(n1) => match &other.name {
+                VarName::String(_s2) => Some(std::cmp::Ordering::Greater),
+                VarName::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
             },
         }
     }
@@ -53,25 +53,25 @@ impl Ord for Var {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
-pub enum VarInner {
+pub enum VarName {
     String(String),
     Number(Number),
 }
 
-impl From<Value> for VarInner {
+impl From<Value> for VarName {
     fn from(value: Value) -> Self {
         match value {
-            Value::String(s) => VarInner::String(s),
-            Value::Number(n) => VarInner::Number(n),
-            _ => panic!("Unexpected type for VarInner"),
+            Value::String(s) => VarName::String(s),
+            Value::Number(n) => VarName::Number(n),
+            _ => panic!("Unexpected type for VarName"),
         }
     }
 }
-impl From<AstList<Var>> for Vec<VarInner> {
+impl From<AstList<Var>> for Vec<VarName> {
     fn from(ast_list: AstList<Var>) -> Self {
         let mut vec = Vec::new();
-        for var in ast_list.inner {
-            vec.push(var.name);
+        for var in ast_list.as_vec() {
+            vec.push(var.name.clone());
         }
         vec
     }

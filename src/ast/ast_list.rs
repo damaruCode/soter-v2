@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct AstList<T> {
-    pub inner: Vec<T>,
+    inner: Vec<T>,
 }
 
 impl<T> AstList<T> {
@@ -14,8 +14,15 @@ impl<T> AstList<T> {
     pub fn push(&mut self, value: T) {
         self.inner.push(value);
     }
-}
 
+    pub fn get(&self, index: usize) -> Option<&T> {
+        self.inner.get(index)
+    }
+
+    pub fn as_vec(&self) -> &Vec<T> {
+        &self.inner
+    }
+}
 impl From<Vec<Value>> for AstList<TypedCore> {
     fn from(vec: Vec<Value>) -> AstList<TypedCore> {
         let mut list = Vec::new();
@@ -25,7 +32,6 @@ impl From<Vec<Value>> for AstList<TypedCore> {
         AstList { inner: list }
     }
 }
-
 impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
     fn from(vec: Vec<Value>) -> AstList<AstTuple<TypedCore>> {
         let mut list = Vec::new();
@@ -35,7 +41,6 @@ impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
         AstList { inner: list }
     }
 }
-
 impl From<Vec<Value>> for AstList<BitStr> {
     fn from(vec: Vec<Value>) -> AstList<BitStr> {
         let mut list = Vec::new();
@@ -45,7 +50,6 @@ impl From<Vec<Value>> for AstList<BitStr> {
         AstList { inner: list }
     }
 }
-
 impl From<Vec<Value>> for AstList<MapPair> {
     fn from(vec: Vec<Value>) -> AstList<MapPair> {
         let mut list = Vec::new();
