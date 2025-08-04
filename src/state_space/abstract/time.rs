@@ -5,6 +5,7 @@ use super::ProgLoc;
 pub struct Time<'a> {
     inner: Vec<ProgLoc<'a>>,
 }
+
 impl<'a> Time<'a> {
     pub fn new(time: Vec<ProgLoc<'a>>) -> Self {
         Time { inner: time }

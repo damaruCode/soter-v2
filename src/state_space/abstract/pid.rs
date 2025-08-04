@@ -6,6 +6,7 @@ pub struct Pid<'a> {
     prog_loc: ProgLoc<'a>,
     time: Time<'a>,
 }
+
 impl<'a> Pid<'a> {
     pub fn new(&self, prog_loc: ProgLoc<'a>, time: Time<'a>) -> Self {
         // Generated the Pid for the new ProcState using its ProgLoc and Time

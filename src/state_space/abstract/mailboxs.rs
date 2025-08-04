@@ -7,6 +7,7 @@ use super::{Pid, Value};
 pub struct Mailbox<'a> {
     inner: HashSet<Value<'a>>,
 }
+
 impl Mailbox<'_> {
     pub fn mmatch(self) {} // TODO
     pub fn enq(self) {} // TODO
@@ -16,6 +17,7 @@ impl Mailbox<'_> {
 pub struct Mailboxes<'a> {
     pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
 }
+
 impl<'a> Mailboxes<'a> {
     pub fn init() -> Self {
         Mailboxes {

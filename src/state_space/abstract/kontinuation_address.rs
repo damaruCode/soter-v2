@@ -9,6 +9,7 @@ pub struct KAddr<'a> {
     env: Env<'a>,
     time: Time<'a>,
 }
+
 impl<'a> KAddr<'a> {
     pub fn init(prog_loc: ProgLoc<'a>) -> Self {
         KAddr {
@@ -18,6 +19,7 @@ impl<'a> KAddr<'a> {
             time: Time::init(),
         }
     }
+
     pub fn new(pid: Pid<'a>, prog_loc: ProgLoc<'a>, env: Env<'a>, time: Time<'a>) -> Self {
         KAddr {
             pid,

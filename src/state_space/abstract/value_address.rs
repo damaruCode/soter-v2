@@ -8,6 +8,7 @@ pub struct VAddr<'a> {
     data: Data<'a>,
     time: Time<'a>,
 }
+
 impl<'a> VAddr<'a> {
     fn new(pid: Pid<'a>, var: Var<'a>, data: Data<'a>, time: Time<'a>) -> Self {
         VAddr {

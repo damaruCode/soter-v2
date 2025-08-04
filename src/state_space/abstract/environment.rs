@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 pub struct Env<'a> {
     inner: BTreeMap<Var<'a>, VAddr<'a>>,
 }
+
 impl Env<'_> {
     pub fn init() -> Self {
         Env {

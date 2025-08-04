@@ -12,6 +12,7 @@ pub struct State<'a> {
     pub mailboxes: Mailboxes<'a>,
     pub store: Store<'a>,
 }
+
 impl<'a> State<'a> {
     pub fn init(ast: &'a TypedCore) -> Self {
         let mut procs = SetMap::new();

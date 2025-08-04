@@ -8,6 +8,7 @@ pub struct Store<'a> {
     kont: SetMap<KAddr<'a>, Kont<'a>>,
     value: SetMap<VAddr<'a>, Value<'a>>,
 }
+
 impl<'a> Store<'a> {
     pub fn init() -> Self {
         Store {

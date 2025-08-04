@@ -5,6 +5,7 @@ use crate::ast::TypedCore;
 pub struct ProgLoc<'a> {
     inner: &'a TypedCore,
 }
+
 impl<'a> ProgLoc<'a> {
     pub fn new(inner: &'a TypedCore) -> Self {
         ProgLoc { inner }
