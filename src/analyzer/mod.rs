@@ -93,7 +93,17 @@ impl<'a> Analyzer<'a> {
         Ok(self.current_program_state.clone())
     }
 
-    fn get_dependent_proc_states(&self) -> Option<Vec<ProcState>> {
+    fn get_data_dependencies(&self, pid: &Pid) -> Option<Vec<ProcState>> {
+        // TODO
+        None
+    }
+
+    fn get_value_dependencies(&self, vaddr: &VAddr) -> Option<Vec<ProcState>> {
+        // TODO
+        None
+    }
+
+    fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Option<Vec<ProcState>> {
         // TODO
         None
     }
