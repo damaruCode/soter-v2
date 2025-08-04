@@ -2,7 +2,8 @@ use std::collections::{HashSet, VecDeque};
 use std::hash::Hash;
 
 pub trait WorkItem: Eq + Hash + Clone {
-    fn process(&self) -> Option<Vec<Self>>;
+    // NOTE do we need Option if we reintroduce ProcStates when things change for them?
+    fn process(&self) -> Option<(Vec<Self>, Vec<Self>)>;
 }
 
 pub struct WorkList<T: WorkItem> {
@@ -26,11 +27,16 @@ impl<T: WorkItem> WorkList<T> {
         // This terminates because it assumes a fixpoint implementation
         while let Some(item) = self.queue.pop_front() {
             match item.process() {
-                Some(new_items) => {
-                    for new_item in new_items {
+                Some((new_items, revisit_items)) => {
+                    for item in revisit_items {
+                        // NOTE not sure if just adding them back into the queue is enough
+                        self.queue.push_back(item);
+                    }
+
+                    for item in new_items {
                         // NOTE cloning here might become a memory issue
-                        if self.seen.insert(new_item.clone()) {
-                            self.queue.push_back(new_item);
+                        if self.seen.insert(item.clone()) {
+                            self.queue.push_back(item);
                         }
                     }
                 }
