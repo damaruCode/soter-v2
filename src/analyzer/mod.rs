@@ -9,6 +9,7 @@ pub enum TransitionError {
 pub struct Analyzer<'a> {
     current_program_state: State<'a>,
 }
+
 impl<'a> Analyzer<'a> {
     pub fn new(ast: &'a TypedCore) -> Self {
         Analyzer {
@@ -90,5 +91,10 @@ impl<'a> Analyzer<'a> {
         }
 
         Ok(self.current_program_state.clone())
+    }
+
+    fn get_dependent_proc_states(&self) -> Option<Vec<ProcState>> {
+        // TODO
+        None
     }
 }
