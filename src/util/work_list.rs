@@ -15,7 +15,7 @@ impl<T: WorkItem> WorkList<T> {
         let mut queue = VecDeque::new();
         let mut seen = HashSet::new();
         for item in initial {
-            // NOTE coning here might become a memory issue
+            // NOTE cloning here might become a memory issue
             seen.insert(item.clone());
             queue.push_back(item);
         }
@@ -26,6 +26,7 @@ impl<T: WorkItem> WorkList<T> {
         while let Some(item) = self.queue.pop_front() {
             let new_items = item.process();
             for new_item in new_items {
+                // NOTE cloning here might become a memory issue
                 if self.seen.insert(new_item.clone()) {
                     self.queue.push_back(new_item);
                 }
