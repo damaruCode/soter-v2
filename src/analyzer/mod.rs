@@ -121,7 +121,6 @@ impl<'a> Analyzer<'a> {
             match &state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match location.get() {
                     TypedCore::Var(pl_var) => {
-                        // NOTE took out the indirection of var
                         match state.env.get(&pl_var.name) {
                             Some(pl_vaddr) => {
                                 if pl_vaddr == *vaddr {
@@ -140,8 +139,23 @@ impl<'a> Analyzer<'a> {
         dependencies
     }
 
-    fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Option<Vec<ProcState>> {
-        // TODO
-        None
+    fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Vec<ProcState> {
+        let mut dependencies = Vec::new();
+        for (_, state) in &self.current_program_state.procs {
+            if state.k_addr != *kaddr {
+                continue;
+            }
+            match &state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(location) => match location.get() {
+                    // TODO add the arms that are non-reducable
+                    _ => {}
+                },
+                ProgLocOrPid::Pid(_) => {
+                    // NOTE cloning here might become a memory issue
+                    dependencies.push(state.clone());
+                }
+            }
+        }
+        dependencies
     }
 }
