@@ -1,4 +1,4 @@
-use super::{Data, Env, KAddr, Kont, Pid, ProgLoc, Time, Value};
+use super::{Data, Env, Kont, KontinuationAddress, Pid, ProgLoc, Time, Value, ValueAddress};
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
@@ -8,24 +8,24 @@ pub enum ProgLocOrPid<'a> {
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct ProcState<'a> {
+pub struct ProcState<'a, K: KontinuationAddress, V: ValueAddress> {
     pub pid: Pid<'a>,
     pub prog_loc_or_pid: ProgLocOrPid<'a>,
-    pub env: Env<'a>,
-    pub k_addr: KAddr<'a>,
+    pub env: Env<'a, V>,
+    pub k_addr: K,
     pub time: Time<'a>,
 
     visited_data: Vec<Data<'a>>,
-    visited_values: Vec<Value<'a>>,
-    visited_konts: Vec<Kont<'a>>,
+    visited_values: Vec<Value<'a, V>>,
+    visited_konts: Vec<Kont<'a, K, V>>,
 }
 
-impl<'a> ProcState<'a> {
+impl<'a, K: KontinuationAddress, V: ValueAddress> ProcState<'a, K, V> {
     pub fn new(
         pid: Pid<'a>,
         prog_loc_or_pid: ProgLocOrPid<'a>,
-        env: Env<'a>,
-        k_addr: KAddr<'a>,
+        env: Env<'a, V>,
+        k_addr: K,
         time: Time<'a>,
     ) -> Self {
         ProcState {
@@ -41,12 +41,12 @@ impl<'a> ProcState<'a> {
         }
     }
 
-    pub fn init(prog_loc: ProgLoc<'a>) -> Self {
+    pub fn init(prog_loc: ProgLoc<'a>, init_k_addr: K) -> Self {
         ProcState {
             pid: Pid::init(prog_loc.clone()),
             prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc.clone()),
             env: Env::init(),
-            k_addr: KAddr::init(prog_loc.clone()),
+            k_addr: init_k_addr,
             time: Time::init(),
 
             visited_data: Vec::new(),
@@ -59,11 +59,11 @@ impl<'a> ProcState<'a> {
         self.visited_data.contains(data)
     }
 
-    pub fn has_visited_value(&self, value: &Value) -> bool {
+    pub fn has_visited_value(&self, value: &Value<V>) -> bool {
         self.visited_values.contains(value)
     }
 
-    pub fn has_visited_kontinuation(&self, kont: &Kont) -> bool {
+    pub fn has_visited_kontinuation(&self, kont: &Kont<K, V>) -> bool {
         self.visited_konts.contains(kont)
     }
 }

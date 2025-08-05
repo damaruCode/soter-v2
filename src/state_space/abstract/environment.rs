@@ -1,20 +1,20 @@
-use super::{VAddr, Var};
+use super::{ValueAddress, Var};
 use std::collections::BTreeMap;
 
 // Env := Var -> VAddr
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct Env<'a> {
-    inner: BTreeMap<Var<'a>, VAddr<'a>>,
+pub struct Env<'a, V: ValueAddress> {
+    inner: BTreeMap<Var<'a>, V>,
 }
 
-impl Env<'_> {
+impl<V: ValueAddress> Env<'_, V> {
     pub fn init() -> Self {
         Env {
             inner: BTreeMap::new(),
         }
     }
 
-    pub fn get(&self, var: &Var) -> Option<VAddr> {
+    pub fn get(&self, var: &Var) -> Option<V> {
         self.inner.get(var).cloned()
     }
 }

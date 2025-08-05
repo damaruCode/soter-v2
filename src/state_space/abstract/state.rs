@@ -1,4 +1,4 @@
-use super::{Mailboxes, Pid, ProcState, ProgLoc, Store};
+use super::{KontinuationAddress, Mailboxes, Pid, ProcState, ProgLoc, Store, ValueAddress};
 use crate::{ast::TypedCore, util::SetMap};
 
 // State := Procs x Mailboxes x Store
@@ -7,17 +7,20 @@ use crate::{ast::TypedCore, util::SetMap};
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
 #[derive(Clone, Debug, PartialEq)]
-pub struct State<'a> {
-    pub procs: SetMap<Pid<'a>, ProcState<'a>>,
-    pub mailboxes: Mailboxes<'a>,
-    pub store: Store<'a>,
+pub struct State<'a, K: KontinuationAddress, V: ValueAddress> {
+    pub procs: SetMap<Pid<'a>, ProcState<'a, K, V>>,
+    pub mailboxes: Mailboxes<'a, V>,
+    pub store: Store<'a, K, V>,
 }
 
-impl<'a> State<'a> {
-    pub fn init(ast: &'a TypedCore) -> Self {
+impl<'a, K: KontinuationAddress, V: ValueAddress> State<'a, K, V> {
+    pub fn init(ast: &'a TypedCore, init_k_addr: K) -> Self {
         let mut procs = SetMap::new();
         let prog_loc = ProgLoc::init(ast);
-        procs.push(Pid::init(prog_loc.clone()), ProcState::init(prog_loc));
+        procs.push(
+            Pid::init(prog_loc.clone()),
+            ProcState::<K, V>::init(prog_loc, init_k_addr),
+        );
 
         State {
             procs,

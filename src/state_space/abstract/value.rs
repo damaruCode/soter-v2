@@ -1,13 +1,13 @@
-use super::{Closure, Pid};
+use super::{Closure, Pid, ValueAddress};
 
 // Value := Closure U+ Pid
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ClosureOrPid<'a> {
-    Closure(Closure<'a>),
+pub enum ClosureOrPid<'a, V: ValueAddress> {
+    Closure(Closure<'a, V>),
     Pid(Pid<'a>),
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Value<'a> {
-    inner: ClosureOrPid<'a>,
+pub struct Value<'a, V: ValueAddress> {
+    inner: ClosureOrPid<'a, V>,
 }

@@ -1,23 +1,26 @@
 use crate::ast::TypedCore;
 use crate::state_space::r#abstract::*;
 
+mod state;
+use state::*;
+
 pub enum TransitionError {
     ErroneousTransition,
     NoValidTransition,
 }
 
-pub struct Analyzer<'a> {
-    current_program_state: State<'a>,
+pub struct Analyzer<'a, K: KontinuationAddress, V: ValueAddress> {
+    current_program_state: State<'a, K, V>,
 }
 
-impl<'a> Analyzer<'a> {
+impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
     pub fn new(ast: &'a TypedCore) -> Self {
         Analyzer {
             current_program_state: State::init(ast),
         }
     }
 
-    pub fn step(&self) -> Result<State, TransitionError> {
+    pub fn step(&self) -> Result<State<K, V>, TransitionError> {
         for (_pid, proc_state) in &self.current_program_state.procs {
             let _state = match &proc_state.prog_loc_or_pid {
                 ProgLocOrPid::Pid(_pid) => {
@@ -93,17 +96,17 @@ impl<'a> Analyzer<'a> {
         Ok(self.current_program_state.clone())
     }
 
-    fn get_data_dependencies(&self, pid: &Pid) -> Option<Vec<ProcState>> {
+    fn get_data_dependencies(&self, pid: &Pid) -> Option<Vec<ProcState<K, V>>> {
         // TODO
         None
     }
 
-    fn get_value_dependencies(&self, vaddr: &VAddr) -> Option<Vec<ProcState>> {
+    fn get_value_dependencies(&self, vaddr: &V) -> Option<Vec<ProcState<K, V>>> {
         // TODO
         None
     }
 
-    fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Option<Vec<ProcState>> {
+    fn get_kontinuation_dependencies(&self, kaddr: &K) -> Option<Vec<ProcState<K, V>>> {
         // TODO
         None
     }

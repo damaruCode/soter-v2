@@ -1,15 +1,15 @@
 use std::collections::HashSet;
 
-use super::{KAddr, Kont, VAddr, Value};
+use super::{Kont, KontinuationAddress, Value, ValueAddress};
 use crate::util::SetMap;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Store<'a> {
-    kont: SetMap<KAddr<'a>, Kont<'a>>,
-    value: SetMap<VAddr<'a>, Value<'a>>,
+pub struct Store<'a, K: KontinuationAddress, V: ValueAddress> {
+    kont: SetMap<K, Kont<'a, K, V>>,
+    value: SetMap<V, Value<'a, V>>,
 }
 
-impl<'a> Store<'a> {
+impl<'a, K: KontinuationAddress, V: ValueAddress> Store<'a, K, V> {
     pub fn init() -> Self {
         Store {
             kont: SetMap::new(),
@@ -17,19 +17,19 @@ impl<'a> Store<'a> {
         }
     }
 
-    pub fn get_kont(&self, key: &'a KAddr) -> Option<&HashSet<Kont<'a>>> {
+    pub fn get_kont(&self, key: &'a K) -> Option<&HashSet<Kont<'a, K, V>>> {
         self.kont.get(key)
     }
 
-    pub fn get_value(&self, key: &'a VAddr) -> Option<&HashSet<Value<'a>>> {
+    pub fn get_value(&self, key: &'a V) -> Option<&HashSet<Value<'a, V>>> {
         self.value.get(key)
     }
 
-    pub fn insert_kont(&mut self, key: KAddr<'a>, kont: Kont<'a>) {
+    pub fn insert_kont(&mut self, key: K, kont: Kont<'a, K, V>) {
         self.kont.push(key, kont);
     }
 
-    pub fn insert_value(&mut self, key: VAddr<'a>, value: Value<'a>) {
+    pub fn insert_value(&mut self, key: V, value: Value<'a, V>) {
         self.value.push(key, value);
     }
 }
