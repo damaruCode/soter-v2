@@ -93,14 +93,51 @@ impl<'a> Analyzer<'a> {
         Ok(self.current_program_state.clone())
     }
 
-    fn get_data_dependencies(&self, pid: &Pid) -> Option<Vec<ProcState>> {
-        // TODO
-        None
+    fn get_data_dependencies(&self, pid: &Pid) -> Vec<ProcState> {
+        let mut dependencies = Vec::new();
+        match self.current_program_state.procs.get(pid) {
+            Some(set) => {
+                for state in set {
+                    match &state.prog_loc_or_pid {
+                        ProgLocOrPid::ProgLoc(location) => match location.get() {
+                            TypedCore::Receive(_) => {
+                                // NOTE cloning here might become a memory issue
+                                dependencies.push(state.clone());
+                            }
+                            _ => {}
+                        },
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+        dependencies
     }
 
-    fn get_value_dependencies(&self, vaddr: &VAddr) -> Option<Vec<ProcState>> {
-        // TODO
-        None
+    fn get_value_dependencies(&self, vaddr: &VAddr) -> Vec<ProcState> {
+        let mut dependencies = Vec::new();
+        for (_, state) in &self.current_program_state.procs {
+            match &state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(location) => match location.get() {
+                    TypedCore::Var(pl_var) => {
+                        // NOTE took out the indirection of var
+                        match state.env.get(pl_var) {
+                            Some(pl_vaddr) => {
+                                if pl_vaddr == *vaddr {
+                                    // NOTE cloning here might become a memory issue
+                                    dependencies.push(state.clone());
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+        dependencies
     }
 
     fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Option<Vec<ProcState>> {
