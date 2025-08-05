@@ -1,24 +1,24 @@
 use std::collections::{HashMap, HashSet};
 
-use super::{Pid, Value};
+use super::{Pid, Value, ValueAddress};
 
 // Mailbox := P(Value)
 #[derive(Clone, Debug, PartialEq)]
-pub struct Mailbox<'a> {
-    inner: HashSet<Value<'a>>,
+pub struct Mailbox<'a, V: ValueAddress> {
+    inner: HashSet<Value<'a, V>>,
 }
 
-impl Mailbox<'_> {
+impl<V: ValueAddress> Mailbox<'_, V> {
     pub fn mmatch(self) {} // TODO
     pub fn enq(self) {} // TODO
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Mailboxes<'a> {
-    pub inner: HashMap<Pid<'a>, Mailbox<'a>>,
+pub struct Mailboxes<'a, V: ValueAddress> {
+    pub inner: HashMap<Pid<'a>, Mailbox<'a, V>>,
 }
 
-impl<'a> Mailboxes<'a> {
+impl<'a, V: ValueAddress> Mailboxes<'a, V> {
     pub fn init() -> Self {
         Mailboxes {
             inner: HashMap::new(),

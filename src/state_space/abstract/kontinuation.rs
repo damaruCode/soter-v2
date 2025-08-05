@@ -1,4 +1,4 @@
-use super::{Env, KAddr, ProgLoc};
+use super::{Env, KontinuationAddress, ProgLoc, ValueAddress};
 use crate::ast::{AstList, Var};
 
 // Kont :=
@@ -7,8 +7,8 @@ use crate::ast::{AstList, Var};
 //       | Stop
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum Kont<'a> {
-    Let(&'a AstList<Var>, ProgLoc<'a>, Env<'a>, KAddr<'a>),
-    Do(ProgLoc<'a>, Env<'a>, KAddr<'a>),
+pub enum Kont<'a, K: KontinuationAddress, V: ValueAddress> {
+    Let(&'a AstList<Var>, ProgLoc<'a>, Env<'a, V>, K),
+    Do(ProgLoc<'a>, Env<'a, V>, K),
     Stop,
 }
