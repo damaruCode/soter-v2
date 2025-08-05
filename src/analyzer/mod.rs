@@ -122,7 +122,7 @@ impl<'a> Analyzer<'a> {
                 ProgLocOrPid::ProgLoc(location) => match location.get() {
                     TypedCore::Var(pl_var) => {
                         // NOTE took out the indirection of var
-                        match state.env.get(pl_var) {
+                        match state.env.get(&pl_var.name) {
                             Some(pl_vaddr) => {
                                 if pl_vaddr == *vaddr {
                                     // NOTE cloning here might become a memory issue

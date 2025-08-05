@@ -12,7 +12,6 @@ pub mod store;
 pub mod time;
 pub mod value;
 pub mod value_address;
-pub mod var;
 
 pub use closure::*;
 pub use data::*;
@@ -28,4 +27,3 @@ pub use store::*;
 pub use time::*;
 pub use value::*;
 pub use value_address::*;
-pub use var::*;

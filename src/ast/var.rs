@@ -34,16 +34,7 @@ impl From<Vec<Value>> for AstList<Var> {
 }
 impl PartialOrd for Var {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match &self.name {
-            VarName::String(s1) => match &other.name {
-                VarName::String(s2) => Some(s1.cmp(s2)),
-                VarName::Number(_n2) => Some(std::cmp::Ordering::Less),
-            },
-            VarName::Number(n1) => match &other.name {
-                VarName::String(_s2) => Some(std::cmp::Ordering::Greater),
-                VarName::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
-            },
-        }
+        self.name.partial_cmp(&other.name)
     }
 }
 impl Ord for Var {
@@ -74,5 +65,24 @@ impl From<AstList<Var>> for Vec<VarName> {
             vec.push(var.name.clone());
         }
         vec
+    }
+}
+impl PartialOrd for VarName {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match &self {
+            VarName::String(s1) => match &other {
+                VarName::String(s2) => Some(s1.cmp(s2)),
+                VarName::Number(_n2) => Some(std::cmp::Ordering::Less),
+            },
+            VarName::Number(n1) => match &other {
+                VarName::String(_s2) => Some(std::cmp::Ordering::Greater),
+                VarName::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
+            },
+        }
+    }
+}
+impl Ord for VarName {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }
