@@ -29,9 +29,7 @@ pub fn compile() {
 pub fn run(file: &String) {
     //erl -noshell -s ecorej to_core <file_path> -s init stop
     let r = Command::new("erl")
-        .args([
-            "-noshell", "-s", "ecorej", "to_corej", file, "-s", "init", "stop",
-        ])
+        .args(["-noshell", "ecorej", "to_corej", file, "-s", "init", "stop"])
         .output()
         .expect("failed to run erlang");
 
