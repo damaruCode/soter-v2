@@ -6,7 +6,7 @@ pub mod util;
 
 use std::env;
 
-use analyzer::Analyzer;
+use analyzer::{Analyzer, StandardAddressBuilder};
 use chrono::Utc;
 use log4rs::{
     append::file::FileAppender,
@@ -44,14 +44,14 @@ fn main() {
     let mut core_path = args[1].to_string();
     core_path.push_str(".json");
     let core = erlang::get_core(&core_path);
-    let _typed_core = ast::TypedCore::from(core);
+    let typed_core = ast::TypedCore::from(core);
 
     // let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
     // lambda_actor = lambda_actor.step();
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    // let _analyzer = Analyzer::new(&typed_core);
+    let _analyzer = Analyzer::new(&typed_core, Box::new(StandardAddressBuilder {}));
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 use crate::{
-    ast::VarName,
+    ast::{TypedCore, VarName},
     state_space::r#abstract::{
         AddressBuilder, Data, Env, Kont, KontinuationAddress, Pid, ProcState, ProgLoc,
         ProgLocOrPid, Time, Value, ValueAddress,
@@ -30,19 +30,23 @@ impl ValueAddress for VAddr<'_> {}
 
 pub struct StandardAddressBuilder {}
 impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
-    fn init_kaddr(target_proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>) -> KAddr<'a> {
+    fn init_kaddr(
+        &self,
+        pid: Pid<'a>,
+        prog_loc: ProgLoc<'a>,
+        env: Env<VAddr<'a>>,
+        time: Time<'a>,
+    ) -> KAddr<'a> {
         KAddr {
-            pid: target_proc_state.pid.clone(),
-            prog_loc: match &target_proc_state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
-                _ => panic!("ProgLoc expected"),
-            },
-            env: target_proc_state.env.clone(),
-            time: target_proc_state.time.clone(),
+            pid,
+            prog_loc,
+            env,
+            time,
         }
     }
 
     fn new_kaddr(
+        &self,
         proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
         new_kont: &Kont<KAddr<'a>, VAddr<'a>>,
     ) -> KAddr<'a> {
@@ -58,6 +62,7 @@ impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
     }
 
     fn new_vaddr(
+        &self,
         val_store: SetMap<VAddr, Value<VAddr>>,
         proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
         var: &VarName,
@@ -65,11 +70,13 @@ impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
         VAddr {
             pid: proc_state.pid.clone(),
             var: var.clone(),
-            data: match proc_state.prog_loc_or_pid {
-                ProgLocOrPid::Pid(pid) => Data::Pid(pid),
-                ProgLocOrPid::ProgLoc(prog_loc) => {
-                    // TODO
-                }
+            data: match &proc_state.prog_loc_or_pid {
+                ProgLocOrPid::Pid(pid) => Data::Pid(pid.clone()),
+                ProgLocOrPid::ProgLoc(prog_loc) => match prog_loc.get() {
+                    TypedCore::Fun(fun) => Data::Fun(fun),
+                    // TODO how would we recognize a Constructor or Atom?
+                    _ => panic!("Unexpected program location"),
+                },
             },
             time: proc_state.time.clone(),
         }

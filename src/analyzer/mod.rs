@@ -2,7 +2,7 @@ use crate::ast::TypedCore;
 use crate::state_space::r#abstract::*;
 
 mod allocation_schemes;
-use allocation_schemes::*;
+pub use allocation_schemes::*;
 
 pub enum TransitionError {
     ErroneousTransition,
@@ -11,14 +11,22 @@ pub enum TransitionError {
 
 pub struct Analyzer<'a, K: KontinuationAddress, V: ValueAddress> {
     current_program_state: State<'a, K, V>,
-    address_builder: Box<dyn AddressBuilder<K, V>>,
+    address_builder: Box<dyn AddressBuilder<'a, K, V>>,
 }
 
 impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
-    pub fn new(ast: &'a TypedCore, address_builder: Box<dyn AddressBuilder<K, V>>) -> Self {
+    pub fn new(ast: &'a TypedCore, address_builder: Box<dyn AddressBuilder<'a, K, V>>) -> Self {
+        let prog_loc = ProgLoc::init(ast);
+        let k_addr = address_builder.init_kaddr(
+            Pid::init(prog_loc.clone()),
+            prog_loc,
+            Env::init(),
+            Time::init(),
+        );
+
         Analyzer {
             address_builder,
-            current_program_state: State::init(ast),
+            current_program_state: State::init(ast, k_addr),
         }
     }
 
