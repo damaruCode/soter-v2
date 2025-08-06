@@ -8,6 +8,6 @@ use super::Pid;
 pub enum Data<'a> {
     Pid(Pid<'a>),
     Atom(),
-    Fun(Fun),
+    Fun(&'a Fun),
     Constructor(Vec<Data<'a>>),
 }
