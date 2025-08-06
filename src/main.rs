@@ -2,7 +2,6 @@ pub mod analyzer;
 pub mod ast;
 pub mod erlang;
 pub mod state_space;
-pub mod transition_system;
 pub mod util;
 
 use std::env;
@@ -51,7 +50,8 @@ fn main() {
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    //let _analyzer = analyzer::Analyzer::new(&typed_core);
+    let address_builder = StandardAddressBuilder
+    let _analyzer = Analyzer::new(&typed_core, );
 }
 
 #[cfg(test)]

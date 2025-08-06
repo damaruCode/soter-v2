@@ -1,6 +1,9 @@
-use crate::state_space::r#abstract::{
-    AddressBuilder, Data, Env, KontinuationAddress, Pid, ProgLoc, ProgLocOrPid, Time, ValueAddress,
-    Var,
+use crate::{
+    ast::VarName,
+    state_space::r#abstract::{
+        AddressBuilder, Data, Env, KontinuationAddress, Pid, ProcState, ProgLoc, ProgLocOrPid,
+        State, Time, ValueAddress,
+    },
 };
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
@@ -18,21 +21,16 @@ impl KontinuationAddress for KAddr<'_> {}
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct VAddr<'a> {
     pid: Pid<'a>,
-    var: Var<'a>,
+    var: VarName,
     data: Data<'a>,
     time: Time<'a>,
 }
 impl ValueAddress for VAddr<'_> {}
 
 pub struct StandardAddressBuilder {}
-impl AddressBuilder for StandardAddressBuilder {
-    type K = KAddr<'a>;
-    type V = VAddr<'a>;
-
-    fn init_kaddr(
-        target_proc_state: &crate::state_space::r#abstract::ProcState<Self::K, Self::V>,
-    ) -> Self::K {
-        Self::K {
+impl<'a> AddressBuilder<KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
+    fn init_kaddr(target_proc_state: &ProcState<KAddr, VAddr>) -> KAddr {
+        KAddr {
             pid: target_proc_state.pid,
             prog_loc: match target_proc_state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc,
@@ -43,15 +41,7 @@ impl AddressBuilder for StandardAddressBuilder {
         }
     }
 
-    fn new_kaddr(
-        state: &crate::state_space::r#abstract::State<Self::K, Self::V>,
-        partial_info: &crate::state_space::r#abstract::State<Self::K, Self::V>,
-    ) -> Self::K {
-    }
+    fn new_kaddr(state: &State<KAddr, VAddr>, partial_info: &State<KAddr, VAddr>) -> Self::K {}
 
-    fn new_vaddr(
-        state: &crate::state_space::r#abstract::State<Self::K, Self::V>,
-        partial_info: &crate::state_space::r#abstract::State<Self::K, Self::V>,
-    ) -> Self::V {
-    }
+    fn new_vaddr(state: &State<KAddr, VAddr>, partial_info: &State<KAddr, VAddr>) -> Self::V {}
 }

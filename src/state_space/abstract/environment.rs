@@ -1,4 +1,7 @@
-use super::{ValueAddress, Var};
+use crate::ast::VarName;
+
+use super::VAddr;
+
 use std::collections::BTreeMap;
 
 // Env := Var -> VAddr
@@ -14,7 +17,7 @@ impl<V: ValueAddress> Env<'_, V> {
         }
     }
 
-    pub fn get(&self, var: &Var) -> Option<V> {
-        self.inner.get(var).cloned()
+    pub fn get(&self, var_name: &VarName) -> Option<V> {
+        self.inner.get(var_name).cloned()
     }
 }
