@@ -98,7 +98,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
         Ok(self.current_program_state.clone())
     }
 
-    fn get_data_dependencies(&self, pid: &Pid) -> Vec<ProcState> {
+    fn get_data_dependencies(&self, pid: &Pid) -> Vec<ProcState<K, V>> {
         let mut dependencies = Vec::new();
         match self.current_program_state.procs.get(pid) {
             Some(set) => {
@@ -120,13 +120,12 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
         dependencies
     }
 
-    fn get_value_dependencies(&self, vaddr: &VAddr) -> Vec<ProcState> {
+    fn get_value_dependencies(&self, vaddr: &V) -> Vec<ProcState<K, V>> {
         let mut dependencies = Vec::new();
         for (_, state) in &self.current_program_state.procs {
             match &state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match location.get() {
                     TypedCore::Var(pl_var) => {
-                        // NOTE took out the indirection of var
                         match state.env.get(&pl_var.name) {
                             Some(pl_vaddr) => {
                                 if pl_vaddr == *vaddr {
@@ -145,8 +144,23 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
         dependencies
     }
 
-    fn get_kontinuation_dependencies(&self, kaddr: &K) -> Option<Vec<ProcState<K, V>>> {
-        // TODO
-        None
+    fn get_kontinuation_dependencies(&self, kaddr: &K) -> Vec<ProcState<K, V>> {
+        let mut dependencies = Vec::new();
+        for (_, state) in &self.current_program_state.procs {
+            if state.k_addr != *kaddr {
+                continue;
+            }
+            match &state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(location) => match location.get() {
+                    // TODO add the arms that are non-reducable
+                    _ => {}
+                },
+                ProgLocOrPid::Pid(_) => {
+                    // NOTE cloning here might become a memory issue
+                    dependencies.push(state.clone());
+                }
+            }
+        }
+        dependencies
     }
 }

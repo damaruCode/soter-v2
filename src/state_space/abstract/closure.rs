@@ -4,5 +4,5 @@ use super::{Env, ProgLoc, ValueAddress};
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Closure<'a, V: ValueAddress> {
     prog_loc: ProgLoc<'a>,
-    env: Env<'a, V>,
+    env: Env<V>,
 }

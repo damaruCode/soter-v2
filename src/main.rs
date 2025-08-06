@@ -6,6 +6,7 @@ pub mod util;
 
 use std::env;
 
+use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
     append::file::FileAppender,
@@ -50,8 +51,7 @@ fn main() {
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    let address_builder = StandardAddressBuilder
-    let _analyzer = Analyzer::new(&typed_core, );
+    // let _analyzer = Analyzer::new(&typed_core);
 }
 
 #[cfg(test)]
