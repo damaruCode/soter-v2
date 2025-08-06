@@ -1,16 +1,16 @@
 use crate::ast::VarName;
 
-use super::VAddr;
-
 use std::collections::BTreeMap;
+
+use super::ValueAddress;
 
 // Env := Var -> VAddr
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct Env<'a, V: ValueAddress> {
-    inner: BTreeMap<Var<'a>, V>,
+pub struct Env<V: ValueAddress> {
+    inner: BTreeMap<VarName, V>,
 }
 
-impl<V: ValueAddress> Env<'_, V> {
+impl<V: ValueAddress> Env<V> {
     pub fn init() -> Self {
         Env {
             inner: BTreeMap::new(),

@@ -11,11 +11,13 @@ pub enum TransitionError {
 
 pub struct Analyzer<'a, K: KontinuationAddress, V: ValueAddress> {
     current_program_state: State<'a, K, V>,
+    address_builder: Box<dyn AddressBuilder<K, V>>,
 }
 
 impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
-    pub fn new(ast: &'a TypedCore) -> Self {
+    pub fn new(ast: &'a TypedCore, address_builder: Box<dyn AddressBuilder<K, V>>) -> Self {
         Analyzer {
+            address_builder,
             current_program_state: State::init(ast),
         }
     }

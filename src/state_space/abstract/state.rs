@@ -24,7 +24,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> State<'a, K, V> {
 
         State {
             procs,
-            mailboxes: Mailboxes::init(),
+            mailboxes: Mailboxes::<V>::init(),
             store: Store::init(),
         }
     }

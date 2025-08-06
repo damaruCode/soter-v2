@@ -1,9 +1,10 @@
 use crate::{
     ast::VarName,
     state_space::r#abstract::{
-        AddressBuilder, Data, Env, KontinuationAddress, Pid, ProcState, ProgLoc, ProgLocOrPid,
-        State, Time, ValueAddress,
+        AddressBuilder, Data, Env, Kont, KontinuationAddress, Pid, ProcState, ProgLoc,
+        ProgLocOrPid, Time, Value, ValueAddress,
     },
+    util::SetMap,
 };
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
@@ -12,7 +13,7 @@ use crate::{
 pub struct KAddr<'a> {
     pid: Pid<'a>,
     prog_loc: ProgLoc<'a>,
-    env: Env<'a, VAddr<'a>>,
+    env: Env<VAddr<'a>>,
     time: Time<'a>,
 }
 impl KontinuationAddress for KAddr<'_> {}
@@ -28,20 +29,49 @@ pub struct VAddr<'a> {
 impl ValueAddress for VAddr<'_> {}
 
 pub struct StandardAddressBuilder {}
-impl<'a> AddressBuilder<KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
-    fn init_kaddr(target_proc_state: &ProcState<KAddr, VAddr>) -> KAddr {
+impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
+    fn init_kaddr(target_proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>) -> KAddr<'a> {
         KAddr {
-            pid: target_proc_state.pid,
-            prog_loc: match target_proc_state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(prog_loc) => prog_loc,
-                ProgLocOrPid::Pid(_pid) => panic!("ProgLoc expected"),
+            pid: target_proc_state.pid.clone(),
+            prog_loc: match &target_proc_state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
+                _ => panic!("ProgLoc expected"),
             },
-            env: target_proc_state.env,
-            time: target_proc_state.time,
+            env: target_proc_state.env.clone(),
+            time: target_proc_state.time.clone(),
         }
     }
 
-    fn new_kaddr(state: &State<KAddr, VAddr>, partial_info: &State<KAddr, VAddr>) -> Self::K {}
+    fn new_kaddr(
+        proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
+        new_kont: &Kont<KAddr<'a>, VAddr<'a>>,
+    ) -> KAddr<'a> {
+        KAddr {
+            pid: proc_state.pid.clone(),
+            prog_loc: match &proc_state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
+                _ => panic!("ProgLoc expected"),
+            },
+            env: proc_state.env.clone(),
+            time: proc_state.time.clone(),
+        }
+    }
 
-    fn new_vaddr(state: &State<KAddr, VAddr>, partial_info: &State<KAddr, VAddr>) -> Self::V {}
+    fn new_vaddr(
+        val_store: SetMap<VAddr, Value<VAddr>>,
+        proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
+        var: &VarName,
+    ) -> VAddr<'a> {
+        VAddr {
+            pid: proc_state.pid.clone(),
+            var: var.clone(),
+            data: match proc_state.prog_loc_or_pid {
+                ProgLocOrPid::Pid(pid) => Data::Pid(pid),
+                ProgLocOrPid::ProgLoc(prog_loc) => {
+                    // TODO
+                }
+            },
+            time: proc_state.time.clone(),
+        }
+    }
 }

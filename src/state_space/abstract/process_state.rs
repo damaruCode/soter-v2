@@ -11,7 +11,7 @@ pub enum ProgLocOrPid<'a> {
 pub struct ProcState<'a, K: KontinuationAddress, V: ValueAddress> {
     pub pid: Pid<'a>,
     pub prog_loc_or_pid: ProgLocOrPid<'a>,
-    pub env: Env<'a, V>,
+    pub env: Env<V>,
     pub k_addr: K,
     pub time: Time<'a>,
 
@@ -24,7 +24,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> ProcState<'a, K, V> {
     pub fn new(
         pid: Pid<'a>,
         prog_loc_or_pid: ProgLocOrPid<'a>,
-        env: Env<'a, V>,
+        env: Env<V>,
         k_addr: K,
         time: Time<'a>,
     ) -> Self {
