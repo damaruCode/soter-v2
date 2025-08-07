@@ -32,7 +32,7 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            pkgs-old.erlangR23
+            pkgs-old.erlangR22
             #pkgs.erlang_27
             pkgs.rebar3
             pkgs.rust-bin.stable.latest.default
