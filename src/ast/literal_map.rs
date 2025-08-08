@@ -13,6 +13,7 @@ pub struct LiteralMap {
     pub es: AstList<MapPair>,
     pub is_pat: bool,
 }
+
 impl From<Map<String, Value>> for LiteralMap {
     fn from(map: Map<String, Value>) -> Self {
         LiteralMap {

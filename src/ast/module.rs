@@ -13,6 +13,7 @@ pub struct Module {
     pub attrs: AstList<AstTuple<TypedCore>>,
     pub defs: AstList<AstTuple<TypedCore>>,
 }
+
 impl From<Map<String, Value>> for Module {
     fn from(map: Map<String, Value>) -> Self {
         Module {

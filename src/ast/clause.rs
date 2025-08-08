@@ -11,6 +11,7 @@ pub struct Clause {
     pub guard: Box<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Clause {
     fn from(map: Map<String, Value>) -> Self {
         Clause {

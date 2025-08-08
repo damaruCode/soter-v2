@@ -11,6 +11,7 @@ pub struct Receive {
     pub timeout: Box<TypedCore>,
     pub action: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Receive {
     fn from(map: Map<String, Value>) -> Self {
         Receive {

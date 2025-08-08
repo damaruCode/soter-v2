@@ -7,6 +7,7 @@ pub struct Values {
     pub anno: AstList<TypedCore>,
     pub es: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Values {
     fn from(map: Map<String, Value>) -> Self {
         Values {

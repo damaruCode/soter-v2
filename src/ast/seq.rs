@@ -9,6 +9,7 @@ pub struct Seq {
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Seq {
     fn from(map: Map<String, Value>) -> Self {
         Seq {

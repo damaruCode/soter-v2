@@ -9,6 +9,7 @@ pub struct Case {
     pub arg: Box<TypedCore>,
     pub clauses: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Case {
     fn from(map: Map<String, Value>) -> Self {
         Case {

@@ -11,6 +11,7 @@ pub struct Call {
     pub name: Box<TypedCore>,
     pub args: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Call {
     fn from(map: Map<String, Value>) -> Self {
         Call {

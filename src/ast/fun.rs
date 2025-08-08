@@ -8,6 +8,7 @@ pub struct Fun {
     pub vars: AstList<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Fun {
     fn from(map: Map<String, Value>) -> Self {
         Fun {

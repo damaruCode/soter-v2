@@ -9,6 +9,7 @@ pub struct Apply {
     pub op: Box<TypedCore>,
     pub args: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Apply {
     fn from(map: Map<String, Value>) -> Self {
         Apply {

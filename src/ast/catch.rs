@@ -7,6 +7,7 @@ pub struct Catch {
     pub anno: AstList<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Catch {
     fn from(map: Map<String, Value>) -> Self {
         Catch {

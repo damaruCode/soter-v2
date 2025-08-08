@@ -10,6 +10,7 @@ pub struct LetRec {
     pub defs: AstList<AstTuple<TypedCore>>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for LetRec {
     fn from(map: Map<String, Value>) -> Self {
         LetRec {

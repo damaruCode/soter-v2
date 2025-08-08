@@ -10,6 +10,7 @@ pub struct PrimOp {
     pub args: AstList<TypedCore>, // NOTE We could probably be more precise here; rogers2018 enforces that
                                   // PrimOp is always applied to names
 }
+
 impl From<Map<String, Value>> for PrimOp {
     fn from(map: Map<String, Value>) -> Self {
         PrimOp {
@@ -23,6 +24,7 @@ impl From<Map<String, Value>> for PrimOp {
 pub struct SelfOp {
     pub anno: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for SelfOp {
     fn from(map: Map<String, Value>) -> Self {
         Self {

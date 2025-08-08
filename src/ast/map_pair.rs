@@ -12,11 +12,13 @@ pub struct MapPair {
     pub key: Box<TypedCore>,
     pub val: Box<TypedCore>,
 }
+
 impl From<Value> for MapPair {
     fn from(value: Value) -> MapPair {
         MapPair::deserialize(value).unwrap()
     }
 }
+
 impl From<Map<String, Value>> for MapPair {
     fn from(map: Map<String, Value>) -> Self {
         MapPair {

@@ -9,6 +9,7 @@ pub struct Cons {
     pub hd: Box<TypedCore>,
     pub tl: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Cons {
     fn from(map: Map<String, Value>) -> Self {
         Cons {

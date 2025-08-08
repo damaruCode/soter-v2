@@ -9,6 +9,7 @@ pub struct Alias {
     pub var: Box<TypedCore>,
     pub pat: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Alias {
     fn from(map: Map<String, Value>) -> Self {
         Alias {

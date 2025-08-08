@@ -15,6 +15,7 @@ pub struct Try {
     pub evars: AstList<TypedCore>,
     pub handler: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Try {
     fn from(map: Map<String, Value>) -> Self {
         Try {

@@ -7,6 +7,7 @@ pub struct Binary {
     pub anno: AstList<TypedCore>,
     pub segments: AstList<BitStr>,
 }
+
 impl From<Map<String, Value>> for Binary {
     fn from(map: Map<String, Value>) -> Self {
         Binary {

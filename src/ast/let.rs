@@ -11,6 +11,7 @@ pub struct Let {
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Let {
     fn from(map: Map<String, Value>) -> Self {
         Let {
