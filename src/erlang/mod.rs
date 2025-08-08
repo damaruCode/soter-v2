@@ -1,3 +1,4 @@
+use glob::glob;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -17,8 +18,16 @@ pub fn get_core(file: &String) -> serde_json::Value {
 
 pub fn compile() {
     //erlc -o ebin src/jsx*.erl
+    let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
+    for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
+        match entry {
+            Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
+            Err(e) => println!("{:?}", e),
+        }
+    }
+
     let c = Command::new("erlc")
-        .args(["-o", "erlang/ebin", "erlang/jsx/src/jsx*.erl"])
+        .args(args)
         .output()
         .expect("failed to compile jsx");
 
