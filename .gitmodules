@@ -1,0 +1,3 @@
+[submodule "erlang/jsx"]
+	path = erlang/jsx
+	url = https://github.com/talentdeficit/jsx.git
