@@ -43,18 +43,15 @@ impl Ord for Var {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
-pub enum VarName {
-    String(String),
-    Number(Number),
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone, PartialOrd, Ord)]
+pub struct VarName {
+    inner: String,
 }
 
 impl From<Value> for VarName {
-    fn from(value: Value) -> Self {
-        match value {
-            Value::String(s) => VarName::String(s),
-            Value::Number(n) => VarName::Number(n),
-            _ => panic!("Unexpected type for VarName"),
+    fn from(_value: Value) -> Self {
+        Self {
+            inner: String::new(),
         }
     }
 }
@@ -65,24 +62,5 @@ impl From<AstList<Var>> for Vec<VarName> {
             vec.push(var.name.clone());
         }
         vec
-    }
-}
-impl PartialOrd for VarName {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        match &self {
-            VarName::String(s1) => match &other {
-                VarName::String(s2) => Some(s1.cmp(s2)),
-                VarName::Number(_n2) => Some(std::cmp::Ordering::Less),
-            },
-            VarName::Number(n1) => match &other {
-                VarName::String(_s2) => Some(std::cmp::Ordering::Greater),
-                VarName::Number(n2) => Some(n1.as_i64().unwrap().cmp(&n2.as_i64().unwrap())),
-            },
-        }
-    }
-}
-impl Ord for VarName {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
     }
 }

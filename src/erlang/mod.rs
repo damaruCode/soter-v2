@@ -1,3 +1,4 @@
+use glob::glob;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -16,20 +17,48 @@ pub fn get_core(file: &String) -> serde_json::Value {
 }
 
 pub fn compile() {
+    //erlc -o ebin src/jsx*.erl
+    let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
+    for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
+        match entry {
+            Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
+            Err(e) => println!("{:?}", e),
+        }
+    }
+
+    let c = Command::new("erlc")
+        .args(args)
+        .output()
+        .expect("failed to compile jsx");
+
+    println!("jsx_compile_status: {}", c.status);
+    assert!(c.status.success());
+
     //erlc ecorej.erl
     let c = Command::new("erlc")
         .arg("erlang/ecorej.erl")
         .output()
-        .expect("failed to compile erlang");
+        .expect("failed to compile ecorej");
 
-    println!("erlang_compile_status: {}", c.status);
+    println!("ecorej_compile_status: {}", c.status);
     assert!(c.status.success());
 }
 
 pub fn run(file: &String) {
     //erl -noshell -s ecorej to_core <file_path> -s init stop
     let r = Command::new("erl")
-        .args(["-noshell", "ecorej", "to_corej", file, "-s", "init", "stop"])
+        .args([
+            "-pa",
+            "erlang/ebin",
+            "-noshell",
+            "-s",
+            "ecorej",
+            "to_corej",
+            file,
+            "-s",
+            "init",
+            "stop",
+        ])
         .output()
         .expect("failed to run erlang");
 

@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-21.05";
+    nixpkgs-old.url = "github:NixOS/nixpkgs/nixos-21.11";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -32,8 +32,7 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            # pkgs-old.erlangR22
-            pkgs.erlang_27
+            pkgs-old.erlangR22
             pkgs.rust-bin.stable.latest.default
           ];
         };
