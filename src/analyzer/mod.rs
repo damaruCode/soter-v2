@@ -115,29 +115,30 @@ impl<'a> Analyzer<'a> {
         dependencies
     }
 
-    fn get_value_dependencies(&self, vaddr: &VAddr) -> Vec<ProcState> {
-        let mut dependencies = Vec::new();
-        for (_, state) in &self.current_program_state.procs {
-            match &state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match location.get() {
-                    TypedCore::Var(pl_var) => {
-                        match state.env.get(&pl_var.name) {
-                            Some(pl_vaddr) => {
-                                if pl_vaddr == *vaddr {
-                                    // NOTE cloning here might become a memory issue
-                                    dependencies.push(state.clone());
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
-        }
-        dependencies
-    }
+    // TODO when .get(...) works
+    //fn get_value_dependencies(&self, vaddr: &VAddr) -> Vec<ProcState> {
+    //    let mut dependencies = Vec::new();
+    //    for (_, state) in &self.current_program_state.procs {
+    //        match &state.prog_loc_or_pid {
+    //            ProgLocOrPid::ProgLoc(location) => match location.get() {
+    //                TypedCore::Var(pl_var) => {
+    //                    match state.env.get(&pl_var.name) {
+    //                        Some(pl_vaddr) => {
+    //                            if pl_vaddr == *vaddr {
+    //                                // NOTE cloning here might become a memory issue
+    //                                dependencies.push(state.clone());
+    //                            }
+    //                        }
+    //                        _ => {}
+    //                    }
+    //                }
+    //                _ => {}
+    //            },
+    //            _ => {}
+    //        }
+    //    }
+    //    dependencies
+    //}
 
     fn get_kontinuation_dependencies(&self, kaddr: &KAddr) -> Vec<ProcState> {
         let mut dependencies = Vec::new();

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //		   exports :: [cerl:cerl()],
 //		   attrs :: [{cerl:cerl(), cerl:cerl()}],
 //		   defs :: [{cerl:cerl(), cerl:cerl()}]}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Module {
     pub anno: AstList<TypedCore>,
     pub name: Box<TypedCore>,

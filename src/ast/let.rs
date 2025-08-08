@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 //-record(c_let, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		arg :: cerl:cerl(),
 //		body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Let {
     pub anno: AstList<TypedCore>,
     pub vars: AstList<Var>,

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 //-record(c_apply, {anno=[] :: list(), op :: cerl:cerl(),
 //		  args :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Apply {
     pub anno: AstList<TypedCore>,
     pub op: Box<TypedCore>,

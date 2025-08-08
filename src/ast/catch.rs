@@ -2,7 +2,7 @@ use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
 //-record(c_catch, {anno=[] :: list(), body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Catch {
     pub anno: AstList<TypedCore>,
     pub body: Box<TypedCore>,

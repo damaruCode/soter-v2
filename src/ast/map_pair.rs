@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 //	       op :: #c_literal{val::'assoc'} | #c_literal{val::'exact'},
 //		     key :: any(),              % todo
 //		     val :: any()}).            % todo
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct MapPair {
     pub anno: AstList<TypedCore>,
     pub op: Literal,

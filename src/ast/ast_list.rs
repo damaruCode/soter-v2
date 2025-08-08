@@ -1,7 +1,7 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct AstList<T> {
     inner: Vec<T>,
 }

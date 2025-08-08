@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 //		   unit :: cerl:cerl(),
 //		   type :: cerl:cerl(),
 //		   flags :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct BitStr {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,

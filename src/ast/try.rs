@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 //		body :: cerl:cerl(),
 //		evars :: [cerl:cerl()],
 //		handler :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Try {
     pub anno: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
