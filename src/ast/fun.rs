@@ -1,13 +1,15 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
+
 //-record(c_fun, {anno=[] :: list(), vars :: [cerl:cerl()],
 //		body :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Fun {
     pub anno: AstList<TypedCore>,
     pub vars: AstList<TypedCore>,
     pub body: Box<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Fun {
     fn from(map: Map<String, Value>) -> Self {
         Fun {

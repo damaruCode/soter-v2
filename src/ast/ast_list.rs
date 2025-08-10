@@ -1,7 +1,7 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct AstList<T> {
     inner: Vec<T>,
 }
@@ -23,6 +23,7 @@ impl<T> AstList<T> {
         &self.inner
     }
 }
+
 impl From<Vec<Value>> for AstList<TypedCore> {
     fn from(vec: Vec<Value>) -> AstList<TypedCore> {
         let mut list = Vec::new();

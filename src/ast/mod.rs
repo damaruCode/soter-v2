@@ -62,7 +62,7 @@ use serde_json::Value;
 #[derive(Debug)]
 pub struct ConversionError;
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub enum TypedCore {
     //
     AstTuple(AstTuple<TypedCore>),

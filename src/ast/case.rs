@@ -3,12 +3,13 @@ use serde::{Deserialize, Serialize};
 
 //-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
 //		 clauses :: [cerl:cerl()]}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Case {
     pub anno: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
     pub clauses: AstList<TypedCore>,
 }
+
 impl From<Map<String, Value>> for Case {
     fn from(map: Map<String, Value>) -> Self {
         Case {

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 //		   unit :: cerl:cerl(),
 //		   type :: cerl:cerl(),
 //		   flags :: cerl:cerl()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct BitStr {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,
@@ -15,11 +15,13 @@ pub struct BitStr {
     pub r#type: Box<TypedCore>,
     pub flags: Box<TypedCore>,
 }
+
 impl From<Value> for BitStr {
     fn from(value: Value) -> BitStr {
         BitStr::deserialize(value).unwrap()
     }
 }
+
 impl From<Map<String, Value>> for BitStr {
     fn from(map: Map<String, Value>) -> Self {
         BitStr {

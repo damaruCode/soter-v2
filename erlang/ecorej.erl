@@ -213,6 +213,17 @@ enc({c_var, Anno, Name}) ->
 enc(Tuple) when is_tuple(Tuple) ->
   [enc(Elem) || Elem <- tuple_to_list(Tuple)];
 enc(List) when is_list(List) ->
-  [enc(Elem) || Elem <- List];
+  case List of
+    [] ->
+      [];
+    _ ->
+      try
+        Y = list_to_binary(List),
+        Y
+      catch
+        error:badarg ->
+          [enc(Elem) || Elem <- List]
+      end
+  end;
 enc(Other) ->
   Other.

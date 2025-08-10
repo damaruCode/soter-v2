@@ -6,13 +6,14 @@ use serde::{Deserialize, Serialize};
 //		     arg=#c_literal{val=#{}} :: cerl:c_var() | cerl:c_literal(),
 //		     es :: [cerl:c_map_pair()],
 //		     is_pat=false :: boolean()}).
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct LiteralMap {
     pub anno: AstList<TypedCore>,
     pub arg: Literal,
     pub es: AstList<MapPair>,
     pub is_pat: bool,
 }
+
 impl From<Map<String, Value>> for LiteralMap {
     fn from(map: Map<String, Value>) -> Self {
         LiteralMap {
