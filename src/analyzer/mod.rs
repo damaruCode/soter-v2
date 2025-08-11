@@ -69,7 +69,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
                     TypedCore::Let(_let) => {
                         // ABS_PUSH_LET
                     }
-                    // ProgLoc is irreducible via the previous transition rules; we call it a value
+                    // ProgLoc is irreducible via the previous transition rules; it's a Value
                     // We need to look at the continuation for the next computation
                     _ => match self
                         .current_program_state

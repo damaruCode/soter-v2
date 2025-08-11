@@ -47,30 +47,34 @@ impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
 
     fn new_kaddr(
         &self,
-        proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
-        new_kont: &Kont<KAddr<'a>, VAddr<'a>>,
+        curr_proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
+        _next_prog_loc_or_pid: &'a ProgLocOrPid,
+        _next_env: &'a Env<VAddr<'a>>,
+        _next_time: &'a Time,
     ) -> KAddr<'a> {
         KAddr {
-            pid: proc_state.pid.clone(),
-            prog_loc: match &proc_state.prog_loc_or_pid {
+            pid: curr_proc_state.pid.clone(),
+            prog_loc: match &curr_proc_state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            env: proc_state.env.clone(),
-            time: proc_state.time.clone(),
+            env: curr_proc_state.env.clone(),
+            time: curr_proc_state.time.clone(),
         }
     }
 
     fn new_vaddr(
         &self,
-        val_store: SetMap<VAddr, Value<VAddr>>,
-        proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
+        curr_proc_state: &'a ProcState<KAddr<'a>, VAddr<'a>>,
         var: &VarName,
+        _next_prog_loc_or_pid: &'a ProgLocOrPid,
+        _next_env: &'a Env<VAddr<'a>>,
+        _next_time: &'a Time,
     ) -> VAddr<'a> {
         VAddr {
-            pid: proc_state.pid.clone(),
+            pid: curr_proc_state.pid.clone(),
             var: var.clone(),
-            data: match &proc_state.prog_loc_or_pid {
+            data: match &curr_proc_state.prog_loc_or_pid {
                 ProgLocOrPid::Pid(pid) => Data::Pid(pid.clone()),
                 ProgLocOrPid::ProgLoc(prog_loc) => match prog_loc.get() {
                     TypedCore::Fun(fun) => Data::Fun(fun),
@@ -78,7 +82,7 @@ impl<'a> AddressBuilder<'a, KAddr<'a>, VAddr<'a>> for StandardAddressBuilder {
                     _ => panic!("Unexpected program location"),
                 },
             },
-            time: proc_state.time.clone(),
+            time: curr_proc_state.time.clone(),
         }
     }
 }
