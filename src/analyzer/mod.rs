@@ -30,7 +30,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
         }
     }
 
-    pub fn step(&self) -> Result<State<K, V>, TransitionError> {
+    pub fn step(&self) -> Result<(), TransitionError> {
         for (_pid, proc_state) in &self.current_program_state.procs {
             let _state = match &proc_state.prog_loc_or_pid {
                 ProgLocOrPid::Pid(_pid) => {
@@ -103,7 +103,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
             };
         }
 
-        Ok(self.current_program_state.clone())
+        Ok(())
     }
 
     fn get_data_dependencies(&self, pid: &Pid) -> Vec<ProcState<K, V>> {
