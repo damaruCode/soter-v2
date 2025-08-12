@@ -1,32 +1,32 @@
-use super::{Data, Env, Kont, KontinuationAddress, Pid, ProgLoc, Time, Value, ValueAddress};
+use super::{Data, Env, Kont, KontinuationAddress, Pid, Time, Value, ValueAddress};
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub enum ProgLocOrPid<'a> {
-    ProgLoc(ProgLoc<'a>),
-    Pid(Pid<'a>),
+pub enum ProgLocOrPid {
+    ProgLoc(usize),
+    Pid(Pid),
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct ProcState<'a, K: KontinuationAddress, V: ValueAddress> {
-    pub pid: Pid<'a>,
-    pub prog_loc_or_pid: ProgLocOrPid<'a>,
+pub struct ProcState<K: KontinuationAddress, V: ValueAddress> {
+    pub pid: Pid,
+    pub prog_loc_or_pid: ProgLocOrPid,
     pub env: Env<V>,
     pub k_addr: K,
-    pub time: Time<'a>,
+    pub time: Time,
 
-    visited_data: Vec<Data<'a>>,
-    visited_values: Vec<Value<'a, V>>,
-    visited_konts: Vec<Kont<'a, K, V>>,
+    visited_data: Vec<Data>,
+    visited_values: Vec<Value<V>>,
+    visited_konts: Vec<Kont<K, V>>,
 }
 
-impl<'a, K: KontinuationAddress, V: ValueAddress> ProcState<'a, K, V> {
+impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
     pub fn new(
-        pid: Pid<'a>,
-        prog_loc_or_pid: ProgLocOrPid<'a>,
+        pid: Pid,
+        prog_loc_or_pid: ProgLocOrPid,
         env: Env<V>,
         k_addr: K,
-        time: Time<'a>,
+        time: Time,
     ) -> Self {
         ProcState {
             pid,
@@ -41,10 +41,10 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> ProcState<'a, K, V> {
         }
     }
 
-    pub fn init(prog_loc: ProgLoc<'a>, init_k_addr: K) -> Self {
+    pub fn init(init_k_addr: K) -> Self {
         ProcState {
-            pid: Pid::init(prog_loc.clone()),
-            prog_loc_or_pid: ProgLocOrPid::ProgLoc(prog_loc.clone()),
+            pid: Pid::init(),
+            prog_loc_or_pid: ProgLocOrPid::ProgLoc(0),
             env: Env::init(),
             k_addr: init_k_addr,
             time: Time::init(),

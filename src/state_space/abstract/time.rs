@@ -1,13 +1,11 @@
-use super::ProgLoc;
-
 // Time := ProgLoc^k
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct Time<'a> {
-    inner: Vec<ProgLoc<'a>>,
+pub struct Time {
+    pub inner: Vec<usize>,
 }
 
-impl<'a> Time<'a> {
-    pub fn new(time: Vec<ProgLoc<'a>>) -> Self {
+impl Time {
+    pub fn new(time: Vec<usize>) -> Self {
         Time { inner: time }
     }
 
@@ -15,13 +13,9 @@ impl<'a> Time<'a> {
         Time { inner: Vec::new() }
     }
 
-    pub fn tick(&self, prog_loc: ProgLoc<'a>) -> Self {
+    pub fn tick(&self, prog_loc: usize) -> Self {
         let mut ticked_time = self.clone();
         ticked_time.inner.push(prog_loc);
         ticked_time
-    }
-
-    pub fn get_contour(&self) -> Vec<ProgLoc<'a>> {
-        self.inner.clone()
     }
 }

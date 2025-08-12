@@ -4,21 +4,21 @@ use super::{Pid, Value, ValueAddress};
 
 // Mailbox := P(Value)
 #[derive(Clone, Debug, PartialEq)]
-pub struct Mailbox<'a, V: ValueAddress> {
-    inner: HashSet<Value<'a, V>>,
+pub struct Mailbox<V: ValueAddress> {
+    inner: HashSet<Value<V>>,
 }
 
-impl<V: ValueAddress> Mailbox<'_, V> {
+impl<V: ValueAddress> Mailbox<V> {
     pub fn mmatch(self) {} // TODO
     pub fn enq(self) {} // TODO
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Mailboxes<'a, V: ValueAddress> {
-    pub inner: HashMap<Pid<'a>, Mailbox<'a, V>>,
+pub struct Mailboxes<V: ValueAddress> {
+    pub inner: HashMap<Pid, Mailbox<V>>,
 }
 
-impl<'a, V: ValueAddress> Mailboxes<'a, V> {
+impl<V: ValueAddress> Mailboxes<V> {
     pub fn init() -> Self {
         Mailboxes {
             inner: HashMap::new(),

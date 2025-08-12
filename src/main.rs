@@ -51,7 +51,9 @@ fn main() {
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    let _analyzer = Analyzer::new(&typed_core, Box::new(StandardAddressBuilder {}));
+    let ast_helper = util::AstHelper::new(typed_core);
+
+    let _analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
 }
 
 #[cfg(test)]

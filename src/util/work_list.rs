@@ -1,8 +1,9 @@
+use crate::util::AstHelper;
 use std::collections::{HashSet, VecDeque};
 use std::hash::Hash;
 
 pub trait WorkItem: Eq + Hash + Clone {
-    fn process(&self) -> (Vec<Self>, Vec<Self>);
+    fn process(&self, ast_helper: &AstHelper) -> (Vec<Self>, Vec<Self>);
 }
 
 pub struct WorkList<T: WorkItem> {
@@ -22,10 +23,10 @@ impl<T: WorkItem> WorkList<T> {
         Self { queue, seen }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self, ast_helper: &AstHelper) {
         // This terminates because it assumes a fixpoint implementation
         while let Some(item) = self.queue.pop_front() {
-            let (new_items, revisit_items) = item.process();
+            let (new_items, revisit_items) = item.process(ast_helper);
             for item in revisit_items {
                 self.queue.push_back(item);
             }
