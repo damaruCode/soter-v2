@@ -1,16 +1,18 @@
 use std::collections::{HashSet, VecDeque};
 use std::hash::Hash;
+use std::marker::PhantomData;
 
-pub trait WorkItem: Eq + Hash + Clone {
-    fn process(&self) -> (Vec<Self>, Vec<Self>);
+pub trait WorkItem<'a>: Eq + Hash + Clone {
+    fn process(&'a self) -> (Vec<Self>, Vec<Self>);
 }
 
-pub struct WorkList<T: WorkItem> {
+pub struct WorkList<'a, T: WorkItem<'a>> {
     queue: VecDeque<T>,
     seen: HashSet<T>,
+    phantom_data: PhantomData<&'a T>,
 }
 
-impl<T: WorkItem> WorkList<T> {
+impl<'a, T: WorkItem<'a>> WorkList<'a, T> {
     pub fn new(initial: Vec<T>) -> Self {
         let mut queue = VecDeque::new();
         let mut seen = HashSet::new();
@@ -19,7 +21,11 @@ impl<T: WorkItem> WorkList<T> {
             seen.insert(item.clone());
             queue.push_back(item);
         }
-        Self { queue, seen }
+        Self {
+            queue,
+            seen,
+            phantom_data: PhantomData,
+        }
     }
 
     pub fn run(&mut self) {

@@ -165,7 +165,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
                     TypedCore::Var(pl_var) => {
                         match state.env.get(&pl_var.name) {
                             Some(pl_vaddr) => {
-                                if pl_vaddr == *vaddr {
+                                if pl_vaddr == vaddr {
                                     // NOTE cloning here might become a memory issue
                                     dependencies.push(state.clone());
                                 }
@@ -212,6 +212,7 @@ where
     store: Store<'a, K, V>,
     mailboxes: Mailboxes<'a, V>,
 }
+
 impl<'a, K, V> PartialEq for AnalyzerWorkItem<'a, K, V>
 where
     K: KontinuationAddress,
@@ -221,12 +222,14 @@ where
         self.proc_state.eq(&other.proc_state)
     }
 }
+
 impl<'a, K, V> Eq for AnalyzerWorkItem<'a, K, V>
 where
     K: KontinuationAddress,
     V: ValueAddress,
 {
 }
+
 impl<'a, K, V> Hash for AnalyzerWorkItem<'a, K, V>
 where
     K: KontinuationAddress,
@@ -237,12 +240,12 @@ where
     }
 }
 
-impl<'a, K, V> WorkItem for AnalyzerWorkItem<'a, K, V>
+impl<'a, K, V> WorkItem<'a> for AnalyzerWorkItem<'a, K, V>
 where
     K: KontinuationAddress,
-    V: ValueAddress + 'a,
+    V: ValueAddress,
 {
-    fn process(&self) -> (Vec<Self>, Vec<Self>) {
+    fn process(&'a self) -> (Vec<Self>, Vec<Self>) {
         let mut v_new = Vec::new();
         let mut v_revisit = Vec::new();
 
@@ -252,7 +255,7 @@ where
             }
             ProgLocOrPid::ProgLoc(prog_loc) => match prog_loc.get() {
                 TypedCore::Var(var) => match self.proc_state.env.get(&var.name) {
-                    Some(vaddr) => match self.store.get_value(&vaddr) {
+                    Some(vaddr) => match self.store.get_value(vaddr) {
                         Some(values) => {
                             for value in values {
                                 // consider each

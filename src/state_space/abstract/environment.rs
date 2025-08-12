@@ -17,7 +17,7 @@ impl<V: ValueAddress> Env<V> {
         }
     }
 
-    pub fn get(&self, var_name: &VarName) -> Option<V> {
-        self.inner.get(var_name).cloned()
+    pub fn get(&self, var_name: &VarName) -> Option<&V> {
+        self.inner.get(var_name)
     }
 }
