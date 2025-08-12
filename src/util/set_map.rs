@@ -6,8 +6,8 @@ use std::{
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SetMap<K, V>
 where
-    K: PartialEq + Eq + Hash,
-    V: PartialEq + Eq + Hash,
+    K: Eq + Hash,
+    V: Eq + Hash,
 {
     inner: HashMap<K, HashSet<V>>,
 }
@@ -99,3 +99,21 @@ where
         }
     }
 }
+
+// impl<'a, K, V> IntoIterator for SetMap<K, V>
+// where
+//     K: 'a + Eq + Hash + Clone,
+//     V: 'a + Eq + Hash + Clone,
+// {
+//     type Item = (K, V);
+//     type IntoIter = SetMapIterator<'a, K, V>;
+//
+//     fn into_iter(self) -> Self::IntoIter {
+//         let map_iter = self.inner.iter();
+//         SetMapIterator {
+//             map_iter,
+//             set_iter: None,
+//             current_key: None,
+//         }
+//     }
+// }
