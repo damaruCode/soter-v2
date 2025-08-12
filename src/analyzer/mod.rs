@@ -13,14 +13,17 @@ pub enum TransitionError {
     NoValidTransition,
 }
 
-pub struct Analyzer<K: KontinuationAddress, V: ValueAddress> {
-    ast_helper: AstHelper,
+pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
+    ast_helper: AstHelper<'analyzer>,
     current_program_state: State<K, V>,
     address_builder: Box<dyn AddressBuilder<K, V>>,
 }
 
-impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<K, V> {
-    pub fn new(ast_helper: AstHelper, address_builder: Box<dyn AddressBuilder<K, V>>) -> Self {
+impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, V> {
+    pub fn new(
+        ast_helper: AstHelper<'analyzer>,
+        address_builder: Box<dyn AddressBuilder<K, V>>,
+    ) -> Self {
         let k_addr = address_builder.init_kaddr();
 
         Analyzer {
@@ -37,7 +40,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<K, V> {
                 for state in set {
                     match state.prog_loc_or_pid {
                         ProgLocOrPid::ProgLoc(location) => {
-                            match &self.ast_helper.get(location).unwrap() {
+                            match &self.ast_helper.get(location) {
                                 TypedCore::Receive(_) => {
                                     // NOTE cloning here might become a memory issue
                                     dependencies.push(state.clone());
@@ -58,7 +61,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<K, V> {
         let mut dependencies = Vec::new();
         for (_, state) in &self.current_program_state.procs {
             match state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location).unwrap() {
+                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
                     TypedCore::Var(pl_var) => {
                         match state.env.get(&pl_var.name) {
                             Some(pl_vaddr) => {
@@ -85,7 +88,7 @@ impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<K, V> {
                 continue;
             }
             match state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location).unwrap() {
+                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
                     // TODO add the arms that are non-reducable
                     _ => {}
                 },
@@ -150,7 +153,7 @@ where
             ProgLocOrPid::Pid(_pid) => {
                 // ABS_POP_LET_PID
             }
-            ProgLocOrPid::ProgLoc(prog_loc) => match ast_helper.get(*prog_loc).unwrap() {
+            ProgLocOrPid::ProgLoc(prog_loc) => match ast_helper.get(*prog_loc) {
                 TypedCore::Var(var) => match self.proc_state.env.get(&var.name) {
                     Some(vaddr) => match self.store.get_value(&vaddr) {
                         Some(values) => {

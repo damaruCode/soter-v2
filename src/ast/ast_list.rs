@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct AstList<T> {
-    inner: Vec<T>,
+    pub inner: Vec<T>,
 }
 
 impl<T> AstList<T> {

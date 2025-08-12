@@ -51,7 +51,8 @@ fn main() {
     // lambda_actor = lambda_actor.step();
     // log::debug!("{:#?}", lambda_actor);
 
-    let ast_helper = util::AstHelper::new(typed_core);
+    let mut ast_helper = util::AstHelper::new();
+    ast_helper.build_lookup(&typed_core);
 
     let _analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
 }
