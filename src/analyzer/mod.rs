@@ -13,14 +13,14 @@ pub enum TransitionError {
     NoValidTransition,
 }
 
-pub struct Analyzer<'a, K: KontinuationAddress, V: ValueAddress> {
-    ast_helper: AstHelper<'a>,
+pub struct Analyzer<K: KontinuationAddress, V: ValueAddress> {
+    ast_helper: AstHelper,
     current_program_state: State<K, V>,
     address_builder: Box<dyn AddressBuilder<K, V>>,
 }
 
-impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<'a, K, V> {
-    pub fn new(ast_helper: AstHelper<'a>, address_builder: Box<dyn AddressBuilder<K, V>>) -> Self {
+impl<'a, K: KontinuationAddress, V: ValueAddress> Analyzer<K, V> {
+    pub fn new(ast_helper: AstHelper, address_builder: Box<dyn AddressBuilder<K, V>>) -> Self {
         let k_addr = address_builder.init_kaddr();
 
         Analyzer {

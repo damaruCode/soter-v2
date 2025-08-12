@@ -1,19 +1,15 @@
 use crate::ast::TypedCore;
 
-pub struct AstHelper<'a> {
+pub struct AstHelper {
     ast: TypedCore,
-    references: Vec<&'a TypedCore>,
 }
 
-impl<'a> AstHelper<'a> {
+impl AstHelper {
     pub fn new(tc: TypedCore) -> Self {
-        Self {
-            ast: tc,
-            references: Vec::new(),
-        }
+        Self { ast: tc }
     }
 
-    pub fn get(&self, _index: usize) -> Option<&'a TypedCore> {
-        None
+    pub fn get(&self, _index: usize) -> Option<&TypedCore> {
+        Some(&self.ast)
     }
 }
