@@ -42,7 +42,7 @@ fn main() {
     erlang::run(&args[1]);
 
     let mut core_path = args[1].to_string();
-    core_path.push_str("_static.json");
+    core_path.push_str(".json");
     let core = erlang::get_core(&core_path);
     let typed_core = ast::TypedCore::from(core);
     log::debug!("{:#?}", typed_core);
