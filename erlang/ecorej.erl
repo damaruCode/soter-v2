@@ -216,6 +216,8 @@ enc(List) when is_list(List) ->
   case List of
     [] ->
       [];
+    [X] ->
+      [enc(X)];
     _ ->
       try
         Y = list_to_binary(List),
