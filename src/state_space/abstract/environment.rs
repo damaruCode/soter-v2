@@ -1,23 +1,19 @@
-use crate::ast::VarName;
+use crate::ast::Var;
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 
 use super::ValueAddress;
 
 // Env := Var -> VAddr
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Env<V: ValueAddress> {
-    inner: BTreeMap<VarName, V>,
+    pub inner: HashMap<Var, V>,
 }
 
 impl<V: ValueAddress> Env<V> {
     pub fn init() -> Self {
         Env {
-            inner: BTreeMap::new(),
+            inner: HashMap::new(),
         }
-    }
-
-    pub fn get(&self, var_name: &VarName) -> Option<V> {
-        self.inner.get(var_name).cloned()
     }
 }

@@ -5,12 +5,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Var {
     pub anno: AstList<TypedCore>,
-    pub name: VarName,
+    pub name: Box<TypedCore>,
 }
 
 impl From<Value> for Var {
     fn from(value: Value) -> Self {
-        dbg!(&value);
         Var::deserialize(value).unwrap()
     }
 }
@@ -19,7 +18,7 @@ impl From<Map<String, Value>> for Var {
     fn from(map: Map<String, Value>) -> Self {
         Var {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
-            name: VarName::from(map.get("name").unwrap().clone()),
+            name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
         }
     }
 }
@@ -28,33 +27,8 @@ impl From<Vec<Value>> for AstList<Var> {
     fn from(vec: Vec<Value>) -> Self {
         let mut ast_list = AstList::new();
         for value in vec {
-            ast_list.push(Var::from(value));
+            ast_list.inner.push(Var::from(value));
         }
         ast_list
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone, Ord, PartialOrd)]
-pub struct VarName {
-    inner: String,
-}
-
-impl From<Value> for VarName {
-    fn from(_value: Value) -> Self {
-        Self {
-            inner: String::new(),
-        }
-    }
-}
-
-impl From<AstList<Var>> for Vec<VarName> {
-    fn from(ast_list: AstList<Var>) -> Self {
-        let mut vec = Vec::new();
-
-        for var in ast_list.as_vec() {
-            vec.push(var.name.clone());
-        }
-
-        vec
     }
 }

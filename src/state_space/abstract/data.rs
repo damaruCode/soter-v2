@@ -4,7 +4,7 @@ use crate::ast::Fun;
 // NOTE the free vars of the TypedCore are replaced with the values of the higher scopes and has therefore no
 // free vars anymore
 // TODO
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Data {
     Pid(Pid),
     Atom(),

@@ -1,13 +1,13 @@
 use super::{Data, Env, Kont, KontinuationAddress, Pid, Time, Value, ValueAddress};
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProgLocOrPid {
     ProgLoc(usize),
     Pid(Pid),
 }
 
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProcState<K: KontinuationAddress, V: ValueAddress> {
     pub pid: Pid,
     pub prog_loc_or_pid: ProgLocOrPid,

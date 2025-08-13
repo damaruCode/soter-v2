@@ -1,5 +1,5 @@
 // Time := ProgLoc^k
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Time {
     pub inner: Vec<usize>,
 }

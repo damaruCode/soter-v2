@@ -1,10 +1,9 @@
 use super::{Env, ProcState, ProgLocOrPid, Time};
-use crate::ast::VarName;
-use std::hash::Hash;
+use crate::ast::Var;
 
-pub trait Address: Eq + Clone + Hash {}
+pub trait Address: Eq + Clone {}
 
-impl<T: Eq + Clone + Hash> Address for T {}
+impl<T: Eq + Clone> Address for T {}
 
 pub trait KontinuationAddress: Address {}
 
@@ -27,7 +26,7 @@ pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<K, V>,
-        var: &VarName,
+        var: &Var,
         next_prog_loc_or_pid: &ProgLocOrPid,
         next_env: &Env<V>,
         next_time: &Time,

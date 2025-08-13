@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct MapPair {
     pub anno: AstList<TypedCore>,
-    pub op: Literal,
+    pub op: Box<TypedCore>,
     pub key: Box<TypedCore>,
     pub val: Box<TypedCore>,
 }
@@ -23,7 +23,7 @@ impl From<Map<String, Value>> for MapPair {
     fn from(map: Map<String, Value>) -> Self {
         MapPair {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().to_vec()),
-            op: Literal::from(map.get("op").unwrap().clone()),
+            op: Box::new(TypedCore::from(map.get("op").unwrap().clone())),
             key: Box::new(TypedCore::from(map.get("key").unwrap().clone())),
             val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
         }

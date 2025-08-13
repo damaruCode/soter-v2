@@ -1,23 +1,24 @@
 use crate::util::AstHelper;
-use std::collections::{HashSet, VecDeque};
-use std::hash::Hash;
+use std::collections::VecDeque;
 
-pub trait WorkItem: Eq + Hash + Clone {
+pub trait WorkItem: Eq + Clone {
     fn process(&self, ast_helper: &AstHelper) -> (Vec<Self>, Vec<Self>);
 }
 
 pub struct WorkList<T: WorkItem> {
     queue: VecDeque<T>,
-    seen: HashSet<T>,
+    seen: Vec<T>,
 }
 
 impl<T: WorkItem> WorkList<T> {
     pub fn new(initial: Vec<T>) -> Self {
         let mut queue = VecDeque::new();
-        let mut seen = HashSet::new();
+        let mut seen = Vec::new();
         for item in initial {
             // NOTE cloning here might become a memory issue
-            seen.insert(item.clone());
+            if !seen.contains(&item) {
+                seen.push(item.clone());
+            }
             queue.push_back(item);
         }
         Self { queue, seen }
@@ -33,9 +34,11 @@ impl<T: WorkItem> WorkList<T> {
 
             for item in new_items {
                 // NOTE cloning here might become a memory issue
-                if self.seen.insert(item.clone()) {
-                    self.queue.push_back(item);
+                if self.seen.contains(&item) {
+                    continue;
                 }
+                self.seen.push(item.clone());
+                self.queue.push_back(item);
             }
         }
     }

@@ -1,11 +1,9 @@
-use std::collections::{HashMap, HashSet};
-
 use super::{Pid, Value, ValueAddress};
 
 // Mailbox := P(Value)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Mailbox<V: ValueAddress> {
-    inner: HashSet<Value<V>>,
+    inner: Vec<Value<V>>,
 }
 
 impl<V: ValueAddress> Mailbox<V> {
@@ -13,15 +11,13 @@ impl<V: ValueAddress> Mailbox<V> {
     pub fn enq(self) {} // TODO
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Mailboxes<V: ValueAddress> {
-    pub inner: HashMap<Pid, Mailbox<V>>,
+    pub inner: Vec<(Pid, Mailbox<V>)>,
 }
 
 impl<V: ValueAddress> Mailboxes<V> {
     pub fn init() -> Self {
-        Mailboxes {
-            inner: HashMap::new(),
-        }
+        Mailboxes { inner: Vec::new() }
     }
 }

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Binary {
     pub anno: AstList<TypedCore>,
-    pub segments: AstList<BitStr>,
+    pub segments: AstList<TypedCore>,
 }
 
 impl From<Map<String, Value>> for Binary {

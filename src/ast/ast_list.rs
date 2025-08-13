@@ -10,18 +10,6 @@ impl<T> AstList<T> {
     pub fn new() -> Self {
         AstList { inner: Vec::new() }
     }
-
-    pub fn push(&mut self, value: T) {
-        self.inner.push(value);
-    }
-
-    pub fn get(&self, index: usize) -> Option<&T> {
-        self.inner.get(index)
-    }
-
-    pub fn as_vec(&self) -> &Vec<T> {
-        &self.inner
-    }
 }
 
 impl From<Vec<Value>> for AstList<TypedCore> {

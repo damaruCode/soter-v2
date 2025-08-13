@@ -6,7 +6,7 @@ use crate::util::SetMap;
 // Procs := Pid -> P(ProcState)
 // Mailboxes := Pid -> Mailbox
 // Store := (VAddr -> P(Value)) x (KAddr -> P(Kont))
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct State<K: KontinuationAddress, V: ValueAddress> {
     pub procs: SetMap<Pid, ProcState<K, V>>,
     pub mailboxes: Mailboxes<V>,
@@ -20,7 +20,7 @@ impl<K: KontinuationAddress, V: ValueAddress> State<K, V> {
 
         State {
             procs,
-            mailboxes: Mailboxes::<V>::init(),
+            mailboxes: Mailboxes::init(),
             store: Store::init(),
         }
     }

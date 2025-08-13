@@ -1,7 +1,7 @@
 use super::Time;
 
 // Pid := ProgLoc x Time
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Pid {
     prog_loc: usize,
     time: Time,

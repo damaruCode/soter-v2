@@ -1,5 +1,5 @@
 use crate::{
-    ast::{TypedCore, VarName},
+    ast::Var,
     state_space::r#abstract::{
         AddressBuilder, Data, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Time,
         ValueAddress,
@@ -8,7 +8,7 @@ use crate::{
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
 // NOTE * might be possible to depict in control flow rather then as a  data struct
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct KAddr {
     pid: Pid,
     prog_loc: usize,
@@ -19,10 +19,10 @@ pub struct KAddr {
 impl KontinuationAddress for KAddr {}
 
 // VAddr := Pid x Var x Data x Time
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct VAddr {
     pid: Pid,
-    var: VarName,
+    var: Var,
     data: Data,
     time: Time,
 }
@@ -62,7 +62,7 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
-        var: &VarName,
+        var: &Var,
         _next_prog_loc_or_pid: &ProgLocOrPid,
         _next_env: &Env<VAddr>,
         _next_time: &Time,

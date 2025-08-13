@@ -1,5 +1,3 @@
-use std::hash::Hash;
-
 use crate::ast::TypedCore;
 use crate::state_space::r#abstract::*;
 use crate::util::AstHelper;
@@ -59,23 +57,25 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
 
     fn get_value_dependencies(&self, vaddr: &V) -> Vec<ProcState<K, V>> {
         let mut dependencies = Vec::new();
-        for (_, state) in &self.current_program_state.procs {
-            match state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
-                    TypedCore::Var(pl_var) => {
-                        match state.env.get(&pl_var.name) {
-                            Some(pl_vaddr) => {
-                                if pl_vaddr == *vaddr {
-                                    // NOTE cloning here might become a memory issue
-                                    dependencies.push(state.clone());
+        for (_, states) in &self.current_program_state.procs.inner {
+            for state in states {
+                match state.prog_loc_or_pid {
+                    ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
+                        TypedCore::Var(pl_var) => {
+                            match state.env.inner.get(&pl_var) {
+                                Some(pl_vaddr) => {
+                                    if pl_vaddr == vaddr {
+                                        // NOTE cloning here might become a memory issue
+                                        dependencies.push(state.clone());
+                                    }
                                 }
+                                _ => {}
                             }
-                            _ => {}
                         }
-                    }
+                        _ => {}
+                    },
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
         dependencies
@@ -83,18 +83,20 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
 
     fn get_kontinuation_dependencies(&self, kaddr: &K) -> Vec<ProcState<K, V>> {
         let mut dependencies = Vec::new();
-        for (_, state) in &self.current_program_state.procs {
-            if state.k_addr != *kaddr {
-                continue;
-            }
-            match state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
-                    // TODO add the arms that are non-reducable
-                    _ => {}
-                },
-                ProgLocOrPid::Pid(_) => {
-                    // NOTE cloning here might become a memory issue
-                    dependencies.push(state.clone());
+        for (_, states) in &self.current_program_state.procs.inner {
+            for state in states {
+                if state.k_addr != *kaddr {
+                    continue;
+                }
+                match state.prog_loc_or_pid {
+                    ProgLocOrPid::ProgLoc(location) => match &self.ast_helper.get(location) {
+                        // TODO add the arms that are non-reducable
+                        _ => {}
+                    },
+                    ProgLocOrPid::Pid(_) => {
+                        // NOTE cloning here might become a memory issue
+                        dependencies.push(state.clone());
+                    }
                 }
             }
         }
@@ -130,16 +132,6 @@ where
 {
 }
 
-impl<K, V> Hash for AnalyzerWorkItem<K, V>
-where
-    K: KontinuationAddress,
-    V: ValueAddress,
-{
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.proc_state.hash(state);
-    }
-}
-
 impl<K, V> WorkItem for AnalyzerWorkItem<K, V>
 where
     K: KontinuationAddress,
@@ -154,8 +146,8 @@ where
                 // ABS_POP_LET_PID
             }
             ProgLocOrPid::ProgLoc(prog_loc) => match ast_helper.get(*prog_loc) {
-                TypedCore::Var(var) => match self.proc_state.env.get(&var.name) {
-                    Some(vaddr) => match self.store.get_value(&vaddr) {
+                TypedCore::Var(var) => match self.proc_state.env.inner.get(var) {
+                    Some(vaddr) => match self.store.value.get(&vaddr) {
                         Some(values) => {
                             for value in values {
                                 // consider each
@@ -215,7 +207,7 @@ where
                 }
                 // ProgLoc is irreducible via the previous transition rules; it's a Value
                 // We need to look at the continuation for the next computation
-                _ => match self.store.get_kont(&self.proc_state.k_addr) {
+                _ => match self.store.kont.get(&self.proc_state.k_addr) {
                     Some(konts) => {
                         // consider each possible continuation
                         for kont in konts {
