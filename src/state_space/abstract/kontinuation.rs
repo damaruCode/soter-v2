@@ -1,5 +1,7 @@
 use super::{Env, KontinuationAddress, ValueAddress};
-use crate::ast::Var;
+
+type Var = usize;
+type ProgLoc = usize;
 
 // Kont :=
 //       | List<Name>, ProgLoc, Env, KAddr // Let
@@ -8,7 +10,7 @@ use crate::ast::Var;
 // NOTE Stop might be possible to depict in control flow rather then as a data struct
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Kont<K: KontinuationAddress, V: ValueAddress> {
-    Let(Vec<Var>, usize, Env<V>, K),
-    Do(usize, Env<V>, K),
+    Let(Vec<Var>, ProgLoc, Env<V>, K),
+    Do(ProgLoc, Env<V>, K),
     Stop,
 }

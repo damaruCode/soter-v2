@@ -9,11 +9,15 @@ pub mod case;
 pub mod catch;
 pub mod clause;
 pub mod cons;
+pub mod erl_bool;
+pub mod erl_map;
+pub mod erl_null;
+pub mod erl_number;
+pub mod erl_string;
 pub mod fun;
 pub mod r#let;
 pub mod let_rec;
 pub mod literal;
-pub mod literal_map;
 pub mod map_pair;
 pub mod module;
 pub mod opaque;
@@ -24,7 +28,6 @@ pub mod r#try;
 pub mod tuple;
 pub mod values;
 pub mod var;
-pub mod var_map;
 
 pub use alias::*;
 pub use apply::*;
@@ -37,10 +40,14 @@ pub use case::*;
 pub use catch::*;
 pub use clause::*;
 pub use cons::*;
+pub use erl_bool::*;
+pub use erl_map::*;
+pub use erl_null::*;
+pub use erl_number::*;
+pub use erl_string::*;
 pub use fun::*;
 pub use let_rec::*;
 pub use literal::*;
-pub use literal_map::*;
 pub use map_pair::*;
 pub use module::*;
 pub use opaque::*;
@@ -52,11 +59,9 @@ pub use seq::*;
 pub use tuple::*;
 pub use values::*;
 pub use var::*;
-pub use var_map::*;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
-use serde_json::Number;
 use serde_json::Value;
 
 #[derive(Debug)]
@@ -69,10 +74,10 @@ pub enum TypedCore {
     AstList(AstList<TypedCore>),
 
     //
-    Null,
-    Bool(bool),
-    Number(Number),
-    String(String),
+    Null(ErlNull),
+    Bool(ErlBool),
+    Number(ErlNumber),
+    String(ErlString),
 
     //
     Alias(Alias),
@@ -88,7 +93,7 @@ pub enum TypedCore {
     Let(Let),
     LetRec(LetRec),
     Literal(Literal),
-    LiteralMap(LiteralMap),
+    Map(ErlMap),
     MapPair(MapPair),
     Module(Module),
     Opaque(Opaque),
@@ -99,16 +104,67 @@ pub enum TypedCore {
     Tuple(Tuple),
     Values(Values),
     Var(Var),
-    VarMap(VarMap),
+}
+
+pub trait Index {
+    fn get_index(&self) -> Option<usize>;
+}
+
+impl Index for TypedCore {
+    fn get_index(&self) -> Option<usize> {
+        match self {
+            TypedCore::AstTuple(ast) => ast.index,
+            TypedCore::AstList(list) => list.index,
+
+            TypedCore::Null(null) => null.index,
+            TypedCore::Bool(bool) => bool.index,
+            TypedCore::Number(number) => number.index,
+            TypedCore::String(string) => string.index,
+
+            TypedCore::Alias(alias) => alias.index,
+            TypedCore::Apply(apply) => apply.index,
+            TypedCore::Binary(binary) => binary.index,
+            TypedCore::BitStr(bitstr) => bitstr.index,
+            TypedCore::Call(call) => call.index,
+            TypedCore::Case(case) => case.index,
+            TypedCore::Catch(catch) => catch.index,
+            TypedCore::Clause(clause) => clause.index,
+            TypedCore::Cons(cons) => cons.index,
+            TypedCore::Fun(fun) => fun.index,
+            TypedCore::Let(let_) => let_.index,
+            TypedCore::LetRec(letrec) => letrec.index,
+            TypedCore::Literal(lit) => lit.index,
+            TypedCore::Map(map) => map.index,
+            TypedCore::MapPair(pair) => pair.index,
+            TypedCore::Module(module) => module.index,
+            TypedCore::Opaque(opq) => opq.index,
+            TypedCore::PrimOp(prim) => prim.index,
+            TypedCore::Receive(recv) => recv.index,
+            TypedCore::Seq(seq) => seq.index,
+            TypedCore::Try(try_) => try_.index,
+            TypedCore::Tuple(tuple) => tuple.index,
+            TypedCore::Values(vals) => vals.index,
+            TypedCore::Var(var) => var.index,
+        }
+    }
 }
 
 impl From<Value> for TypedCore {
     fn from(core: Value) -> Self {
         match core {
-            Value::Null => TypedCore::Null,
-            Value::Bool(bool) => TypedCore::Bool(bool),
-            Value::Number(number) => TypedCore::Number(number),
-            Value::String(string) => TypedCore::String(string),
+            Value::Null => TypedCore::Null(ErlNull { index: None }),
+            Value::Bool(bool) => TypedCore::Bool(ErlBool {
+                inner: bool,
+                index: None,
+            }),
+            Value::Number(number) => TypedCore::Number(ErlNumber {
+                inner: number,
+                index: None,
+            }),
+            Value::String(string) => TypedCore::String(ErlString {
+                inner: string,
+                index: None,
+            }),
             Value::Array(vec) => TypedCore::AstList(AstList::from(vec)),
             Value::Object(map) => TypedCore::from(map),
         }
@@ -131,10 +187,7 @@ impl From<Map<String, Value>> for TypedCore {
             "c_let" => TypedCore::Let(Let::from(map)),
             "c_letrec" => TypedCore::LetRec(LetRec::from(map)),
             "c_literal" => TypedCore::Literal(Literal::from(map)),
-            "c_map" => match Literal::try_from(map.get("arg").unwrap().clone()) {
-                Ok(_) => TypedCore::LiteralMap(LiteralMap::from(map)),
-                Err(_) => TypedCore::VarMap(VarMap::from(map)),
-            },
+            "c_map" => TypedCore::Map(ErlMap::from(map)),
             "c_map_pair" => TypedCore::MapPair(MapPair::from(map)),
             "c_module" => TypedCore::Module(Module::from(map)),
             "c_opaque" => TypedCore::Opaque(Opaque::from(map)),

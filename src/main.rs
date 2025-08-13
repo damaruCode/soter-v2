@@ -45,7 +45,6 @@ fn main() {
     core_path.push_str(".json");
     let core = erlang::get_core(&core_path);
     let typed_core = ast::TypedCore::from(core);
-    log::debug!("{:#?}", typed_core);
 
     // let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
     // lambda_actor = lambda_actor.step();
@@ -53,10 +52,11 @@ fn main() {
     // log::debug!("{:#?}", lambda_actor);
 
     let mut ast_helper = util::AstHelper::new();
-    ast_helper.build_lookup(&typed_core);
-    log::debug!("{:#?}", ast_helper);
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
 
-    let _analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
+    let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
+    analyzer.run();
 }
 
 #[cfg(test)]

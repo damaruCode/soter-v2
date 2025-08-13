@@ -1,7 +1,9 @@
+type ProgLoc = usize;
+
 // Time := ProgLoc^k
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Time {
-    pub inner: Vec<usize>,
+    pub inner: Vec<ProgLoc>,
 }
 
 impl Time {

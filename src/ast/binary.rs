@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Binary {
     pub anno: AstList<TypedCore>,
     pub segments: AstList<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Binary {
@@ -13,6 +14,7 @@ impl From<Map<String, Value>> for Binary {
         Binary {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             segments: AstList::from(map.get("segments").unwrap().as_array().unwrap().clone()),
+            index: None,
         }
     }
 }

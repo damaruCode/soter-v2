@@ -6,12 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Var {
     pub anno: AstList<TypedCore>,
     pub name: Box<TypedCore>,
-}
-
-impl From<Value> for Var {
-    fn from(value: Value) -> Self {
-        Var::deserialize(value).unwrap()
-    }
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Var {
@@ -19,16 +14,7 @@ impl From<Map<String, Value>> for Var {
         Var {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
+            index: None,
         }
-    }
-}
-
-impl From<Vec<Value>> for AstList<Var> {
-    fn from(vec: Vec<Value>) -> Self {
-        let mut ast_list = AstList::new();
-        for value in vec {
-            ast_list.inner.push(Var::from(value));
-        }
-        ast_list
     }
 }

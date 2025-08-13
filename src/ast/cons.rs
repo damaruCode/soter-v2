@@ -8,6 +8,7 @@ pub struct Cons {
     pub anno: AstList<TypedCore>,
     pub hd: Box<TypedCore>,
     pub tl: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Cons {
@@ -16,6 +17,7 @@ impl From<Map<String, Value>> for Cons {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             hd: Box::new(TypedCore::from(map.get("hd").unwrap().clone())),
             tl: Box::new(TypedCore::from(map.get("tl").unwrap().clone())),
+            index: None,
         }
     }
 }

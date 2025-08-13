@@ -1,42 +1,238 @@
+use crate::ast::Index;
 use crate::ast::TypedCore;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct AstHelper<'helper> {
-    lookup: HashMap<usize, &'helper TypedCore>,
+    lookup_core: HashMap<usize, &'helper TypedCore>,
     next_id: usize,
 }
 
 impl<'helper> AstHelper<'helper> {
     pub fn new() -> Self {
         AstHelper {
-            lookup: HashMap::new(),
+            lookup_core: HashMap::new(),
             next_id: 0,
         }
     }
 
     pub fn get(&self, index: usize) -> &'helper TypedCore {
-        self.lookup[&index]
+        self.lookup_core[&index]
+    }
+
+    pub fn build_indecies(&mut self, mut root: TypedCore) -> TypedCore {
+        fn visit<'a>(node: &mut TypedCore, ctx: &mut AstHelper<'a>) {
+            let id = ctx.next_id;
+            ctx.next_id += 1;
+            match node {
+                TypedCore::AstTuple(t) => {
+                    t.index = Some(id);
+                    visit(&mut *t.frst, ctx);
+                    visit(&mut *t.scnd, ctx);
+                }
+                TypedCore::AstList(l) => {
+                    l.index = Some(id);
+                    for child in &mut *l.inner {
+                        visit(child, ctx);
+                    }
+                }
+                TypedCore::Alias(a) => {
+                    a.index = Some(id);
+                    visit(&mut *a.pat, ctx);
+                }
+                TypedCore::Apply(a) => {
+                    a.index = Some(id);
+                    visit(&mut *a.op, ctx);
+                    for x in &mut *a.args.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Binary(b) => {
+                    b.index = Some(id);
+                    for x in &mut *b.segments.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::BitStr(bs) => {
+                    bs.index = Some(id);
+                    visit(&mut *bs.val, ctx);
+                    visit(&mut *bs.size, ctx);
+                    visit(&mut *bs.unit, ctx);
+                    visit(&mut *bs.r#type, ctx);
+                    visit(&mut *bs.flags, ctx);
+                }
+                TypedCore::Call(c) => {
+                    c.index = Some(id);
+                    visit(&mut *c.module, ctx);
+                    visit(&mut *c.name, ctx);
+                    for x in &mut *c.args.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Case(c) => {
+                    c.index = Some(id);
+                    visit(&mut *c.arg, ctx);
+                    for x in &mut *c.clauses.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Catch(c) => {
+                    c.index = Some(id);
+                    visit(&mut *c.body, ctx);
+                }
+                TypedCore::Clause(c) => {
+                    c.index = Some(id);
+                    for x in &mut *c.pats.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *c.body, ctx);
+                    visit(&mut *c.guard, ctx);
+                }
+                TypedCore::Cons(c) => {
+                    c.index = Some(id);
+                    visit(&mut *c.hd, ctx);
+                    visit(&mut *c.tl, ctx);
+                }
+                TypedCore::Fun(f) => {
+                    f.index = Some(id);
+                    for x in &mut *f.vars.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *f.body, ctx);
+                }
+                TypedCore::Let(l) => {
+                    l.index = Some(id);
+                    for x in &mut *l.vars.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *l.arg, ctx);
+                    visit(&mut *l.body, ctx);
+                }
+                TypedCore::LetRec(lr) => {
+                    lr.index = Some(id);
+                    for tuple in &mut *lr.defs.inner {
+                        visit(&mut *tuple.frst, ctx);
+                        visit(&mut *tuple.scnd, ctx);
+                    }
+                    visit(&mut *lr.body, ctx);
+                }
+                TypedCore::Literal(l) => {
+                    l.index = Some(id);
+                    visit(&mut *l.val, ctx);
+                }
+                TypedCore::Map(m) => {
+                    m.index = Some(id);
+                    visit(&mut *m.arg, ctx);
+                    for x in &mut *m.es.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::MapPair(mp) => {
+                    mp.index = Some(id);
+                    visit(&mut *mp.op, ctx);
+                    visit(&mut *mp.key, ctx);
+                    visit(&mut *mp.val, ctx);
+                }
+                TypedCore::Module(m) => {
+                    m.index = Some(id);
+                    visit(&mut *m.name, ctx);
+                    for x in &mut *m.exports.inner {
+                        visit(x, ctx);
+                    }
+                    for tuple in &mut *m.attrs.inner {
+                        visit(&mut *tuple.frst, ctx);
+                        visit(&mut *tuple.scnd, ctx);
+                    }
+                    for tuple in &mut *m.defs.inner {
+                        visit(&mut *tuple.frst, ctx);
+                        visit(&mut *tuple.scnd, ctx);
+                    }
+                }
+                TypedCore::Opaque(o) => {
+                    o.index = Some(id);
+                    visit(&mut *o.val, ctx);
+                }
+                TypedCore::PrimOp(p) => {
+                    p.index = Some(id);
+                    visit(&mut *p.name, ctx);
+                    for x in &mut *p.args.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Receive(r) => {
+                    r.index = Some(id);
+                    for x in &mut *r.clauses.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *r.timeout, ctx);
+                    visit(&mut *r.action, ctx);
+                }
+                TypedCore::Seq(s) => {
+                    s.index = Some(id);
+                    visit(&mut *s.arg, ctx);
+                    visit(&mut *s.body, ctx);
+                }
+                TypedCore::Try(t) => {
+                    t.index = Some(id);
+                    visit(&mut *t.arg, ctx);
+                    for x in &mut *t.vars.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *t.body, ctx);
+                    for x in &mut *t.evars.inner {
+                        visit(x, ctx);
+                    }
+                    visit(&mut *t.handler, ctx);
+                }
+                TypedCore::Tuple(t) => {
+                    t.index = Some(id);
+                    for x in &mut *t.es.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Values(v) => {
+                    v.index = Some(id);
+                    for x in &mut *v.es.inner {
+                        visit(x, ctx);
+                    }
+                }
+                TypedCore::Var(v) => {
+                    v.index = Some(id);
+                    visit(&mut *v.name, ctx);
+                }
+                TypedCore::Null(n) => {
+                    n.index = Some(id);
+                }
+                TypedCore::Bool(b) => {
+                    b.index = Some(id);
+                }
+                TypedCore::Number(n) => {
+                    n.index = Some(id);
+                }
+                TypedCore::String(s) => {
+                    s.index = Some(id);
+                }
+            }
+        }
+        visit(&mut root, self);
+        root
     }
 
     pub fn build_lookup(&mut self, root: &'helper TypedCore) {
         fn visit<'a>(node: &'a TypedCore, ctx: &mut AstHelper<'a>) {
-            let id = ctx.next_id;
-            ctx.next_id += 1;
-            ctx.lookup.insert(id, node);
-
+            let id = node.get_index().unwrap();
+            ctx.lookup_core.insert(id, node);
             match node {
                 TypedCore::AstTuple(t) => {
                     visit(&t.frst, ctx);
                     visit(&t.scnd, ctx);
                 }
-                TypedCore::AstList(list) => {
-                    for child in &list.inner {
+                TypedCore::AstList(l) => {
+                    for child in &l.inner {
                         visit(child, ctx);
                     }
                 }
                 TypedCore::Alias(a) => {
-                    visit(&a.var, ctx);
                     visit(&a.pat, ctx);
                 }
                 TypedCore::Apply(a) => {
@@ -107,15 +303,9 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::Literal(l) => {
                     visit(&l.val, ctx);
                 }
-                TypedCore::LiteralMap(lm) => {
-                    visit(&lm.arg, ctx);
-                    for x in &lm.es.inner {
-                        visit(x, ctx);
-                    }
-                }
-                TypedCore::VarMap(vm) => {
-                    visit(&vm.arg, ctx);
-                    for x in &vm.es.inner {
+                TypedCore::Map(m) => {
+                    visit(&m.arg, ctx);
+                    for x in &m.es.inner {
                         visit(x, ctx);
                     }
                 }
@@ -183,10 +373,10 @@ impl<'helper> AstHelper<'helper> {
                     visit(&v.name, ctx);
                 }
                 // Leaf nodes
-                TypedCore::Null
-                | TypedCore::Bool(_)
-                | TypedCore::Number(_)
-                | TypedCore::String(_) => {}
+                TypedCore::Null(_) => {}
+                TypedCore::Bool(_) => {}
+                TypedCore::Number(_) => {}
+                TypedCore::String(_) => {}
             }
         }
         visit(root, self);

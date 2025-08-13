@@ -10,6 +10,7 @@ pub struct Receive {
     pub clauses: AstList<TypedCore>,
     pub timeout: Box<TypedCore>,
     pub action: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Receive {
@@ -19,6 +20,7 @@ impl From<Map<String, Value>> for Receive {
             clauses: AstList::from(map.get("clauses").unwrap().as_array().unwrap().clone()),
             timeout: Box::new(TypedCore::from(map.get("timeout").unwrap().clone())),
             action: Box::new(TypedCore::from(map.get("action").unwrap().clone())),
+            index: None,
         }
     }
 }

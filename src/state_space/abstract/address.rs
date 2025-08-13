@@ -1,9 +1,11 @@
 use super::{Env, ProcState, ProgLocOrPid, Time};
 use crate::ast::Var;
 
-pub trait Address: Eq + Clone {}
+use std::fmt::Debug;
 
-impl<T: Eq + Clone> Address for T {}
+pub trait Address: Eq + Clone + Debug {}
+
+impl<T: Eq + Clone + Debug> Address for T {}
 
 pub trait KontinuationAddress: Address {}
 

@@ -8,6 +8,7 @@ pub struct Alias {
     pub anno: AstList<TypedCore>,
     pub var: Box<TypedCore>,
     pub pat: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Alias {
@@ -16,6 +17,7 @@ impl From<Map<String, Value>> for Alias {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             var: Box::new(TypedCore::from(map.get("var").unwrap().clone())),
             pat: Box::new(TypedCore::from(map.get("pat").unwrap().clone())),
+            index: None,
         }
     }
 }

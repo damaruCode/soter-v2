@@ -10,6 +10,7 @@ pub struct Call {
     pub module: Box<TypedCore>,
     pub name: Box<TypedCore>,
     pub args: AstList<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Call {
@@ -19,6 +20,7 @@ impl From<Map<String, Value>> for Call {
             module: Box::new(TypedCore::from(map.get("module").unwrap().clone())),
             name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
             args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
+            index: None,
         }
     }
 }

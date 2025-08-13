@@ -1,9 +1,11 @@
 use super::{Data, Env, Kont, KontinuationAddress, Pid, Time, Value, ValueAddress};
 
+type ProgLoc = usize;
+
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ProgLocOrPid {
-    ProgLoc(usize),
+    ProgLoc(ProgLoc),
     Pid(Pid),
 }
 

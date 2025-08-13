@@ -9,6 +9,7 @@ pub struct LetRec {
     pub anno: AstList<TypedCore>,
     pub defs: AstList<AstTuple<TypedCore>>,
     pub body: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for LetRec {
@@ -17,6 +18,7 @@ impl From<Map<String, Value>> for LetRec {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             defs: AstList::from(map.get("defs").unwrap().as_array().unwrap().clone()),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+            index: None,
         }
     }
 }

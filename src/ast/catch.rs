@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Catch {
     pub anno: AstList<TypedCore>,
     pub body: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Catch {
@@ -13,6 +14,7 @@ impl From<Map<String, Value>> for Catch {
         Catch {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+            index: None,
         }
     }
 }

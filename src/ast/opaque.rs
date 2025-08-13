@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Opaque {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Opaque {
@@ -13,6 +14,7 @@ impl From<Map<String, Value>> for Opaque {
         Opaque {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
+            index: None,
         }
     }
 }

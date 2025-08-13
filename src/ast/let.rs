@@ -10,6 +10,7 @@ pub struct Let {
     pub vars: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Let {
@@ -19,6 +20,7 @@ impl From<Map<String, Value>> for Let {
             vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
             arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
+            index: None,
         }
     }
 }

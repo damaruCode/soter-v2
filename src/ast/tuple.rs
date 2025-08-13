@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Tuple {
     pub anno: AstList<TypedCore>,
     pub es: AstList<TypedCore>,
+    pub index: Option<usize>,
 }
 
 impl From<Map<String, Value>> for Tuple {
@@ -13,6 +14,7 @@ impl From<Map<String, Value>> for Tuple {
         Tuple {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             es: AstList::from(map.get("es").unwrap().as_array().unwrap().clone()),
+            index: None,
         }
     }
 }
