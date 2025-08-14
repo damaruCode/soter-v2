@@ -1,9 +1,6 @@
-use crate::{
-    ast::Var,
-    state_space::r#abstract::{
-        AddressBuilder, Data, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Time,
-        ValueAddress,
-    },
+use crate::state_space::r#abstract::{
+    AddressBuilder, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Time, ValueAddress,
+    VarName,
 };
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
@@ -22,8 +19,7 @@ impl KontinuationAddress for KAddr {}
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct VAddr {
     pid: Pid,
-    var: Var,
-    data: Data,
+    var_name: VarName,
     time: Time,
 }
 impl ValueAddress for VAddr {}
@@ -39,7 +35,6 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
         }
     }
 
-    //TODO
     fn new_kaddr(
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
@@ -58,28 +53,17 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
         }
     }
 
-    //TODO
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
-        var: &Var,
+        var_name: &VarName,
         _next_prog_loc_or_pid: &ProgLocOrPid,
         _next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> VAddr {
         VAddr {
             pid: curr_proc_state.pid.clone(),
-            var: var.clone(),
-            data: match &curr_proc_state.prog_loc_or_pid {
-                ProgLocOrPid::Pid(pid) => Data::Pid(pid.clone()),
-                //TODO with ast_helper
-                //ProgLocOrPid::ProgLoc(prog_loc) => match self.ast_helper.get(prog_loc).unwrap() {
-                //    TypedCore::Fun(fun) => Data::Fun(fun),
-                //    // TODO how would we recognize a Constructor or Atom?
-                //    _ => panic!("Unexpected program location"),
-                //},
-                _ => Data::Pid(Pid::init()),
-            },
+            var_name: var_name.clone(),
             time: curr_proc_state.time.clone(),
         }
     }

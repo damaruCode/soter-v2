@@ -1,16 +1,12 @@
 type ProgLoc = usize;
 
 // Time := ProgLoc^k
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct Time {
     pub inner: Vec<ProgLoc>,
 }
 
 impl Time {
-    pub fn new(time: Vec<usize>) -> Self {
-        Time { inner: time }
-    }
-
     pub fn init() -> Self {
         Time { inner: Vec::new() }
     }
@@ -19,5 +15,9 @@ impl Time {
         let mut ticked_time = self.clone();
         ticked_time.inner.push(prog_loc);
         ticked_time
+    }
+
+    pub fn append(&mut self, mut vec: Vec<ProgLoc>) {
+        self.inner.append(&mut vec);
     }
 }

@@ -1,5 +1,4 @@
-use super::{Env, ProcState, ProgLocOrPid, Time};
-use crate::ast::Var;
+use super::{Env, ProcState, ProgLocOrPid, Time, VarName};
 
 use std::fmt::Debug;
 
@@ -28,7 +27,7 @@ pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<K, V>,
-        var: &Var,
+        var_name: &VarName,
         next_prog_loc_or_pid: &ProgLocOrPid,
         next_env: &Env<V>,
         next_time: &Time,

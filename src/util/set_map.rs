@@ -23,6 +23,7 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
                 return;
             }
         }
+        self.inner.push((key, vec![value]));
     }
 
     /// Returns a reference to the set of values associated with a given key, if the key exists

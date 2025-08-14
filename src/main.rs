@@ -46,11 +46,6 @@ fn main() {
     let core = erlang::get_core(&core_path);
     let typed_core = ast::TypedCore::from(core);
 
-    // let mut lambda_actor = state_space::r#abstract::State::init(&typed_core);
-    // lambda_actor = lambda_actor.step();
-    // lambda_actor = lambda_actor.step();
-    // log::debug!("{:#?}", lambda_actor);
-
     let mut ast_helper = util::AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
     log::debug!("{:#?}", indexed_typed_core);
@@ -63,13 +58,20 @@ fn main() {
 
 #[cfg(test)]
 mod benchmarks {
+    use crate::analyzer::{Analyzer, StandardAddressBuilder};
     use crate::ast;
     use crate::erlang;
+    use crate::util::AstHelper;
 
     fn run_and_check(erl_file: &str) {
         erlang::run(&format!("test/{}.erl", erl_file));
         let core = erlang::get_core(&format!("test/{}.erl.json", erl_file));
-        let _typed_core = ast::TypedCore::from(core);
+        let typed_core = ast::TypedCore::from(core);
+        let mut ast_helper = AstHelper::new();
+        let indexed_typed_core = ast_helper.build_indecies(typed_core);
+        ast_helper.build_lookup(&indexed_typed_core);
+        let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
+        analyzer.run();
     }
 
     #[test]
