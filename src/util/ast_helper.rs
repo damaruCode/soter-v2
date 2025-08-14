@@ -38,6 +38,7 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Alias(a) => {
                     a.index = Some(id);
+                    visit(&mut *a.var, ctx);
                     visit(&mut *a.pat, ctx);
                 }
                 TypedCore::Apply(a) => {
@@ -85,8 +86,8 @@ impl<'helper> AstHelper<'helper> {
                     for x in &mut *c.pats.inner {
                         visit(x, ctx);
                     }
-                    visit(&mut *c.body, ctx);
                     visit(&mut *c.guard, ctx);
+                    visit(&mut *c.body, ctx);
                 }
                 TypedCore::Cons(c) => {
                     c.index = Some(id);

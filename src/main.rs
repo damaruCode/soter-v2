@@ -53,6 +53,8 @@ fn main() {
 
     let mut ast_helper = util::AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    log::debug!("{:#?}", indexed_typed_core);
+
     ast_helper.build_lookup(&indexed_typed_core);
 
     let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
