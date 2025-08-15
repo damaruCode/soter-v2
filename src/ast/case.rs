@@ -1,6 +1,6 @@
 use crate::{
     state_space::r#abstract::{Env, Value, ValueAddress, VarName},
-    util::SetMap,
+    util::{AstHelper, SetMap},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
@@ -18,29 +18,70 @@ pub struct Case {
 }
 
 impl Case {
+    //TODO
     pub fn cmatch<V: ValueAddress>(
         clauses: Vec<Clause>,
-        _env: Env<V>,
-        _value_store: &SetMap<V, Value<V>>,
+        v_addr: V,
+        value_store: &SetMap<V, Value<V>>,
+        ast_helper: &AstHelper,
     ) -> Option<(usize, Env<V>)> {
-        for clause in clauses {
-            if clause.pats.inner.len() == 0 {
+        for i in 0..clauses.len() {
+            if clauses[i].pats.inner.len() == 0 {
                 return None;
             }
-            for _pat in clause.pats.inner {
-                todo!("cmatch should pass to pmatch here")
+            let mut new_env = Env::init();
+            for pat in &clauses[i].pats.inner {
+                let p_env = Self::pmatch(pat, v_addr.clone(), value_store, ast_helper);
+                new_env.merge_with(&p_env);
+            }
+            if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
+                return Some((i, new_env));
             }
         }
-
         None
     }
 
+    //TODO
     pub fn pmatch<V: ValueAddress>(
-        _var_name: VarName,
-        _v_addr: V,
-        _value_store: &SetMap<V, Value<V>>,
+        typed_core: &TypedCore,
+        v_addr: V,
+        value_store: &SetMap<V, Value<V>>,
+        ast_helper: &AstHelper,
     ) -> Env<V> {
-        todo!("Pattern matching is not implemented yet")
+        match typed_core {
+            TypedCore::AstList(outer_at) => {
+                let clopid = value_store.get(&v_addr).unwrap();
+                for value in clopid {
+                    match value {
+                        Value::Closure(c) => match ast_helper.get(c.prog_loc) {
+                            TypedCore::AstList(inner_at) => {
+                                for i in 0..outer_at.inner.len() {
+                                    let p_env = Self::pmatch(
+                                        &outer_at.inner[i],
+                                        c.env.inner.get(VarName::from(inner_at.inner[i])),
+                                        value_store,
+                                        ast_helper,
+                                    );
+                                }
+                            }
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+            }
+            _ => panic!(),
+        }
+    }
+
+    //TODO
+    pub fn gmatch<V: ValueAddress>(
+        typed_core: &TypedCore,
+        env: &Env<V>,
+        value_store: &SetMap<V, Value<V>>,
+        ast_helper: &AstHelper,
+    ) -> bool {
+        todo!("Guard matching is not implemented yet")
     }
 }
 

@@ -315,7 +315,15 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 // ABS_CASE
                 TypedCore::Case(case) => {
                     let clauses = Vec::from(&case.clauses);
-                    let mats = Case::cmatch::<V>(clauses.clone(), self.env.clone(), &store.value);
+                    let mats = Case::cmatch(
+                        clauses.clone(),
+                        self.env
+                            .inner
+                            .get(&VarName::from(&*case.arg))
+                            .unwrap()
+                            .clone(),
+                        &store.value,
+                    );
 
                     if let Some((index, env)) = mats {
                         let mut new_item = self.clone();
