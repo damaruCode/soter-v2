@@ -50,15 +50,19 @@ impl Case {
     ) -> Env<V> {
         match typed_core {
             TypedCore::AstList(outer_at) => {
-                let clopid = value_store.get(&v_addr).unwrap();
-                for value in clopid {
+                let values = value_store.get(&v_addr).unwrap();
+                for value in values {
                     match value {
                         Value::Closure(c) => match ast_helper.get(c.prog_loc) {
                             TypedCore::AstList(inner_at) => {
                                 for i in 0..outer_at.inner.len() {
                                     let p_env = Self::pmatch(
                                         &outer_at.inner[i],
-                                        c.env.inner.get(VarName::from(inner_at.inner[i])),
+                                        c.env
+                                            .inner
+                                            .get(&VarName::from(&inner_at.inner[i]))
+                                            .unwrap()
+                                            .clone(),
                                         value_store,
                                         ast_helper,
                                     );
@@ -71,7 +75,8 @@ impl Case {
                 }
             }
             _ => panic!(),
-        }
+        };
+        Env::init()
     }
 
     //TODO

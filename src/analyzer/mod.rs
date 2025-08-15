@@ -336,7 +336,8 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 }
                 // ABS_RECEIVE
                 TypedCore::Receive(_receive) => {
-                    panic!();
+                    let mailbox = mailboxes.inner.get(&self.pid).unwrap();
+                    let msg = mailbox.mmatch();
                 }
                 TypedCore::PrimOp(_prim_op) => {
                     // NOTE This would require another
