@@ -6,12 +6,14 @@ use crate::{
     util::AstHelper,
 };
 
+use super::TransitionResult;
+
 pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     case: &Case,
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
     ast_helper: &AstHelper,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
     let clauses = Vec::from(&case.clauses);

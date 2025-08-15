@@ -6,7 +6,7 @@ use crate::{
     util::AstHelper,
 };
 
-use super::abs_spawn;
+use super::{abs_spawn, TransitionResult};
 
 pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     call: &Call,
@@ -15,7 +15,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
     ast_helper: &AstHelper,
     address_builder: &Box<dyn AddressBuilder<K, V>>,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     match &*call.name {
         TypedCore::Literal(l) => match &*l.val {
             TypedCore::String(s) => match s.inner.as_str() {

@@ -3,10 +3,12 @@ use crate::{
     state_space::r#abstract::{KontinuationAddress, ProcState, ProgLocOrPid, ValueAddress},
 };
 
+use super::TransitionResult;
+
 pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     module: &Module,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
     match &*module.defs.inner[0].scnd {

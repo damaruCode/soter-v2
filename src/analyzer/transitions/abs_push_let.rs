@@ -8,6 +8,8 @@ use crate::{
     util::{AstHelper, SetMap},
 };
 
+use super::TransitionResult;
+
 pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     r#let: &Let,
     proc_state: &ProcState<K, V>,
@@ -15,7 +17,7 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     address_builder: &Box<dyn AddressBuilder<K, V>>,
     ast_helper: &AstHelper,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
 

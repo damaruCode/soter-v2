@@ -29,7 +29,6 @@ pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
         curr_proc_state: &ProcState<K, V>,
         var_name: &VarName,
         next_prog_loc_or_pid: &ProgLocOrPid,
-        next_env: &Env<V>,
         next_time: &Time,
     ) -> V;
 }

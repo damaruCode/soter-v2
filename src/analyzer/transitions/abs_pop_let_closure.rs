@@ -7,6 +7,8 @@ use crate::{
     util::{AstHelper, SetMap},
 };
 
+use super::TransitionResult;
+
 pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     proc_state_prog_loc: usize,
@@ -18,7 +20,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     address_builder: &Box<dyn AddressBuilder<K, V>>,
     ast_helper: &AstHelper,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     if kont_var_list.len() != 1 {
         panic!("Expected VarList of length 1");
     }
@@ -35,7 +37,6 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
         &proc_state,
         &new_var_name,
         &new_item.prog_loc_or_pid,
-        &new_item.env,
         &new_item.time,
     );
     new_item

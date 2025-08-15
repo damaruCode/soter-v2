@@ -96,9 +96,8 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         }
 
         match &self.prog_loc_or_pid {
-            // ABS_POP_LET_PID
-            ProgLocOrPid::Pid(_pid) => {
-                panic!()
+            ProgLocOrPid::Pid(pid) => {
+                abs_pop_let_pid(pid, self, store, seen, address_builder, ast_helper)
             }
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
                 TypedCore::Module(m) => abs_module(self, m),
@@ -122,11 +121,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     // match on the name. However, the PrimOps: self, spawn and send are the only
                     // ones being considered, so parsing them in the ast module would probably be
                     // more sensible
-
-                    // ABS_SELF
-                    // ABS_SPAWN
-                    // ABS_SEND
-                    panic!()
+                    todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND")
                 }
                 TypedCore::Let(l) => {
                     abs_push_let(l, self, store, seen, address_builder, ast_helper)

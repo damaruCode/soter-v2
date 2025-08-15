@@ -7,6 +7,8 @@ use crate::{
     util::AstHelper,
 };
 
+use super::TransitionResult;
+
 pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     var_name: &VarName,
     proc_state: &ProcState<K, V>,
@@ -14,7 +16,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
     ast_helper: &AstHelper,
     address_builder: &Box<dyn AddressBuilder<K, V>>,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
     let values = store

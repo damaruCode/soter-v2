@@ -5,11 +5,13 @@ use crate::{
     },
 };
 
+use super::TransitionResult;
+
 pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
     var: &Var,
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
-) -> (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>) {
+) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
     match proc_state.env.inner.get(&VarName::from(&*var.name)) {

@@ -65,7 +65,6 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
         curr_proc_state: &ProcState<KAddr, VAddr>,
         var_name: &VarName,
         _next_prog_loc_or_pid: &ProgLocOrPid,
-        _next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> VAddr {
         VAddr {
