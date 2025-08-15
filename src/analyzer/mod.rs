@@ -323,6 +323,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                             .unwrap()
                             .clone(),
                         &store.value,
+                        ast_helper,
                     );
 
                     if let Some((index, env)) = mats {
@@ -337,7 +338,8 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 // ABS_RECEIVE
                 TypedCore::Receive(_receive) => {
                     let mailbox = mailboxes.inner.get(&self.pid).unwrap();
-                    let msg = mailbox.mmatch();
+                    // let msg = mailbox.mmatch();
+                    panic!();
                 }
                 TypedCore::PrimOp(_prim_op) => {
                     // NOTE This would require another

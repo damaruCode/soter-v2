@@ -77,7 +77,7 @@ impl Case {
 
                                 return Some(new_env);
                             }
-                            _ => panic!(),
+                            _ => todo!(),
                         },
                         _ => panic!(),
                     }
@@ -91,11 +91,23 @@ impl Case {
     //TODO
     pub fn gmatch<V: ValueAddress>(
         typed_core: &TypedCore,
-        env: &Env<V>,
-        value_store: &SetMap<V, Value<V>>,
-        ast_helper: &AstHelper,
+        _env: &Env<V>,
+        _value_store: &SetMap<V, Value<V>>,
+        _ast_helper: &AstHelper,
     ) -> bool {
-        todo!("Guard matching is not implemented yet")
+        match typed_core {
+            TypedCore::Literal(l) => match *l.val.clone() {
+                TypedCore::String(s) => {
+                    if s.inner.as_str() == "true" {
+                        true
+                    } else {
+                        todo!("{:#?}", typed_core)
+                    }
+                }
+                _ => todo!("{:#?}", typed_core),
+            },
+            _ => todo!("{:#?}", typed_core),
+        }
     }
 }
 
