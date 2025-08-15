@@ -39,18 +39,16 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 
     let mats = Case::cmatch(&clauses, values, &store.value, ast_helper);
 
-    for mat in mats {
-        if let Some((index, env)) = mat {
-            let mut new_item = proc_state.clone();
-            new_item.prog_loc_or_pid =
-                ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
-            new_item.env.merge_with(&env);
+    for (index, env) in mats {
+        let mut new_item = proc_state.clone();
+        new_item.prog_loc_or_pid =
+            ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
+        new_item.env.merge_with(&env);
 
-            v_new.push(new_item);
+        v_new.push(new_item);
 
-            // stop after first match
-            break;
-        }
+        // stop after first match
+        break;
     }
 
     (v_new, Vec::new())

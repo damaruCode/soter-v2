@@ -107,15 +107,8 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     abs_call(c, self, mailboxes, store, ast_helper, address_builder)
                 }
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                // ABS_CASE
                 TypedCore::Case(c) => abs_case(c, self, store, ast_helper),
-                // ABS_RECEIVE
-                TypedCore::Receive(r) => {
-                    let mailbox = mailboxes.inner.get(&self.pid).unwrap();
-                    let msgs = mailbox.mmatch(&Vec::from(&r.clauses), &store.value, ast_helper);
-
-                    panic!()
-                }
+                TypedCore::Receive(r) => abs_receive(r, self, mailboxes, store, ast_helper),
                 TypedCore::PrimOp(_prim_op) => {
                     // NOTE This would require another
                     // match on the name. However, the PrimOps: self, spawn and send are the only

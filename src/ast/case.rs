@@ -23,24 +23,22 @@ impl Case {
         values: &Vec<Value<V>>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Vec<Option<(usize, Env<V>)>> {
-        let mut opts = Vec::new();
+    ) -> Vec<(usize, Env<V>)> {
+        let mut matches = Vec::new();
         for i in 0..clauses.len() {
             let mut new_env = Env::init();
             for pat in &clauses[i].pats.inner {
                 let p_envs = Self::pmatch(pat, values, value_store, ast_helper);
 
                 for p_env in p_envs {
-                    if let Some(env) = p_env {
-                        new_env.merge_with(&env);
-                    }
+                    new_env.merge_with(&p_env);
                 }
             }
             if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
-                opts.push(Some((i, new_env)));
+                matches.push((i, new_env));
             }
         }
-        opts
+        matches
     }
 
     //TODO No idea if this is right; doesn't really matter right now
@@ -49,49 +47,57 @@ impl Case {
         values: &Vec<Value<V>>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Vec<Option<Env<V>>> {
-        let mut opts = Vec::new();
-        match typed_core {
-            TypedCore::AstList(tc_al) => {
-                for value in values {
-                    match value {
-                        Value::Closure(c) => match ast_helper.get(c.prog_loc) {
-                            TypedCore::AstList(var_al) => {
-                                let mut new_env = Env::init();
-                                for i in 0..tc_al.inner.len() {
-                                    let p_envs = Self::pmatch(
-                                        &tc_al.inner[i],
-                                        value_store
-                                            .get(
-                                                &c.env
-                                                    .inner
-                                                    .get(&VarName::from(&var_al.inner[i]))
-                                                    .unwrap()
-                                                    .clone(),
-                                            )
-                                            .unwrap(),
-                                        value_store,
-                                        ast_helper,
-                                    );
+    ) -> Vec<Env<V>> {
+        fn traverse<V: ValueAddress>(
+            ast_list: &AstList<TypedCore>,
+            values: &Vec<Value<V>>,
+            value_store: &SetMap<V, Value<V>>,
+            ast_helper: &AstHelper,
+        ) -> Vec<Env<V>> {
+            let mut matches = Vec::new();
 
-                                    for p_env in p_envs {
-                                        if let Some(env) = p_env {
-                                            new_env.merge_with(&env);
-                                        }
-                                    }
+            for value in values {
+                match value {
+                    Value::Closure(c) => match ast_helper.get(c.prog_loc) {
+                        TypedCore::AstList(var_al) => {
+                            let mut new_env = Env::init();
+                            for i in 0..ast_list.inner.len() {
+                                let p_envs = Case::pmatch(
+                                    &ast_list.inner[i],
+                                    value_store
+                                        .get(
+                                            &c.env
+                                                .inner
+                                                .get(&VarName::from(&var_al.inner[i]))
+                                                .unwrap()
+                                                .clone(),
+                                        )
+                                        .unwrap(),
+                                    value_store,
+                                    ast_helper,
+                                );
+
+                                for p_env in p_envs {
+                                    new_env.merge_with(&p_env);
                                 }
-
-                                opts.push(Some(new_env));
                             }
-                            _ => todo!(),
-                        },
-                        _ => panic!(),
-                    }
+
+                            matches.push(new_env);
+                        }
+                        _ => todo!(),
+                    },
+                    _ => panic!(),
                 }
             }
-            _ => panic!(),
-        };
-        opts
+
+            matches
+        }
+
+        match typed_core {
+            TypedCore::AstList(al) => traverse(al, values, value_store, ast_helper),
+            TypedCore::Tuple(tup) => traverse(&tup.es, values, value_store, ast_helper),
+            _ => panic!("{:#?}", typed_core),
+        }
     }
 
     pub fn gmatch<V: ValueAddress>(
@@ -109,6 +115,7 @@ impl Case {
                         todo!("{:#?}", typed_core)
                     }
                 }
+                TypedCore::Bool(b) => b.inner,
                 _ => todo!("{:#?}", typed_core),
             },
             _ => todo!("{:#?}", typed_core),
