@@ -278,18 +278,39 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                                         new_proc_state_one.prog_loc_or_pid =
                                                             ProgLocOrPid::Pid(new_pid.clone());
 
-                                                        let new_proc_state_two = ProcState::new(
-                                                            new_pid,
-                                                            ProgLocOrPid::ProgLoc(
-                                                                (*f.body).get_index().unwrap(),
-                                                            ),
-                                                            clo.env.clone(),
-                                                            address_builder.init_kaddr(),
-                                                            Time::init(),
-                                                        );
-
                                                         v_new.push(new_proc_state_one);
-                                                        v_new.push(new_proc_state_two);
+
+                                                        match &*f.body {
+                                                            TypedCore::Case(c) => {
+                                                                match &c.clauses.inner[0] {
+                                                                    TypedCore::Clause(c) => {
+                                                                        let new_proc_state_two =
+                                                                    ProcState::new(
+                                                                        new_pid.clone(),
+                                                                        ProgLocOrPid::ProgLoc(
+                                                                            (*c.body)
+                                                                                .get_index()
+                                                                                .unwrap(),
+                                                                        ),
+                                                                        clo.env.clone(),
+                                                                        address_builder
+                                                                            .init_kaddr(),
+                                                                        Time::init(),
+                                                                    );
+                                                                        v_new.push(
+                                                                            new_proc_state_two,
+                                                                        );
+
+                                                                        mailboxes.inner.insert(
+                                                                            new_pid,
+                                                                            Mailbox::init(),
+                                                                        );
+                                                                    }
+                                                                    _ => panic!(),
+                                                                }
+                                                            }
+                                                            _ => panic!(),
+                                                        }
                                                     }
                                                     _ => panic!(),
                                                 }
@@ -315,16 +336,25 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 // ABS_CASE
                 TypedCore::Case(case) => {
                     let clauses = Vec::from(&case.clauses);
-                    let mats = Case::cmatch(
-                        clauses.clone(),
-                        self.env
-                            .inner
-                            .get(&VarName::from(&*case.arg))
-                            .unwrap()
-                            .clone(),
-                        &store.value,
-                        ast_helper,
-                    );
+                    let values;
+                    match &*case.arg {
+                        TypedCore::Var(v) => {
+                            values = store
+                                .value
+                                .get(&self.env.inner.get(&VarName::from(v)).unwrap())
+                                .unwrap()
+                        }
+                        TypedCore::Literal(l) => match *l.val {
+                            TypedCore::AstList(al) => {}
+                            TypedCore::String(_) => {
+                                let var_name = VarName::from(&*l.val);
+                            }
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+
+                    let mats = Case::cmatch(&clauses, values, &store.value, ast_helper);
 
                     for mat in mats {
                         if let Some((index, env)) = mat {
@@ -342,9 +372,10 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     }
                 }
                 // ABS_RECEIVE
-                TypedCore::Receive(_receive) => {
+                TypedCore::Receive(r) => {
                     let mailbox = mailboxes.inner.get(&self.pid).unwrap();
-                    // let msg = mailbox.mmatch();
+                    let msgs = mailbox.mmatch(&Vec::from(&r.clauses), &store.value, ast_helper);
+
                     panic!();
                 }
                 TypedCore::PrimOp(_prim_op) => {

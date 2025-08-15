@@ -1,6 +1,6 @@
 use crate::{
     ast::{Case, Clause},
-    util::SetMap,
+    util::{AstHelper, SetMap},
 };
 
 use super::{Env, Pid, Value, ValueAddress};
@@ -13,13 +13,19 @@ pub struct Mailbox<V: ValueAddress> {
 }
 
 impl<V: ValueAddress> Mailbox<V> {
+    pub fn init() -> Self {
+        Mailbox { inner: Vec::new() }
+    }
+
     // TODO
     pub fn mmatch(
         &self,
-        clauses: Vec<Clause>,
+        clauses: &Vec<Clause>,
         value_store: &SetMap<V, Value<V>>,
-    ) -> Option<(usize, V, Env<V>)> {
-        None
+        ast_helper: &AstHelper,
+    ) -> Vec<(usize, V, Env<V>)> {
+        Case::cmatch(clauses, &self.inner, value_store, ast_helper);
+        Vec::new()
     }
 }
 
@@ -31,7 +37,7 @@ pub struct Mailboxes<V: ValueAddress> {
 impl<V: ValueAddress> Mailboxes<V> {
     pub fn init() -> Self {
         Mailboxes {
-            inner: HashMap::new(),
+            inner: HashMap::from([(Pid::init(), Mailbox::init())]),
         }
     }
 

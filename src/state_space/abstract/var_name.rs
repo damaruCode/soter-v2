@@ -1,4 +1,5 @@
 use crate::ast::TypedCore;
+use crate::ast::Var;
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub enum VarName {
@@ -26,5 +27,11 @@ impl From<&TypedCore> for VarName {
             }
             _ => panic!("{:#?}", tc),
         }
+    }
+}
+
+impl From<&Var> for VarName {
+    fn from(v: &Var) -> Self {
+        VarName::from(&*v.name)
     }
 }

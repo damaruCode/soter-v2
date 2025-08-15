@@ -18,10 +18,9 @@ pub struct Case {
 }
 
 impl Case {
-    //TODO
     pub fn cmatch<V: ValueAddress>(
-        clauses: Vec<Clause>,
-        v_addr: V,
+        clauses: &Vec<Clause>,
+        values: &Vec<Value<V>>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> Vec<Option<(usize, Env<V>)>> {
@@ -29,7 +28,7 @@ impl Case {
         for i in 0..clauses.len() {
             let mut new_env = Env::init();
             for pat in &clauses[i].pats.inner {
-                let p_envs = Self::pmatch(pat, v_addr.clone(), value_store, ast_helper);
+                let p_envs = Self::pmatch(pat, values, value_store, ast_helper);
 
                 for p_env in p_envs {
                     if let Some(env) = p_env {
@@ -47,14 +46,13 @@ impl Case {
     //TODO No idea if this is right; doesn't really matter right now
     pub fn pmatch<V: ValueAddress>(
         typed_core: &TypedCore,
-        v_addr: V,
+        values: &Vec<Value<V>>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> Vec<Option<Env<V>>> {
         let mut opts = Vec::new();
         match typed_core {
             TypedCore::AstList(tc_al) => {
-                let values = value_store.get(&v_addr).unwrap();
                 for value in values {
                     match value {
                         Value::Closure(c) => match ast_helper.get(c.prog_loc) {
@@ -63,11 +61,15 @@ impl Case {
                                 for i in 0..tc_al.inner.len() {
                                     let p_envs = Self::pmatch(
                                         &tc_al.inner[i],
-                                        c.env
-                                            .inner
-                                            .get(&VarName::from(&var_al.inner[i]))
-                                            .unwrap()
-                                            .clone(),
+                                        value_store
+                                            .get(
+                                                &c.env
+                                                    .inner
+                                                    .get(&VarName::from(&var_al.inner[i]))
+                                                    .unwrap()
+                                                    .clone(),
+                                            )
+                                            .unwrap(),
                                         value_store,
                                         ast_helper,
                                     );
@@ -92,7 +94,6 @@ impl Case {
         opts
     }
 
-    //TODO
     pub fn gmatch<V: ValueAddress>(
         typed_core: &TypedCore,
         _env: &Env<V>,
