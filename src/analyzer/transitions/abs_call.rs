@@ -7,7 +7,7 @@ use crate::{
     util::{AstHelper, SetMap},
 };
 
-use super::{abs_send, abs_spawn, TransitionResult};
+use super::{abs_self, abs_send, abs_spawn, TransitionResult};
 
 pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     call: &Call,
@@ -29,7 +29,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     ast_helper,
                     address_builder,
                 ),
-                "!" => abs_send(
+                "!" | "send" => abs_send(
                     &call.args.inner[0],
                     &call.args.inner[1],
                     proc_state,
@@ -38,6 +38,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     seen_proc_states,
                     ast_helper,
                 ),
+                "self" => abs_self(proc_state),
                 _ => panic!(),
             },
             _ => panic!(),

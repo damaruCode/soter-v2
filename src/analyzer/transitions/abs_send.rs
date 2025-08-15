@@ -22,8 +22,6 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
 
-    println!("{:#?}", typed_core_to);
-
     let pids = match typed_core_to {
         TypedCore::Var(v) => {
             let maybe_pids = store
@@ -43,20 +41,42 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
         _ => panic!(),
     };
 
-    let msg_values = match typed_core_msg {
-        TypedCore::Var(v) => store
-            .value
-            .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
-            .unwrap(),
-        TypedCore::Literal(l) => &Vec::from([Value::Closure(Closure {
-            prog_loc: (*l.val).get_index().unwrap(),
-            env: Env::init(),
-        })]),
-        _ => panic!(),
-    };
+    fn determine_values<K: KontinuationAddress, V: ValueAddress>(
+        typed_core_msg: &TypedCore,
+        proc_state: &ProcState<K, V>,
+        store: &Store<K, V>,
+    ) -> Vec<Value<V>> {
+        match typed_core_msg {
+            TypedCore::Var(v) => store
+                .value
+                .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
+                .unwrap()
+                .clone(),
+            TypedCore::Literal(l) => Vec::from([Value::Closure(Closure {
+                prog_loc: (*l.val).get_index().unwrap(),
+                env: Env::init(),
+            })]),
+            TypedCore::AstList(al) => {
+                let mut values = Vec::new();
+                for tc in &al.inner {
+                    values.append(&mut determine_values(&tc, proc_state, store));
+                }
+                values
+            }
+            TypedCore::Tuple(t) => {
+                let mut values = Vec::new();
+                for tc in &t.es.inner {
+                    values.append(&mut determine_values(&tc, proc_state, store));
+                }
+                values
+            }
+            tc => panic!("{:#?}", tc),
+        }
+    }
 
+    let msg_values = determine_values(typed_core_msg, proc_state, store);
     for pid in pids {
-        for value in msg_values {
+        for value in &msg_values {
             let mut new_item = proc_state.clone();
             new_item.prog_loc_or_pid = match value {
                 Value::Pid(pid) => ProgLocOrPid::Pid(pid.clone()),

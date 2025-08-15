@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Case, Index, TypedCore, ValueAddressOrValue, VarNamesOrValue},
+    ast::{Case, Index, TypedCore, ValueAddressOrValue},
     state_space::r#abstract::{
         KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
     },
