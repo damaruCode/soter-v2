@@ -1,3 +1,4 @@
+use crate::ast::Case;
 use crate::ast::Index;
 use crate::ast::TypedCore;
 use crate::state_space::r#abstract::*;
@@ -312,8 +313,18 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     panic!();
                 }
                 // ABS_CASE
-                TypedCore::Case(_case) => {
-                    panic!();
+                TypedCore::Case(case) => {
+                    let clauses = Vec::from(&case.clauses);
+                    let mats = Case::cmatch::<V>(clauses.clone(), self.env.clone(), &store.value);
+
+                    if let Some((index, env)) = mats {
+                        let mut new_item = self.clone();
+                        new_item.prog_loc_or_pid =
+                            ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
+                        new_item.env.merge_with(&env);
+
+                        v_new.push(new_item);
+                    }
                 }
                 // ABS_RECEIVE
                 TypedCore::Receive(_receive) => {

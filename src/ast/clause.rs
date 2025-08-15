@@ -24,3 +24,16 @@ impl From<Map<String, Value>> for Clause {
         }
     }
 }
+
+impl From<&AstList<TypedCore>> for Vec<Clause> {
+    fn from(al: &AstList<TypedCore>) -> Self {
+        let mut clauses = Vec::new();
+        for tc in &al.inner {
+            match tc {
+                TypedCore::Clause(c) => clauses.push(c.clone()),
+                _ => panic!("{:#?}", tc),
+            }
+        }
+        clauses
+    }
+}

@@ -15,4 +15,10 @@ impl<V: ValueAddress> Env<V> {
             inner: HashMap::new(),
         }
     }
+
+    pub fn merge_with(&mut self, other: &Self) {
+        for (var_name, v_addr) in &other.inner {
+            self.inner.insert(var_name.clone(), v_addr.clone());
+        }
+    }
 }
