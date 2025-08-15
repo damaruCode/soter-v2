@@ -8,6 +8,7 @@ pub mod abs_pop_let_closure;
 pub mod abs_pop_let_pid;
 pub mod abs_push_let;
 pub mod abs_receive;
+pub mod abs_send;
 pub mod abs_spawn;
 pub mod abs_var;
 
@@ -18,6 +19,7 @@ pub use abs_pop_let_closure::*;
 pub use abs_pop_let_pid::*;
 pub use abs_push_let::*;
 pub use abs_receive::*;
+pub use abs_send::*;
 pub use abs_spawn::*;
 pub use abs_var::*;
 

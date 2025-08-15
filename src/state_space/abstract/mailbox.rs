@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Case, Clause},
+    ast::{Case, Clause, ValueAddressOrValue},
     util::{AstHelper, SetMap},
 };
 
@@ -24,8 +24,23 @@ impl<V: ValueAddress> Mailbox<V> {
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> Vec<(usize, Env<V>)> {
-        // NOTE mmatch_set is simply a cmatch
-        Case::cmatch(clauses, &self.inner, value_store, ast_helper)
+        let mut matched_msgs = Vec::new();
+        for msg in &self.inner {
+            let mats = Case::cmatch(
+                clauses,
+                &ValueAddressOrValue::Value(msg.clone()),
+                value_store,
+                ast_helper,
+            );
+
+            for opt in mats {
+                if let Some(tup) = opt {
+                    matched_msgs.push(tup);
+                }
+            }
+        }
+
+        matched_msgs
     }
 }
 

@@ -7,16 +7,6 @@ use serde_json::Map;
 
 use super::{AstList, Clause, TypedCore};
 
-pub enum VarNamesOrValue<V: ValueAddress> {
-    VarNames(Vec<VarName>),
-    Value(Value<V>),
-}
-
-pub enum ValueAddressOrValue<V: ValueAddress> {
-    ValueAddress(V),
-    Value(Value<V>),
-}
-
 //-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
 //		 clauses :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
@@ -30,97 +20,78 @@ pub struct Case {
 impl Case {
     pub fn cmatch<V: ValueAddress>(
         clauses: &Vec<Clause>,
-        v_addr_or_value: &ValueAddressOrValue<V>,
+        var_names: &Vec<VarName>,
+        env: &Env<V>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Vec<Option<(usize, Env<V>)>> {
-        let mut opts = Vec::new();
+    ) -> Vec<(usize, Env<V>)> {
+        let mut matches = Vec::new();
         for i in 0..clauses.len() {
             let mut new_env = Env::init();
-            let p_env = Self::pmatch(
-                &clauses[i].pats.inner[i],
-                v_addr_or_value,
-                value_store,
-                ast_helper,
-            );
+            for pat in &clauses[i].pats.inner {
+                let p_envs = Self::pmatch(pat, env.inner.get(&var_names[i]).unwrap(), value_store, ast_helper);
 
-            if p_env == Env::init() {
-                continue;
+                for p_env in p_envs {
+                    new_env.merge_with(&p_env);
+                }
             }
-
-            new_env.merge_with(&p_env);
             if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
-                opts.push(Some((i, new_env)))
+                matches.push((i, new_env));
             }
         }
-        opts
+        log::debug!("CLAUSE - {:#?}\nMATCH - {:#?}", clauses, matches);
+        matches
     }
 
     //TODO No idea if this is right; doesn't really matter right now
     pub fn pmatch<V: ValueAddress>(
         typed_core: &TypedCore,
-        v_addr_or_value: &ValueAddressOrValue<V>,
+        v_addrs: &Vec<V>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Env<V> {
+    ) -> Vec<Env<V>> {
         fn traverse<V: ValueAddress>(
             ast_list: &AstList<TypedCore>,
-            v_addr_or_value: &ValueAddressOrValue<V>,
+            values: &Vec<Value<V>>,
             value_store: &SetMap<V, Value<V>>,
             ast_helper: &AstHelper,
-        ) -> Env<V> {
-            let values = match v_addr_or_value {
-                ValueAddressOrValue::Value(value) => Vec::from([value.clone()]),
-                ValueAddressOrValue::ValueAddress(v_addr) => {
-                    value_store.get(&v_addr).unwrap().clone()
-                }
-            };
+        ) -> Vec<Env<V>> {
+            let mut matches = Vec::new();
 
-            let mut new_env = Env::init();
             for value in values {
                 match value {
                     Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                         TypedCore::AstList(var_al) => {
+                            let mut new_env = Env::init();
+
                             for i in 0..ast_list.inner.len() {
-                                let p_env = Case::pmatch(
+                                let p_envs = Case::pmatch(
                                     &ast_list.inner[i],
-                                    &ValueAddressOrValue::ValueAddress(
-                                        clo.env
-                                            .inner
-                                            .get(&VarName::from(&var_al.inner[i]))
-                                            .unwrap()
-                                            .clone(),
-                                    ),
+&VarName::from(&var_al.inner[i])
                                     value_store,
                                     ast_helper,
                                 );
 
-                                new_env.merge_with(&p_env);
+                                for p_env in p_envs {
+                                    new_env.merge_with(&p_env);
+                                }
                             }
+
+                            matches.push(new_env);
                         }
                         _ => todo!(),
                     },
                     _ => panic!(),
-                };
+                }
             }
-            new_env
+
+            matches
         }
 
         match typed_core {
-            TypedCore::Var(v) => match v_addr_or_value {
-                ValueAddressOrValue::ValueAddress(v_addr) => {
-                    let mut new_env = Env::init();
-                    new_env
-                        .inner
-                        .insert(VarName::from(v).clone(), v_addr.clone());
-
-                    log::debug!("NEW_ENV {:#?}", new_env);
-                    new_env
-                }
-                _ => panic!(),
-            },
-            TypedCore::AstList(al) => traverse(al, v_addr_or_value, value_store, ast_helper),
-            TypedCore::Tuple(tup) => traverse(&tup.es, v_addr_or_value, value_store, ast_helper),
+            TypedCore::Var(v) => Env::init().inner.insert(&VarName::from(v), )
+            TypedCore::AstList(al) => traverse(al, values, value_store, ast_helper),
+            TypedCore::Tuple(tup) => traverse(&tup.es, values, value_store, ast_helper),
             _ => panic!("{:#?}", typed_core),
         }
     }

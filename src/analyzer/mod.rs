@@ -104,7 +104,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(_apply) => todo!("ABS_APPLY missing"),
                 TypedCore::Call(c) => {
-                    abs_call(c, self, mailboxes, store, ast_helper, address_builder)
+                    abs_call(c, self, mailboxes, store, seen, ast_helper, address_builder)
                 }
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
                 TypedCore::Case(c) => abs_case(c, self, store, ast_helper),

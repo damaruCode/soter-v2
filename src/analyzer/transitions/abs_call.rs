@@ -1,18 +1,20 @@
 use crate::{
     ast::{Call, TypedCore},
     state_space::r#abstract::{
-        AddressBuilder, KontinuationAddress, Mailboxes, ProcState, Store, ValueAddress, VarName,
+        AddressBuilder, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress,
+        VarName,
     },
-    util::AstHelper,
+    util::{AstHelper, SetMap},
 };
 
-use super::{abs_spawn, TransitionResult};
+use super::{abs_send, abs_spawn, TransitionResult};
 
 pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     call: &Call,
     proc_state: &ProcState<K, V>,
     mailboxes: &mut Mailboxes<V>,
     store: &Store<K, V>,
+    seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
     address_builder: &Box<dyn AddressBuilder<K, V>>,
 ) -> TransitionResult<K, V> {
@@ -27,7 +29,15 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     ast_helper,
                     address_builder,
                 ),
-                "!" => panic!(),
+                "!" => abs_send(
+                    &call.args.inner[0],
+                    &call.args.inner[1],
+                    proc_state,
+                    mailboxes,
+                    store,
+                    seen_proc_states,
+                    ast_helper,
+                ),
                 _ => panic!(),
             },
             _ => panic!(),
