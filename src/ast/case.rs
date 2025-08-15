@@ -47,7 +47,7 @@ impl Case {
         v_addr: V,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Env<V> {
+    ) -> Option<Env<V>> {
         match typed_core {
             TypedCore::AstList(outer_at) => {
                 let values = value_store.get(&v_addr).unwrap();
@@ -55,6 +55,7 @@ impl Case {
                     match value {
                         Value::Closure(c) => match ast_helper.get(c.prog_loc) {
                             TypedCore::AstList(inner_at) => {
+                                let mut new_env = Env::init();
                                 for i in 0..outer_at.inner.len() {
                                     let p_env = Self::pmatch(
                                         &outer_at.inner[i],
@@ -66,7 +67,13 @@ impl Case {
                                         value_store,
                                         ast_helper,
                                     );
+
+                                    if let Some(env) = p_env {
+                                        new_env.merge_with(&env);
+                                    }
                                 }
+
+                                return Some(new_env);
                             }
                             _ => panic!(),
                         },
@@ -76,7 +83,7 @@ impl Case {
             }
             _ => panic!(),
         };
-        Env::init()
+        None
     }
 
     //TODO
