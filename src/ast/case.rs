@@ -32,7 +32,9 @@ impl Case {
             let mut new_env = Env::init();
             for pat in &clauses[i].pats.inner {
                 let p_env = Self::pmatch(pat, v_addr.clone(), value_store, ast_helper);
-                new_env.merge_with(&p_env);
+                if let Some(env) = p_env {
+                    new_env.merge_with(&env);
+                }
             }
             if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
                 return Some((i, new_env));
