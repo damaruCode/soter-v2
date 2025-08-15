@@ -1,3 +1,4 @@
+pub mod address_builder;
 pub mod analyzer;
 pub mod ast;
 pub mod erlang;
@@ -6,7 +7,8 @@ pub mod util;
 
 use std::env;
 
-use analyzer::{Analyzer, StandardAddressBuilder};
+use address_builder::StandardAddressBuilder;
+use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
     append::file::FileAppender,
@@ -52,13 +54,14 @@ fn main() {
 
     ast_helper.build_lookup(&indexed_typed_core);
 
-    let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
+    let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder::new()));
     analyzer.run();
 }
 
 #[cfg(test)]
 mod benchmarks {
-    use crate::analyzer::{Analyzer, StandardAddressBuilder};
+    use crate::address_builder::StandardAddressBuilder;
+    use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;
     use crate::util::AstHelper;
@@ -70,7 +73,7 @@ mod benchmarks {
         let mut ast_helper = AstHelper::new();
         let indexed_typed_core = ast_helper.build_indecies(typed_core);
         ast_helper.build_lookup(&indexed_typed_core);
-        let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder {}));
+        let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder::new()));
         analyzer.run();
     }
 

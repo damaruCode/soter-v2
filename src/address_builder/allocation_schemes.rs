@@ -24,7 +24,14 @@ pub struct VAddr {
 }
 impl ValueAddress for VAddr {}
 
-pub struct StandardAddressBuilder {}
+pub struct StandardAddressBuilder;
+
+impl StandardAddressBuilder {
+    pub fn new() -> Self {
+        StandardAddressBuilder {}
+    }
+}
+
 impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
     fn init_kaddr(&self) -> KAddr {
         KAddr {

@@ -1,4 +1,4 @@
-type ProgLoc = usize;
+use super::ProgLoc;
 
 // Time := ProgLoc^k
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]

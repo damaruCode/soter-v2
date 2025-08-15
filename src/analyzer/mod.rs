@@ -1,5 +1,3 @@
-use crate::ast::Case;
-use crate::ast::Index;
 use crate::ast::TypedCore;
 use crate::state_space::r#abstract::*;
 use crate::util::AstHelper;
@@ -7,8 +5,9 @@ use crate::util::SetMap;
 
 use std::collections::VecDeque;
 
-mod allocation_schemes;
-pub use allocation_schemes::*;
+mod dependency_checker;
+mod transitions;
+use transitions::*;
 
 pub enum TransitionError {
     ErroneousTransition,
@@ -38,102 +37,6 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             queue: VecDeque::from(vec![ProcState::init(k_addr)]),
             seen: SetMap::new(),
         }
-    }
-
-    pub fn push_to_mailboxes(
-        ast_helper: &AstHelper,
-        seen: &SetMap<Pid, ProcState<K, V>>,
-        mailboxes: &mut Mailboxes<V>,
-        pid: Pid,
-        value: Value<V>,
-    ) -> Vec<ProcState<K, V>> {
-        mailboxes.push(pid.clone(), value);
-
-        let mut dependencies = Vec::new();
-        match seen.get(&pid) {
-            Some(set) => {
-                for state in set {
-                    match state.prog_loc_or_pid {
-                        ProgLocOrPid::ProgLoc(location) => {
-                            match ast_helper.get(location) {
-                                TypedCore::Receive(_) => {
-                                    // NOTE cloning here might become a memory issue
-                                    dependencies.push(state.clone());
-                                }
-                                _ => {}
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            _ => {}
-        }
-        dependencies
-    }
-
-    pub fn push_to_value_store(
-        ast_helper: &AstHelper,
-        seen: &SetMap<Pid, ProcState<K, V>>,
-        store: &mut Store<K, V>,
-        v_addr: V,
-        value: Value<V>,
-    ) -> Vec<ProcState<K, V>> {
-        store.value.push(v_addr.clone(), value);
-
-        let mut dependencies = Vec::new();
-        for (_, states) in &seen.inner {
-            for state in states {
-                match state.prog_loc_or_pid {
-                    ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-                        TypedCore::Var(pl_var) => {
-                            match state.env.inner.get(&VarName::from(&*pl_var.name)) {
-                                Some(pl_vaddr) => {
-                                    if pl_vaddr == &v_addr {
-                                        // NOTE cloning here might become a memory issue
-                                        dependencies.push(state.clone());
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                        _ => {}
-                    },
-                    _ => {}
-                }
-            }
-        }
-        dependencies
-    }
-
-    pub fn push_to_kont_store(
-        ast_helper: &AstHelper,
-        seen: &SetMap<Pid, ProcState<K, V>>,
-        store: &mut Store<K, V>,
-        k_addr: K,
-        kont: Kont<K, V>,
-    ) -> Vec<ProcState<K, V>> {
-        store.kont.push(k_addr.clone(), kont);
-
-        let mut dependencies = Vec::new();
-        for (_, states) in &seen.inner {
-            for state in states {
-                if state.k_addr != k_addr {
-                    continue;
-                }
-                match state.prog_loc_or_pid {
-                    ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-                        // TODO add the arms that are non-reducable
-                        _ => {}
-                    },
-                    ProgLocOrPid::Pid(_) => {
-                        // NOTE cloning here might become a memory issue
-                        dependencies.push(state.clone());
-                    }
-                }
-            }
-        }
-        dependencies
     }
 
     pub fn run(&mut self) {
@@ -192,191 +95,27 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
         }
 
-        let mut v_new = Vec::new();
-        let mut v_revisit = Vec::new();
-
         match &self.prog_loc_or_pid {
             // ABS_POP_LET_PID
-            ProgLocOrPid::Pid(_pid) => {}
+            ProgLocOrPid::Pid(_pid) => {
+                panic!()
+            }
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                TypedCore::Module(m) => match &*m.defs.inner[0].scnd {
-                    TypedCore::Fun(f) => match &*f.body {
-                        // NOTE could have more clauses than one
-                        TypedCore::Case(c) => match &c.clauses.inner[0] {
-                            TypedCore::Clause(c) => {
-                                let mut new_item = self.clone();
-                                let index = (*c.body).get_index().unwrap();
-                                new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(index);
-                                v_new.push(new_item);
-                            }
-                            _ => panic!(),
-                        },
-                        _ => panic!(),
-                    },
-                    _ => panic!(),
-                },
-                TypedCore::Var(v) => match self.env.inner.get(&VarName::from(&*v.name)) {
-                    Some(v) => match store.value.get(&v) {
-                        Some(values) => {
-                            for value in values {
-                                // consider each
-                                // non-deterministically
-                                match value {
-                                    Value::Closure(c) => {
-                                        let mut new_item = self.clone();
-                                        new_item.prog_loc_or_pid =
-                                            ProgLocOrPid::ProgLoc(c.prog_loc);
-                                        v_new.push(new_item);
-                                    }
-                                    Value::Pid(_) => {
-                                        panic!("Unexpected value: Expected Closure not Pid")
-                                    }
-                                }
-                            }
-                        }
-                        None => panic!("VAddr does not exist within value store"),
-                    },
-                    None => panic!("No VAddr exists for given Var"),
-                },
-                // ABS_APPLY
-                TypedCore::Apply(_apply) => {
-                    panic!();
-                }
-                // ABS_CALL
+                TypedCore::Module(m) => abs_module(self, m),
+                TypedCore::Var(v) => abs_name(v, self, store),
+                TypedCore::Apply(_apply) => todo!("ABS_APPLY missing"),
                 TypedCore::Call(c) => {
-                    match &*c.name {
-                        TypedCore::Literal(l) => match &*l.val {
-                            TypedCore::String(s) => match s.inner.as_str() {
-                                "spawn" => {
-                                    let values = store
-                                        .value
-                                        .get(
-                                            self.env
-                                                .inner
-                                                .get(&VarName::from(&c.args.inner[0]))
-                                                .unwrap(),
-                                        )
-                                        .unwrap();
-
-                                    for value in values {
-                                        match value {
-                                            Value::Closure(clo) => {
-                                                match ast_helper.get(clo.prog_loc) {
-                                                    TypedCore::Fun(f) => {
-                                                        if f.vars.inner.len() != 0 {
-                                                            panic!();
-                                                        }
-                                                        let mut new_time =
-                                                            self.pid.time.tick(self.pid.prog_loc);
-                                                        new_time.append(self.time.inner.clone());
-                                                        let new_pid = Pid {
-                                                            prog_loc: *pl,
-                                                            time: new_time,
-                                                        };
-
-                                                        let mut new_proc_state_one = self.clone();
-                                                        new_proc_state_one.prog_loc_or_pid =
-                                                            ProgLocOrPid::Pid(new_pid.clone());
-
-                                                        v_new.push(new_proc_state_one);
-
-                                                        match &*f.body {
-                                                            TypedCore::Case(c) => {
-                                                                match &c.clauses.inner[0] {
-                                                                    TypedCore::Clause(c) => {
-                                                                        let new_proc_state_two =
-                                                                    ProcState::new(
-                                                                        new_pid.clone(),
-                                                                        ProgLocOrPid::ProgLoc(
-                                                                            (*c.body)
-                                                                                .get_index()
-                                                                                .unwrap(),
-                                                                        ),
-                                                                        clo.env.clone(),
-                                                                        address_builder
-                                                                            .init_kaddr(),
-                                                                        Time::init(),
-                                                                    );
-                                                                        v_new.push(
-                                                                            new_proc_state_two,
-                                                                        );
-
-                                                                        mailboxes.inner.insert(
-                                                                            new_pid,
-                                                                            Mailbox::init(),
-                                                                        );
-                                                                    }
-                                                                    _ => panic!(),
-                                                                }
-                                                            }
-                                                            _ => panic!(),
-                                                        }
-                                                    }
-                                                    _ => panic!(),
-                                                }
-                                            }
-                                            _ => panic!(),
-                                        }
-                                    }
-                                }
-                                "!" => panic!(),
-                                _ => panic!(),
-                            },
-
-                            _ => panic!(),
-                        },
-                        _ => panic!(),
-                    }
-                    // NOTE look up module field in call
+                    abs_call(c, self, mailboxes, store, ast_helper, address_builder)
                 }
-                // ABS_LETREC
-                TypedCore::LetRec(_let_rec) => {
-                    panic!();
-                }
+                TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
                 // ABS_CASE
-                TypedCore::Case(case) => {
-                    let clauses = Vec::from(&case.clauses);
-                    let values;
-                    match &*case.arg {
-                        TypedCore::Var(v) => {
-                            values = store
-                                .value
-                                .get(&self.env.inner.get(&VarName::from(v)).unwrap())
-                                .unwrap()
-                        }
-                        TypedCore::Literal(l) => match *l.val {
-                            TypedCore::AstList(al) => {}
-                            TypedCore::String(_) => {
-                                let var_name = VarName::from(&*l.val);
-                            }
-                            _ => panic!(),
-                        },
-                        _ => panic!(),
-                    }
-
-                    let mats = Case::cmatch(&clauses, values, &store.value, ast_helper);
-
-                    for mat in mats {
-                        if let Some((index, env)) = mat {
-                            let mut new_item = self.clone();
-                            new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(
-                                (*(clauses[index].body)).get_index().unwrap(),
-                            );
-                            new_item.env.merge_with(&env);
-
-                            v_new.push(new_item);
-
-                            // stop after first match
-                            break;
-                        }
-                    }
-                }
+                TypedCore::Case(c) => abs_case(c, self, store, ast_helper),
                 // ABS_RECEIVE
                 TypedCore::Receive(r) => {
                     let mailbox = mailboxes.inner.get(&self.pid).unwrap();
                     let msgs = mailbox.mmatch(&Vec::from(&r.clauses), &store.value, ast_helper);
 
-                    panic!();
+                    panic!()
                 }
                 TypedCore::PrimOp(_prim_op) => {
                     // NOTE This would require another
@@ -387,35 +126,10 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     // ABS_SELF
                     // ABS_SPAWN
                     // ABS_SEND
-                    panic!();
+                    panic!()
                 }
-                // TODO ABS_PUSH_DO
-                // ABS_PUSH_LET
                 TypedCore::Let(l) => {
-                    let mut new_item = self.clone();
-                    new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*l.arg).get_index().unwrap());
-                    new_item.k_addr = address_builder.new_kaddr(
-                        &self,
-                        &new_item.prog_loc_or_pid,
-                        &new_item.env,
-                        &new_item.time,
-                    );
-
-                    let kont = Kont::Let(
-                        (&l.vars).into(),
-                        (*l.body).get_index().unwrap(),
-                        self.env.clone(),
-                        self.k_addr.clone(),
-                    );
-
-                    v_revisit.append(&mut Analyzer::push_to_kont_store(
-                        &ast_helper,
-                        &seen,
-                        store,
-                        new_item.k_addr.clone(),
-                        kont,
-                    ));
-                    v_new.push(new_item);
+                    abs_push_let(l, self, store, seen, address_builder, ast_helper)
                 }
                 // ProgLoc is irreducible via the previous transition rules; it's a Value
                 // We need to look at the continuation for the next computation
@@ -429,73 +143,44 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                     //TODO ABS_POP_LET_VALUEADDR
                                     match &self.prog_loc_or_pid {
                                         // ABS_POP_LET_PID
-                                        ProgLocOrPid::Pid(_pid) => {
-                                            panic!();
-                                        }
+                                        ProgLocOrPid::Pid(_pid) => todo!(),
                                         ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
                                             // ABS_POP_LET_VALUELIST
-                                            TypedCore::AstList(_al) => {
-                                                panic!();
-                                            }
-                                            // ABS_POP_LET_CLOSURE
+                                            TypedCore::AstList(_al) => todo!(),
                                             _ => {
-                                                if var_list.len() != 1 {
-                                                    panic!();
-                                                }
-
-                                                let mut new_item = self.clone();
-                                                new_item.prog_loc_or_pid =
-                                                    ProgLocOrPid::ProgLoc(body);
-                                                new_item.env = env.clone();
-                                                new_item.k_addr = k_addr.clone();
-                                                let new_var_name =
-                                                    VarName::from(ast_helper.get(var_list[0]));
-                                                let new_v_addr = address_builder.new_vaddr(
-                                                    &self,
-                                                    &new_var_name,
-                                                    &new_item.prog_loc_or_pid,
-                                                    &new_item.env,
-                                                    &new_item.time,
+                                                return abs_pop_let_closure(
+                                                    self,
+                                                    *pl,
+                                                    var_list,
+                                                    body,
+                                                    &env,
+                                                    &k_addr,
+                                                    store,
+                                                    seen,
+                                                    address_builder,
+                                                    ast_helper,
                                                 );
-                                                new_item.env.inner.insert(
-                                                    new_var_name.clone(),
-                                                    new_v_addr.clone(),
-                                                );
-
-                                                v_revisit.append(
-                                                    &mut Analyzer::push_to_value_store(
-                                                        &ast_helper,
-                                                        &seen,
-                                                        store,
-                                                        new_v_addr,
-                                                        Value::Closure(Closure {
-                                                            prog_loc: *pl,
-                                                            env: self.env.clone(),
-                                                        }),
-                                                    ),
-                                                );
-                                                v_new.push(new_item);
                                             }
                                         },
                                     }
                                 }
-                                // ABS_POP_DO
                                 Kont::Do(_body, _env, _k_addr) => {
-                                    panic!();
+                                    todo!("ABS_POP_DO")
                                 }
                                 Kont::Stop => {
                                     // NOTE (successful)
+                                    return (Vec::new(), Vec::new());
                                 }
                             }
                         }
+                        panic!();
                     }
                     None => {
                         // NOTE (fail)
-                        panic!();
+                        todo!("Program seems to fail")
                     }
                 },
             },
-        };
-        (v_new, v_revisit)
+        }
     }
 }

@@ -1,6 +1,4 @@
-use super::{Env, ValueAddress};
-
-type ProgLoc = usize;
+use super::{Env, ProgLoc, ValueAddress};
 
 // Closure := ProgLoc x Env
 #[derive(Clone, Debug, Eq, PartialEq)]

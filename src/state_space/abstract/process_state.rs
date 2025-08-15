@@ -1,6 +1,4 @@
-use super::{Data, Env, Kont, KontinuationAddress, Pid, Time, Value, ValueAddress};
-
-type ProgLoc = usize;
+use super::{Data, Env, Kont, KontinuationAddress, Pid, ProgLoc, Time, Value, ValueAddress};
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Clone, Debug, Eq, PartialEq)]
