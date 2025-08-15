@@ -336,6 +336,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
 
                             v_new.push(new_item);
 
+                            // stop after first match
                             break;
                         }
                     }

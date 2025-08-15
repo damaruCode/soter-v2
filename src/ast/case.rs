@@ -53,19 +53,19 @@ impl Case {
     ) -> Vec<Option<Env<V>>> {
         let mut opts = Vec::new();
         match typed_core {
-            TypedCore::AstList(outer_at) => {
+            TypedCore::AstList(tc_al) => {
                 let values = value_store.get(&v_addr).unwrap();
                 for value in values {
                     match value {
                         Value::Closure(c) => match ast_helper.get(c.prog_loc) {
-                            TypedCore::AstList(inner_at) => {
+                            TypedCore::AstList(var_al) => {
                                 let mut new_env = Env::init();
-                                for i in 0..outer_at.inner.len() {
+                                for i in 0..tc_al.inner.len() {
                                     let p_envs = Self::pmatch(
-                                        &outer_at.inner[i],
+                                        &tc_al.inner[i],
                                         c.env
                                             .inner
-                                            .get(&VarName::from(&inner_at.inner[i]))
+                                            .get(&VarName::from(&var_al.inner[i]))
                                             .unwrap()
                                             .clone(),
                                         value_store,
