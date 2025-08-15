@@ -24,32 +24,34 @@ impl Case {
         v_addr: V,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Option<(usize, Env<V>)> {
+    ) -> Vec<Option<(usize, Env<V>)>> {
+        let mut opts = Vec::new();
         for i in 0..clauses.len() {
-            if clauses[i].pats.inner.len() == 0 {
-                return None;
-            }
             let mut new_env = Env::init();
             for pat in &clauses[i].pats.inner {
-                let p_env = Self::pmatch(pat, v_addr.clone(), value_store, ast_helper);
-                if let Some(env) = p_env {
-                    new_env.merge_with(&env);
+                let p_envs = Self::pmatch(pat, v_addr.clone(), value_store, ast_helper);
+
+                for p_env in p_envs {
+                    if let Some(env) = p_env {
+                        new_env.merge_with(&env);
+                    }
                 }
             }
             if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
-                return Some((i, new_env));
+                opts.push(Some((i, new_env)));
             }
         }
-        None
+        opts
     }
 
-    //TODO
+    //TODO No idea if this is right; doesn't really matter right now
     pub fn pmatch<V: ValueAddress>(
         typed_core: &TypedCore,
         v_addr: V,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Option<Env<V>> {
+    ) -> Vec<Option<Env<V>>> {
+        let mut opts = Vec::new();
         match typed_core {
             TypedCore::AstList(outer_at) => {
                 let values = value_store.get(&v_addr).unwrap();
@@ -59,7 +61,7 @@ impl Case {
                             TypedCore::AstList(inner_at) => {
                                 let mut new_env = Env::init();
                                 for i in 0..outer_at.inner.len() {
-                                    let p_env = Self::pmatch(
+                                    let p_envs = Self::pmatch(
                                         &outer_at.inner[i],
                                         c.env
                                             .inner
@@ -70,12 +72,14 @@ impl Case {
                                         ast_helper,
                                     );
 
-                                    if let Some(env) = p_env {
-                                        new_env.merge_with(&env);
+                                    for p_env in p_envs {
+                                        if let Some(env) = p_env {
+                                            new_env.merge_with(&env);
+                                        }
                                     }
                                 }
 
-                                return Some(new_env);
+                                opts.push(Some(new_env));
                             }
                             _ => todo!(),
                         },
@@ -85,7 +89,7 @@ impl Case {
             }
             _ => panic!(),
         };
-        None
+        opts
     }
 
     //TODO
