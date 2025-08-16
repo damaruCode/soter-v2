@@ -8,9 +8,12 @@ pub struct Store<K: KontinuationAddress, V: ValueAddress> {
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> Store<K, V> {
-    pub fn init() -> Self {
+    pub fn init(stop_k_addr: K) -> Self {
+        let mut kont = SetMap::new();
+        kont.push(stop_k_addr, Kont::Stop);
+
         Store {
-            kont: SetMap::new(),
+            kont,
             value: SetMap::new(),
         }
     }

@@ -33,7 +33,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             ast_helper,
             address_builder,
             mailboxes: Mailboxes::init(),
-            store: Store::init(),
+            store: Store::init(k_addr.clone()),
             queue: VecDeque::from(vec![ProcState::init(k_addr)]),
             seen: SetMap::new(),
         }

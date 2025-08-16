@@ -11,7 +11,7 @@ pub trait KontinuationAddress: Address {}
 pub trait ValueAddress: Address {}
 
 pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
-    /// Creates a new KontinuationAddress for the initial state of the abstract machine
+    /// Creates a new KontinuationAddress for the stop continuation of the abstract machine
     fn init_kaddr(&self) -> K;
 
     /// Creates a new KontinuationAddress for any given state of the abstract machine

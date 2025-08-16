@@ -16,12 +16,12 @@ pub struct State<K: KontinuationAddress, V: ValueAddress> {
 impl<K: KontinuationAddress, V: ValueAddress> State<K, V> {
     pub fn init(init_k_addr: K) -> Self {
         let mut procs = SetMap::new();
-        procs.push(Pid::init(), ProcState::<K, V>::init(init_k_addr));
+        procs.push(Pid::init(), ProcState::<K, V>::init(init_k_addr.clone()));
 
         State {
             procs,
             mailboxes: Mailboxes::init(),
-            store: Store::init(),
+            store: Store::init(init_k_addr),
         }
     }
 }

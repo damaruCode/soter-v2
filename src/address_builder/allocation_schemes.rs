@@ -11,6 +11,7 @@ pub struct KAddr {
     prog_loc: usize,
     env: Env<VAddr>,
     time: Time,
+    _stop: bool,
 }
 
 impl KontinuationAddress for KAddr {}
@@ -39,6 +40,7 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
             prog_loc: 0,
             env: Env::init(),
             time: Time::init(),
+            _stop: true,
         }
     }
 
@@ -57,6 +59,7 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
             },
             env: curr_proc_state.env.clone(),
             time: curr_proc_state.time.clone(),
+            _stop: false,
         }
     }
 

@@ -48,6 +48,7 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
 
                 v_new.push(new_item);
             }
+            Kont::Stop => {} // successful halt
             _ => panic!(),
         }
     }

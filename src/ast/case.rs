@@ -62,6 +62,7 @@ impl Case {
         ast_helper: &AstHelper,
     ) -> Option<Env<V>> {
         fn traverse<V: ValueAddress>(
+            tc_astlist: &TypedCore,
             ast_list: &AstList<TypedCore>,
             v_addr_or_value: &ValueAddressOrValue<V>,
             value_store: &SetMap<V, Value<V>>,
@@ -99,10 +100,7 @@ impl Case {
                                 }
                             }
                         }
-                        tc => match Case::pmatch(tc, v_addr_or_value, value_store, ast_helper) {
-                            Some(env) => new_env.merge_with(&env),
-                            None => return None,
-                        },
+                        _ => return None, // TODO same as below with Pid
                     },
                     Value::Pid(_) => return None, // TODO think about this / maybe talk about it; right now
                                                   // I am of the impression, that this can't match because we
@@ -143,8 +141,16 @@ impl Case {
                     _ => panic!(),
                 },
             },
-            TypedCore::AstList(al) => traverse(al, v_addr_or_value, value_store, ast_helper),
-            TypedCore::Tuple(tup) => traverse(&tup.es, v_addr_or_value, value_store, ast_helper),
+            TypedCore::AstList(al) => {
+                traverse(typed_core, al, v_addr_or_value, value_store, ast_helper)
+            }
+            TypedCore::Tuple(tup) => traverse(
+                typed_core,
+                &tup.es,
+                v_addr_or_value,
+                value_store,
+                ast_helper,
+            ),
             _ => panic!("{:#?}", typed_core),
         }
     }

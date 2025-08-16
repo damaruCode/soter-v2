@@ -27,6 +27,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
         let mut new_item = proc_state.clone();
         new_item.prog_loc_or_pid =
             ProgLocOrPid::ProgLoc((*clauses[index].body).get_index().unwrap());
+        println!("{:#?} - {:#?}", clauses[index], env);
         new_item.env.merge_with(&env);
 
         v_new.push(new_item);
