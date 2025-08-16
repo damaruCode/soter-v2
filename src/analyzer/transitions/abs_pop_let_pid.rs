@@ -1,8 +1,9 @@
 use crate::{
+    abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    state_space::r#abstract::{
-        AddressBuilder, Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
-        ValueAddress, VarName,
+    state_space::{
+        Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
+        VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -14,7 +15,7 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    address_builder: &Box<dyn AddressBuilder<K, V>>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
@@ -30,7 +31,7 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
                 new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(body);
                 new_item.k_addr = k_addr;
 
-                let new_v_addr = address_builder.new_vaddr(
+                let new_v_addr = abstraction.new_vaddr(
                     proc_state,
                     &var_name,
                     &new_item.prog_loc_or_pid,

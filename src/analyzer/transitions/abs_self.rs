@@ -1,4 +1,4 @@
-use crate::state_space::r#abstract::{KontinuationAddress, ProcState, ProgLocOrPid, ValueAddress};
+use crate::state_space::{KontinuationAddress, ProcState, ProgLocOrPid, ValueAddress};
 
 use super::TransitionResult;
 

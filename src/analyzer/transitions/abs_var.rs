@@ -1,6 +1,6 @@
 use crate::{
     ast::Var,
-    state_space::r#abstract::{
+    state_space::{
         KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress, VarName,
     },
 };

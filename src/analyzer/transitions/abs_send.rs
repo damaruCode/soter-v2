@@ -1,7 +1,7 @@
 use crate::{
     analyzer::dependency_checker::push_to_mailboxes,
     ast::{Index, TypedCore},
-    state_space::r#abstract::{
+    state_space::{
         Closure, Env, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
         ValueAddress, VarName,
     },

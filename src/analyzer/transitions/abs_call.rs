@@ -1,9 +1,9 @@
+use core::panic;
+
 use crate::{
+    abstraction::Abstraction,
     ast::{Call, TypedCore},
-    state_space::r#abstract::{
-        AddressBuilder, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress,
-        VarName,
-    },
+    state_space::{KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress, VarName},
     util::{AstHelper, SetMap},
 };
 
@@ -16,8 +16,22 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
-    address_builder: &Box<dyn AddressBuilder<K, V>>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
+    // check module name
+    match &*call.module {
+        TypedCore::Literal(l_mod) => match &*l_mod.val {
+            TypedCore::String(s_mod) => {
+                if s_mod.inner != "erlang" {
+                    todo!("Can't handle modules other than 'erlang'")
+                }
+            }
+            _ => panic!(),
+        },
+        _ => panic!(),
+    };
+
+    // NOTE only operations from the erlang module
     match &*call.name {
         TypedCore::Literal(l) => match &*l.val {
             TypedCore::String(s) => match s.inner.as_str() {
@@ -27,7 +41,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     mailboxes,
                     store,
                     ast_helper,
-                    address_builder,
+                    abstraction,
                 ),
                 "!" | "send" => abs_send(
                     &call.args.inner[0],
@@ -45,5 +59,4 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
         },
         _ => panic!(),
     }
-    // NOTE look up module field in call
 }

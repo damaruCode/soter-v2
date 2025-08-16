@@ -1,4 +1,4 @@
-pub mod address_builder;
+pub mod abstraction;
 pub mod analyzer;
 pub mod ast;
 pub mod erlang;
@@ -7,7 +7,7 @@ pub mod util;
 
 use std::env;
 
-use address_builder::StandardAddressBuilder;
+use abstraction::StandardAbstraction;
 use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
@@ -54,13 +54,32 @@ fn main() {
 
     ast_helper.build_lookup(&indexed_typed_core);
 
-    let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder::new()));
-    analyzer.run();
+    // Analysis
+
+    let mut standard_analyzer =
+        Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let mut non_standard_analyzer =
+        Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(100)));
+
+    let seen_one = standard_analyzer.run();
+    let seen_two = non_standard_analyzer.run();
+
+    // Eval
+    for (pid, states) in seen_one.inner {
+        let states_two = seen_two.get(&pid).unwrap();
+        log::debug!(
+            "{:#?} ONE {:#?} - TWO {:#?}",
+            pid,
+            states.len(),
+            states_two.len()
+        )
+    }
 }
 
 #[cfg(test)]
 mod benchmarks {
-    use crate::address_builder::StandardAddressBuilder;
+    use crate::abstraction::StandardAbstraction;
     use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;
@@ -73,7 +92,7 @@ mod benchmarks {
         let mut ast_helper = AstHelper::new();
         let indexed_typed_core = ast_helper.build_indecies(typed_core);
         ast_helper.build_lookup(&indexed_typed_core);
-        let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAddressBuilder::new()));
+        let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
         analyzer.run();
     }
 

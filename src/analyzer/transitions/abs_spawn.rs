@@ -1,8 +1,9 @@
 use crate::{
+    abstraction::Abstraction,
     ast::{Index, TypedCore},
-    state_space::r#abstract::{
-        AddressBuilder, KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid,
-        Store, Time, Value, ValueAddress, VarName,
+    state_space::{
+        KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Time, Value,
+        ValueAddress, VarName,
     },
     util::AstHelper,
 };
@@ -15,7 +16,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     mailboxes: &mut Mailboxes<V>,
     store: &Store<K, V>,
     ast_helper: &AstHelper,
-    address_builder: &Box<dyn AddressBuilder<K, V>>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
@@ -31,7 +32,8 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     if f.vars.inner.len() != 0 {
                         panic!();
                     }
-                    let mut new_time = proc_state.pid.time.tick(proc_state.pid.prog_loc);
+                    let mut new_time =
+                        abstraction.tick(&proc_state.pid.time, proc_state.pid.prog_loc);
                     new_time.append(proc_state.time.inner.clone());
                     let new_pid = Pid {
                         prog_loc: match proc_state.prog_loc_or_pid {
@@ -53,7 +55,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                     new_pid.clone(),
                                     ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap()),
                                     clo.env.clone(),
-                                    address_builder.init_kaddr(),
+                                    abstraction.init_kaddr(),
                                     Time::init(),
                                 );
                                 v_new.push(new_proc_state_two);

@@ -29,4 +29,4 @@ pub use abs_send::*;
 pub use abs_spawn::*;
 pub use abs_var::*;
 
-use crate::state_space::r#abstract::ProcState;
+use crate::state_space::ProcState;

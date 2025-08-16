@@ -1,16 +1,12 @@
-use super::{Env, ProcState, ProgLocOrPid, Time, VarName};
+pub mod standard;
 
-use std::fmt::Debug;
+pub use standard::*;
 
-pub trait Address: Eq + Clone + Debug {}
+use crate::state_space::{
+    Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
+};
 
-impl<T: Eq + Clone + Debug> Address for T {}
-
-pub trait KontinuationAddress: Address {}
-
-pub trait ValueAddress: Address {}
-
-pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
+pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
     /// Creates a new KontinuationAddress for the stop continuation of the abstract machine
     fn init_kaddr(&self) -> K;
 
@@ -31,4 +27,10 @@ pub trait AddressBuilder<K: KontinuationAddress, V: ValueAddress> {
         next_prog_loc_or_pid: &ProgLocOrPid,
         next_time: &Time,
     ) -> V;
+
+    /// Creates a new Time given a previous Time
+    fn tick(&self, curr_time: &Time, prog_loc: ProgLoc) -> Time;
+
+    /// Creates a new Time by concatinating the Contours
+    fn append_times(&self, pre_time: &Time, post_time: &Time) -> Time;
 }

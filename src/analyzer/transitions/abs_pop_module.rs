@@ -1,9 +1,10 @@
 use crate::{
+    abstraction::Abstraction,
     analyzer::dependency_checker::{push_to_kont_store, push_to_value_store},
     ast::{Index, TypedCore},
-    state_space::r#abstract::{
-        AddressBuilder, Closure, Env, Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid,
-        Store, Value, ValueAddress, VarName,
+    state_space::{
+        Closure, Env, Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
+        ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -17,7 +18,7 @@ pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    address_builder: &Box<dyn AddressBuilder<K, V>>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     // NOTE by convention module has index 0
@@ -39,7 +40,7 @@ pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
             new_item.env = kont_env.clone();
 
             let var_name = VarName::from(&*module.defs.inner[kont_index].frst);
-            let new_v_addr = address_builder.new_vaddr(
+            let new_v_addr = abstraction.new_vaddr(
                 proc_state,
                 &var_name,
                 &new_item.prog_loc_or_pid,
@@ -63,7 +64,7 @@ pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
                 proc_state.env.clone(),
                 proc_state.k_addr.clone(),
             );
-            let new_k_addr = address_builder.new_kaddr(
+            let new_k_addr = abstraction.new_kaddr(
                 proc_state,
                 &new_item.prog_loc_or_pid,
                 &new_item.env,

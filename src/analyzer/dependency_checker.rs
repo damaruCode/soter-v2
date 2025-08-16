@@ -1,6 +1,6 @@
 use crate::{
     ast::TypedCore,
-    state_space::r#abstract::{
+    state_space::{
         Kont, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
         ValueAddress, VarName,
     },
@@ -19,6 +19,11 @@ pub fn push_to_mailboxes<K: KontinuationAddress, V: ValueAddress>(
     let mut dependencies = Vec::new();
     match seen.get(&pid) {
         Some(set) => {
+            log::debug!(
+                "push_to_mailboxes - Seen {:#?} with Pid {:#?}",
+                set.len(),
+                pid
+            );
             for state in set {
                 match state.prog_loc_or_pid {
                     ProgLocOrPid::ProgLoc(location) => {
@@ -49,7 +54,12 @@ pub fn push_to_value_store<K: KontinuationAddress, V: ValueAddress>(
     store.value.push(v_addr.clone(), value);
 
     let mut dependencies = Vec::new();
-    for (_, states) in &seen.inner {
+    for (_pid, states) in &seen.inner {
+        log::debug!(
+            "push_to_value_store - Seen {:#?} with Pid {:#?}",
+            states.len(),
+            _pid
+        );
         for state in states {
             match state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
@@ -83,15 +93,28 @@ pub fn push_to_kont_store<K: KontinuationAddress, V: ValueAddress>(
     store.kont.push(k_addr.clone(), kont);
 
     let mut dependencies = Vec::new();
-    for (_, states) in &seen.inner {
+    for (_pid, states) in &seen.inner {
+        log::debug!(
+            "push_to_kont_store - Seen {:#?} with Pid {:#?}",
+            states.len(),
+            _pid
+        );
         for state in states {
             if state.k_addr != k_addr {
                 continue;
             }
             match state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-                    // TODO add the arms that are non-reducable
-                    _ => {}
+                    TypedCore::Module(_)
+                    | TypedCore::Var(_)
+                    | TypedCore::Apply(_)
+                    | TypedCore::Call(_)
+                    | TypedCore::LetRec(_)
+                    | TypedCore::Case(_)
+                    | TypedCore::Receive(_)
+                    | TypedCore::PrimOp(_)
+                    | TypedCore::Let(_) => {}
+                    _ => dependencies.push(state.clone()),
                 },
                 ProgLocOrPid::Pid(_) => {
                     // NOTE cloning here might become a memory issue

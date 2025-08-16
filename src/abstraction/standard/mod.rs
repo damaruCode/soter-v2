@@ -1,39 +1,24 @@
-use crate::state_space::r#abstract::{
-    AddressBuilder, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Time, ValueAddress,
-    VarName,
-};
+use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarName};
 
-// KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
-// NOTE * might be possible to depict in control flow rather then as a  data struct
-#[derive(Eq, PartialEq, Clone, Debug)]
-pub struct KAddr {
-    pid: Pid,
-    prog_loc: usize,
-    env: Env<VAddr>,
-    time: Time,
-    _stop: bool,
+use super::Abstraction;
+
+pub mod kaddr;
+pub mod vaddr;
+
+pub use kaddr::KAddr;
+pub use vaddr::VAddr;
+
+pub struct StandardAbstraction {
+    time_depth: usize,
 }
 
-impl KontinuationAddress for KAddr {}
-
-// VAddr := Pid x Var x Data x Time
-#[derive(Eq, PartialEq, Clone, Debug)]
-pub struct VAddr {
-    pid: Pid,
-    var_name: VarName,
-    time: Time,
-}
-impl ValueAddress for VAddr {}
-
-pub struct StandardAddressBuilder;
-
-impl StandardAddressBuilder {
-    pub fn new() -> Self {
-        StandardAddressBuilder {}
+impl StandardAbstraction {
+    pub fn new(time_depth: usize) -> Self {
+        Self { time_depth }
     }
 }
 
-impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
+impl Abstraction<KAddr, VAddr> for StandardAbstraction {
     fn init_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
@@ -75,5 +60,27 @@ impl AddressBuilder<KAddr, VAddr> for StandardAddressBuilder {
             var_name: var_name.clone(),
             time: curr_proc_state.time.clone(),
         }
+    }
+
+    fn tick(&self, curr_time: &Time, prog_loc: ProgLoc) -> Time {
+        let mut new_time = curr_time.clone();
+        new_time.inner.push_back(prog_loc);
+
+        if new_time.inner.len() > self.time_depth {
+            new_time.inner.pop_front();
+        }
+
+        new_time
+    }
+
+    fn append_times(&self, pre_time: &Time, post_time: &Time) -> Time {
+        let mut new_time = pre_time.clone();
+        new_time.inner.append(&mut post_time.inner.clone());
+
+        while new_time.inner.len() > self.time_depth {
+            new_time.inner.pop_front();
+        }
+
+        new_time
     }
 }

@@ -1,8 +1,6 @@
 use crate::{
     ast::{Case, Index, TypedCore, ValueAddressOrValue},
-    state_space::r#abstract::{
-        KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
-    },
+    state_space::{KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName},
     util::AstHelper,
 };
 

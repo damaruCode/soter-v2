@@ -1,7 +1,8 @@
 use crate::{
+    abstraction::Abstraction,
     ast::{Apply, Index, TypedCore},
-    state_space::r#abstract::{
-        prog_loc, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress, VarName,
+    state_space::{
+        KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress, VarName,
     },
     util::AstHelper,
 };
@@ -12,6 +13,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     apply: &Apply,
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
@@ -42,10 +44,15 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                             new_item.prog_loc_or_pid =
                                 ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
                             new_item.env = new_env;
-                            new_item.time = new_item.time.tick(match proc_state.prog_loc_or_pid {
-                                ProgLocOrPid::ProgLoc(pl) => pl,
-                                _ => panic!(),
-                            })
+                            new_item.time = abstraction.tick(
+                                &new_item.time,
+                                match proc_state.prog_loc_or_pid {
+                                    ProgLocOrPid::ProgLoc(pl) => pl,
+                                    _ => panic!(),
+                                },
+                            );
+
+                            v_new.push(new_item);
                         }
                         _ => panic!(),
                     },

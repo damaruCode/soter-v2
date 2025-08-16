@@ -1,5 +1,5 @@
 use crate::{
-    state_space::r#abstract::{Env, Value, ValueAddress, VarName},
+    state_space::{Env, Value, ValueAddress, VarName},
     util::{AstHelper, SetMap},
 };
 use serde::{Deserialize, Serialize};

@@ -1,6 +1,6 @@
 use crate::{
     ast::{Index, Receive},
-    state_space::r#abstract::{
+    state_space::{
         KontinuationAddress, Mailboxes, ProcState, ProgLocOrPid, Store, ValueAddress,
     },
     util::AstHelper,

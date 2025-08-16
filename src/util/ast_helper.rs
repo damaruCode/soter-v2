@@ -2,7 +2,7 @@ use crate::ast::Index;
 use crate::ast::TypedCore;
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AstHelper<'helper> {
     lookup_core: HashMap<usize, &'helper TypedCore>,
     next_id: usize,
