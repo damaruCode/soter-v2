@@ -100,7 +100,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 abs_pop_let_pid(pid, self, store, seen, address_builder, ast_helper)
             }
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                TypedCore::Module(m) => abs_module(self, m),
+                TypedCore::Module(m) => {
+                    abs_push_module(m, self, store, seen, address_builder, ast_helper)
+                }
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(a) => abs_apply(a, self, store, ast_helper),
                 TypedCore::Call(c) => {
@@ -152,8 +154,16 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                         },
                                     }
                                 }
-                                Kont::Do(_body, _env, _k_addr) => {
-                                    todo!("ABS_POP_DO")
+                                Kont::Module(index, env, k_addr) => {
+                                    return abs_pop_module_fun(
+                                        index,
+                                        &env,
+                                        self,
+                                        store,
+                                        seen,
+                                        address_builder,
+                                        ast_helper,
+                                    )
                                 }
                                 Kont::Stop => {
                                     // NOTE (successful)
