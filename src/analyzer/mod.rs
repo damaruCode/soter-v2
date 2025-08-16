@@ -102,7 +102,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
                 TypedCore::Module(m) => abs_module(self, m),
                 TypedCore::Var(v) => abs_name(v, self, store),
-                TypedCore::Apply(_apply) => todo!("ABS_APPLY missing"),
+                TypedCore::Apply(a) => abs_apply(a, self, store, ast_helper),
                 TypedCore::Call(c) => {
                     abs_call(c, self, mailboxes, store, seen, ast_helper, address_builder)
                 }

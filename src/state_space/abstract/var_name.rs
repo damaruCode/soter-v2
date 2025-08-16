@@ -1,3 +1,4 @@
+use crate::ast::AstList;
 use crate::ast::TypedCore;
 use crate::ast::Var;
 
@@ -31,7 +32,18 @@ impl From<&TypedCore> for VarName {
 }
 
 impl From<&Var> for VarName {
-    fn from(v: &Var) -> Self {
-        VarName::from(&*v.name)
+    fn from(var: &Var) -> Self {
+        VarName::from(&*var.name)
+    }
+}
+
+impl From<&AstList<TypedCore>> for Vec<VarName> {
+    fn from(var_list: &AstList<TypedCore>) -> Self {
+        let mut var_names = Vec::new();
+        for tc in &var_list.inner {
+            var_names.push(VarName::from(tc));
+        }
+
+        var_names
     }
 }

@@ -1,6 +1,7 @@
 /// K: KontinuationAddress, V: ValueAddress
 pub type TransitionResult<K, V> = (Vec<ProcState<K, V>>, Vec<ProcState<K, V>>);
 
+pub mod abs_apply;
 pub mod abs_call;
 pub mod abs_case;
 pub mod abs_module;
@@ -13,6 +14,7 @@ pub mod abs_send;
 pub mod abs_spawn;
 pub mod abs_var;
 
+pub use abs_apply::*;
 pub use abs_call::*;
 pub use abs_case::*;
 pub use abs_module::*;
