@@ -44,13 +44,11 @@ impl Case {
                 ast_helper,
             );
 
-            if p_env == Env::init() {
-                continue;
-            }
-
-            new_env.merge_with(&p_env);
-            if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
-                opts.push(Some((i, new_env)))
+            if let Some(env) = p_env {
+                new_env.merge_with(&env);
+                if Self::gmatch(&clauses[i].guard, &new_env, value_store, ast_helper) {
+                    opts.push(Some((i, new_env)))
+                }
             }
         }
         opts
@@ -62,13 +60,13 @@ impl Case {
         v_addr_or_value: &ValueAddressOrValue<V>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Env<V> {
+    ) -> Option<Env<V>> {
         fn traverse<V: ValueAddress>(
             ast_list: &AstList<TypedCore>,
             v_addr_or_value: &ValueAddressOrValue<V>,
             value_store: &SetMap<V, Value<V>>,
             ast_helper: &AstHelper,
-        ) -> Env<V> {
+        ) -> Option<Env<V>> {
             let values = match v_addr_or_value {
                 ValueAddressOrValue::Value(value) => Vec::from([value.clone()]),
                 ValueAddressOrValue::ValueAddress(v_addr) => {
@@ -95,15 +93,23 @@ impl Case {
                                     ast_helper,
                                 );
 
-                                new_env.merge_with(&p_env);
+                                match p_env {
+                                    Some(env) => new_env.merge_with(&env),
+                                    None => return None,
+                                }
                             }
                         }
-                        _ => todo!(),
+                        tc => match Case::pmatch(tc, v_addr_or_value, value_store, ast_helper) {
+                            Some(env) => new_env.merge_with(&env),
+                            None => return None,
+                        },
                     },
-                    _ => panic!(),
+                    Value::Pid(_) => return None, // TODO think about this / maybe talk about it; right now
+                                                  // I am of the impression, that this can't match because we
+                                                  // are comparing it to an ast_list (pid != ast_list)
                 };
             }
-            new_env
+            Some(new_env)
         }
 
         match typed_core {
@@ -114,10 +120,28 @@ impl Case {
                         .inner
                         .insert(VarName::from(v).clone(), v_addr.clone());
 
-                    log::debug!("NEW_ENV {:#?}", new_env);
-                    new_env
+                    Some(new_env)
                 }
                 _ => panic!(),
+            },
+            TypedCore::String(s1) => match v_addr_or_value {
+                ValueAddressOrValue::ValueAddress(v_addr) => match value_store.get(&v_addr) {
+                    Some(_) => Some(Env::init()),
+                    None => None,
+                },
+                ValueAddressOrValue::Value(val) => match val {
+                    Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+                        TypedCore::String(s2) => {
+                            if s1.inner == s2.inner {
+                                Some(Env::init())
+                            } else {
+                                None
+                            }
+                        }
+                        _ => panic!(),
+                    },
+                    _ => panic!(),
+                },
             },
             TypedCore::AstList(al) => traverse(al, v_addr_or_value, value_store, ast_helper),
             TypedCore::Tuple(tup) => traverse(&tup.es, v_addr_or_value, value_store, ast_helper),
