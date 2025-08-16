@@ -1,8 +1,6 @@
 use crate::{
     ast::{Index, Receive},
-    state_space::{
-        KontinuationAddress, Mailboxes, ProcState, ProgLocOrPid, Store, ValueAddress,
-    },
+    state_space::{KontinuationAddress, Mailboxes, ProcState, ProgLocOrPid, Store, ValueAddress},
     util::AstHelper,
 };
 
@@ -32,6 +30,6 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
 
         v_new.push(new_item);
     }
-
+    log::debug!("ABS_RECEIVE - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())
 }

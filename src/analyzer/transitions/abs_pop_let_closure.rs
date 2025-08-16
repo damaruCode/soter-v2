@@ -57,5 +57,11 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     ));
     v_new.push(new_item);
 
+    log::debug!(
+        "ABS_POP_LET_CLOSURE - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
+
     (v_new, v_revisit)
 }

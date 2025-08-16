@@ -15,6 +15,7 @@ use super::TransitionResult;
 pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
     kont_index: usize,
     kont_env: &Env<V>,
+    kont_k_addr: &K, // NOTE right now the k_addr will naturally point to the Stop continuation
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
@@ -59,11 +60,7 @@ pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
                 }),
             ));
 
-            let kont = Kont::Module(
-                kont_index + 1,
-                proc_state.env.clone(),
-                proc_state.k_addr.clone(),
-            );
+            let kont = Kont::Module(kont_index + 1, proc_state.env.clone(), kont_k_addr.clone());
             let new_k_addr = abstraction.new_kaddr(
                 proc_state,
                 &new_item.prog_loc_or_pid,
@@ -81,6 +78,12 @@ pub fn abs_pop_module_fun<K: KontinuationAddress, V: ValueAddress>(
             ));
 
             v_new.push(new_item);
+
+            log::debug!(
+                "ABS_POP_MODULE - {:?} New - {:?} Revisit",
+                v_new.len(),
+                v_revisit.len()
+            );
 
             (v_new, v_revisit)
         }

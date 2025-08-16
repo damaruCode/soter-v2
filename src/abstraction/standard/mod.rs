@@ -19,7 +19,7 @@ impl StandardAbstraction {
 }
 
 impl Abstraction<KAddr, VAddr> for StandardAbstraction {
-    fn init_kaddr(&self) -> KAddr {
+    fn stop_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,

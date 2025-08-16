@@ -55,7 +55,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                     new_pid.clone(),
                                     ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap()),
                                     clo.env.clone(),
-                                    abstraction.init_kaddr(),
+                                    abstraction.stop_kaddr(),
                                     Time::init(),
                                 );
                                 v_new.push(new_proc_state_two);
@@ -72,6 +72,6 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
             _ => panic!(),
         }
     }
-
+    log::debug!("ABS_SPAWN - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())
 }

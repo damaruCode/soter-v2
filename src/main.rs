@@ -67,7 +67,8 @@ fn main() {
 
     // Eval
     for (pid, states) in seen_one.inner {
-        let states_two = seen_two.get(&pid).unwrap();
+        let mt = Vec::new();
+        let states_two = seen_two.get(&pid).unwrap_or(&mt);
         log::debug!(
             "{:#?} ONE {:#?} - TWO {:#?}",
             pid,

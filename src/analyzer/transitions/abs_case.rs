@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Case, Index, TypedCore, ValueAddressOrValue},
+    ast::{Case, Clause, Index, TypedCore, ValueAddressOrValue},
     state_space::{KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName},
     util::AstHelper,
 };
@@ -14,10 +14,29 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
-    let clauses = Vec::from(&case.clauses);
+    let clauses: Vec<Clause> = Vec::from(&case.clauses);
     let v_addr;
     match &*case.arg {
         TypedCore::Var(v) => v_addr = proc_state.env.inner.get(&VarName::from(v)).unwrap(),
+        TypedCore::Values(v) => {
+            if v.es.inner.len() == 0 {
+                // empty case
+                for clause in clauses {
+                    // empty clause
+                    if clause.pats.inner.len() == 0 {
+                        let mut new_item = proc_state.clone();
+                        new_item.prog_loc_or_pid =
+                            ProgLocOrPid::ProgLoc((*clause.body).get_index().unwrap());
+
+                        v_new.push(new_item);
+
+                        return (v_new, Vec::new());
+                    }
+                }
+            }
+
+            todo!("{:#?}", v);
+        }
         TypedCore::Literal(l) => match *l.val.clone() {
             TypedCore::AstList(al) => todo!("{:#?}", al),
             TypedCore::String(s) => {
@@ -26,7 +45,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             _ => panic!(),
         },
         TypedCore::AstTuple(t) => todo!("{:#?}", t),
-        _ => panic!(),
+        tc => panic!("{:#?}", tc),
     }
 
     let mats = Case::cmatch(
@@ -46,6 +65,8 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             v_new.push(new_item);
         }
     }
+
+    log::debug!("ABS_CASE - {:?} New - {:?} Revisit", v_new.len(), 0);
 
     (v_new, Vec::new())
 }

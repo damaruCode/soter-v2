@@ -7,8 +7,8 @@ use crate::state_space::{
 };
 
 pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
-    /// Creates a new KontinuationAddress for the stop continuation of the abstract machine
-    fn init_kaddr(&self) -> K;
+    /// Creates a new KontinuationAddress for the Stop continuation of the abstract machine
+    fn stop_kaddr(&self) -> K;
 
     /// Creates a new KontinuationAddress for any given state of the abstract machine
     fn new_kaddr(

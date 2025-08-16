@@ -44,5 +44,10 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     ));
     v_new.push(new_item);
 
+    log::debug!(
+        "ABS_PUSH_LET - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
     (v_new, v_revisit)
 }

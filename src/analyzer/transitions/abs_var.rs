@@ -37,5 +37,6 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
         None => panic!("No VAddr exists for given Var"),
     };
 
+    log::debug!("ABS_VAR - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())
 }

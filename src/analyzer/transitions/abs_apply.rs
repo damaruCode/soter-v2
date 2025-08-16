@@ -11,6 +11,7 @@ use super::TransitionResult;
 
 pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     apply: &Apply,
+    prog_loc_proc_state: usize,
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
@@ -44,13 +45,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                             new_item.prog_loc_or_pid =
                                 ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
                             new_item.env = new_env;
-                            new_item.time = abstraction.tick(
-                                &new_item.time,
-                                match proc_state.prog_loc_or_pid {
-                                    ProgLocOrPid::ProgLoc(pl) => pl,
-                                    _ => panic!(),
-                                },
-                            );
+                            new_item.time = abstraction.tick(&new_item.time, prog_loc_proc_state);
 
                             v_new.push(new_item);
                         }
@@ -63,5 +58,6 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
         _ => panic!(),
     }
 
+    log::debug!("ABS_APPLY - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())
 }

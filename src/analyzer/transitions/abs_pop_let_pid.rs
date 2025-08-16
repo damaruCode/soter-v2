@@ -54,5 +54,10 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
         }
     }
 
+    log::debug!(
+        "ABS_POP_LET_PID - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
     (v_new, v_revisit)
 }

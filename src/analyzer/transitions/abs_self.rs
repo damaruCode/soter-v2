@@ -8,5 +8,6 @@ pub fn abs_self<K: KontinuationAddress, V: ValueAddress>(
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::Pid(proc_state.pid.clone());
 
+    log::debug!("ABS_SELF - {:?} New - {:?} Revisit", 1, 0);
     (Vec::from([new_item]), Vec::new())
 }

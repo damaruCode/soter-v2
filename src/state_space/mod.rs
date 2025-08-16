@@ -7,7 +7,6 @@ pub mod mailbox;
 pub mod pid;
 pub mod process_state;
 pub mod prog_loc;
-pub mod state;
 pub mod store;
 pub mod time;
 pub mod value;
@@ -22,8 +21,8 @@ pub use mailbox::*;
 pub use pid::*;
 pub use process_state::*;
 pub use prog_loc::*;
-pub use state::*;
 pub use store::*;
 pub use time::*;
 pub use value::*;
 pub use var_name::*;
+

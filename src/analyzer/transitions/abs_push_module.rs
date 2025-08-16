@@ -17,6 +17,7 @@ pub fn abs_push_module<K: KontinuationAddress, V: ValueAddress>(
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
+    let v_revisit;
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid =
@@ -31,10 +32,21 @@ pub fn abs_push_module<K: KontinuationAddress, V: ValueAddress>(
     );
 
     new_item.k_addr = new_k_addr.clone();
+    log::debug!(
+        "PUSH_MODULE {:#?}",
+        ast_helper.get(match new_item.prog_loc_or_pid {
+            ProgLocOrPid::ProgLoc(pl) => pl,
+            _ => panic!(),
+        })
+    );
     v_new.push(new_item);
 
-    (
-        v_new,
-        push_to_kont_store(ast_helper, seen_proc_states, store, new_k_addr, kont),
-    )
+    v_revisit = push_to_kont_store(ast_helper, seen_proc_states, store, new_k_addr, kont);
+
+    log::debug!(
+        "ABS_PUSH_MODULE - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
+    (v_new, v_revisit)
 }

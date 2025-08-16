@@ -94,5 +94,10 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
             ));
         }
     }
+    log::debug!(
+        "ABS_SEND - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
     (v_new, v_revisit)
 }
