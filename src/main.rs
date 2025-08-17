@@ -66,6 +66,7 @@ fn main() {
     let seen_two = non_standard_analyzer.run();
 
     // Eval
+    let mut stopped = Vec::new();
     for (pid, states) in seen_one.inner {
         let mt = Vec::new();
         let states_two = seen_two.get(&pid).unwrap_or(&mt);
@@ -74,8 +75,16 @@ fn main() {
             pid,
             states.len(),
             states_two.len()
-        )
+        );
+
+        for state in states {
+            if state.k_addr._stop {
+                stopped.push(state.clone());
+            }
+        }
     }
+
+    log::debug!("FINAL STATES {:#?}", stopped);
 }
 
 #[cfg(test)]

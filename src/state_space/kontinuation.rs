@@ -6,7 +6,6 @@ use super::{Env, KontinuationAddress, ProgLoc, ValueAddress};
 //       | Stop
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Kont<K: KontinuationAddress, V: ValueAddress> {
-    Module(usize, Env<V>, K),
     Let(Vec<ProgLoc>, ProgLoc, Env<V>, K),
     Stop,
 }

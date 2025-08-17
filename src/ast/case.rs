@@ -62,7 +62,6 @@ impl Case {
         ast_helper: &AstHelper,
     ) -> Option<Env<V>> {
         fn traverse<V: ValueAddress>(
-            tc_astlist: &TypedCore,
             ast_list: &AstList<TypedCore>,
             v_addr_or_value: &ValueAddressOrValue<V>,
             value_store: &SetMap<V, Value<V>>,
@@ -141,16 +140,8 @@ impl Case {
                     _ => panic!(),
                 },
             },
-            TypedCore::AstList(al) => {
-                traverse(typed_core, al, v_addr_or_value, value_store, ast_helper)
-            }
-            TypedCore::Tuple(tup) => traverse(
-                typed_core,
-                &tup.es,
-                v_addr_or_value,
-                value_store,
-                ast_helper,
-            ),
+            TypedCore::AstList(al) => traverse(al, v_addr_or_value, value_store, ast_helper),
+            TypedCore::Tuple(tup) => traverse(&tup.es, v_addr_or_value, value_store, ast_helper),
             _ => panic!("{:#?}", typed_core),
         }
     }

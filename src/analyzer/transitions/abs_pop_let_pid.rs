@@ -24,11 +24,16 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
     let konts = store.kont.get(&proc_state.k_addr).unwrap().clone();
     for kont in konts {
         match kont {
-            Kont::Let(var_list, body, _env, k_addr) => {
+            Kont::Let(var_list, body, env, k_addr) => {
+                if var_list.len() != 1 {
+                    panic!()
+                }
+
                 let var_name = VarName::from(ast_helper.get(var_list[0]));
 
                 let mut new_item = proc_state.clone();
                 new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(body);
+                new_item.env = env;
                 new_item.k_addr = k_addr;
 
                 let new_v_addr = abstraction.new_vaddr(
@@ -50,7 +55,6 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
                 v_new.push(new_item);
             }
             Kont::Stop => {} // successful halt
-            _ => panic!(),
         }
     }
 
