@@ -13,6 +13,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     module: &Module,
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
+    module_env: &mut Env<V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
@@ -84,6 +85,9 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
             _ => panic!(),
         }
     }
+
+    // ... also update the module_env
+    module_env.merge_with(&new_item.env);
 
     v_new.push(new_item);
 

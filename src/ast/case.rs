@@ -34,15 +34,17 @@ impl Case {
         clauses: &Vec<Clause>,
         v_addr_or_value: &ValueAddressOrValue<V>,
         value_store: &SetMap<V, Value<V>>,
+        module_env: &Env<V>,
         ast_helper: &AstHelper,
     ) -> Vec<Option<(usize, Env<V>)>> {
         let mut opts = Vec::new();
         for i in 0..(clauses.len() - 1) {
-            let mut new_env = Env::init();
+            let mut new_env = module_env.clone();
             let p_env = Self::pmatch(
                 &clauses[i].pats.inner[i],
                 v_addr_or_value,
                 value_store,
+                module_env,
                 ast_helper,
             );
 
@@ -61,12 +63,14 @@ impl Case {
         typed_core: &TypedCore,
         v_addr_or_value: &ValueAddressOrValue<V>,
         value_store: &SetMap<V, Value<V>>,
+        module_env: &Env<V>,
         ast_helper: &AstHelper,
     ) -> Option<Env<V>> {
         fn traverse<V: ValueAddress>(
             ast_list: &AstList<TypedCore>,
             v_addr_or_value: &ValueAddressOrValue<V>,
             value_store: &SetMap<V, Value<V>>,
+            module_env: &Env<V>,
             ast_helper: &AstHelper,
         ) -> Option<Env<V>> {
             let values = match v_addr_or_value {
@@ -76,7 +80,7 @@ impl Case {
                 }
             };
 
-            let mut new_env = Env::init();
+            let mut new_env = module_env.clone();
             for value in values {
                 match value {
                     Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
@@ -92,6 +96,7 @@ impl Case {
                                             .clone(),
                                     ),
                                     value_store,
+                                    module_env,
                                     ast_helper,
                                 );
 
@@ -114,7 +119,7 @@ impl Case {
         match typed_core {
             TypedCore::Var(v) => match v_addr_or_value {
                 ValueAddressOrValue::ValueAddress(v_addr) => {
-                    let mut new_env = Env::init();
+                    let mut new_env = module_env.clone();
                     new_env
                         .inner
                         .insert(VarName::from(v).clone(), v_addr.clone());
@@ -125,14 +130,14 @@ impl Case {
             },
             TypedCore::String(s1) => match v_addr_or_value {
                 ValueAddressOrValue::ValueAddress(v_addr) => match value_store.get(&v_addr) {
-                    Some(_) => Some(Env::init()),
+                    Some(_) => Some(module_env.clone()),
                     None => None,
                 },
                 ValueAddressOrValue::Value(val) => match val {
                     Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                         TypedCore::String(s2) => {
                             if s1.inner == s2.inner {
-                                Some(Env::init())
+                                Some(module_env.clone())
                             } else {
                                 None
                             }
@@ -142,8 +147,16 @@ impl Case {
                     _ => panic!(),
                 },
             },
-            TypedCore::AstList(al) => traverse(al, v_addr_or_value, value_store, ast_helper),
-            TypedCore::Tuple(tup) => traverse(&tup.es, v_addr_or_value, value_store, ast_helper),
+            TypedCore::AstList(al) => {
+                traverse(al, v_addr_or_value, value_store, module_env, ast_helper)
+            }
+            TypedCore::Tuple(tup) => traverse(
+                &tup.es,
+                v_addr_or_value,
+                value_store,
+                module_env,
+                ast_helper,
+            ),
             _ => panic!("{:#?}", typed_core),
         }
     }

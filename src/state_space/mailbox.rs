@@ -22,6 +22,7 @@ impl<V: ValueAddress> Mailbox<V> {
         &self,
         clauses: &Vec<Clause>,
         value_store: &SetMap<V, Value<V>>,
+        module_env: &Env<V>,
         ast_helper: &AstHelper,
     ) -> Vec<(usize, Env<V>)> {
         let mut matched_msgs = Vec::new();
@@ -30,6 +31,7 @@ impl<V: ValueAddress> Mailbox<V> {
                 clauses,
                 &ValueAddressOrValue::Value(msg.clone()),
                 value_store,
+                module_env,
                 ast_helper,
             );
 

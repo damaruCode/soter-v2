@@ -18,6 +18,7 @@ pub enum TransitionError {
 pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     ast_helper: AstHelper<'analyzer>,
     abstraction: Box<dyn Abstraction<K, V>>,
+    module_env: Env<V>,
     mailboxes: Mailboxes<V>,
     store: Store<K, V>,
     queue: VecDeque<ProcState<K, V>>,
@@ -30,6 +31,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         Analyzer {
             ast_helper,
             abstraction,
+            module_env: Env::init(),
             mailboxes: Mailboxes::init(),
             store: Store::init(stop_k_addr.clone()),
             queue: VecDeque::from(vec![ProcState::init(stop_k_addr)]),
@@ -45,6 +47,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &mut self.mailboxes,
                 &mut self.store,
                 &self.abstraction,
+                &mut self.module_env,
                 &self.seen,
             );
 
@@ -75,6 +78,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         mailboxes: &mut Mailboxes<V>,
         store: &mut Store<K, V>,
         abstraction: &Box<dyn Abstraction<K, V>>,
+        module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> (Vec<Self>, Vec<Self>);
 }
@@ -86,6 +90,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         mailboxes: &mut Mailboxes<V>,
         store: &mut Store<K, V>,
         abstraction: &Box<dyn Abstraction<K, V>>,
+        module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> (Vec<Self>, Vec<Self>) {
         //TODO Delete log
@@ -101,15 +106,17 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 abs_pop_let_pid(pid, self, store, seen, abstraction, ast_helper)
             }
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                TypedCore::Module(m) => abs_module(m, self, store, abstraction),
+                TypedCore::Module(m) => abs_module(m, self, store, module_env, abstraction),
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(a) => abs_apply(a, *pl, self, store, abstraction, ast_helper),
                 TypedCore::Call(c) => {
                     abs_call(c, self, mailboxes, store, seen, ast_helper, abstraction)
                 }
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                TypedCore::Case(c) => abs_case(c, self, store, ast_helper),
-                TypedCore::Receive(r) => abs_receive(r, self, mailboxes, store, ast_helper),
+                TypedCore::Case(c) => abs_case(c, self, store, module_env, ast_helper),
+                TypedCore::Receive(r) => {
+                    abs_receive(r, self, mailboxes, store, module_env, ast_helper)
+                }
                 TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
                 // ProgLoc is irreducible via the previous transition rules; it's a Value

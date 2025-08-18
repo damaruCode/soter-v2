@@ -1,6 +1,8 @@
 use crate::{
     ast::{Index, Receive},
-    state_space::{KontinuationAddress, Mailboxes, ProcState, ProgLocOrPid, Store, ValueAddress},
+    state_space::{
+        Env, KontinuationAddress, Mailboxes, ProcState, ProgLocOrPid, Store, ValueAddress,
+    },
     util::AstHelper,
 };
 
@@ -11,13 +13,14 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     mailboxes: &Mailboxes<V>,
     store: &Store<K, V>,
+    module_env: &Env<V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
     let mailbox = mailboxes.inner.get(&proc_state.pid).unwrap();
     let clauses = &Vec::from(&receive.clauses);
-    let matching_msgs = mailbox.mmatch(clauses, &store.value, ast_helper);
+    let matching_msgs = mailbox.mmatch(clauses, &store.value, module_env, ast_helper);
 
     // NOTE the Mailbox_set abstraction does not extract any messages, so finding
     // the matched message is simply a case of looking at the message at `index`

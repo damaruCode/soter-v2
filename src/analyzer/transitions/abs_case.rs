@@ -1,6 +1,8 @@
 use crate::{
     ast::{Case, Clause, Index, TypedCore, ValueAddressOrValue},
-    state_space::{KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName},
+    state_space::{
+        Env, KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
+    },
     util::AstHelper,
 };
 
@@ -10,6 +12,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     case: &Case,
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
+    module_env: &Env<V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
@@ -52,6 +55,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
         &clauses,
         &ValueAddressOrValue::ValueAddress(v_addr.clone()),
         &store.value,
+        module_env,
         ast_helper,
     );
 
