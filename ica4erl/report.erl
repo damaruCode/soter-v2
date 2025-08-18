@@ -1,4 +1,4 @@
--module(example).
+-module(report).
 
 -compile(export_all).
 

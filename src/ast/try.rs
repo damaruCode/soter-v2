@@ -14,7 +14,7 @@ pub struct Try {
     pub body: Box<TypedCore>,
     pub evars: AstList<TypedCore>,
     pub handler: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Try {
@@ -26,7 +26,13 @@ impl From<Map<String, Value>> for Try {
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
             evars: AstList::from(map.get("evars").unwrap().as_array().unwrap().clone()),
             handler: Box::new(TypedCore::from(map.get("handler").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Try {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

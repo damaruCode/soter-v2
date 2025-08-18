@@ -8,7 +8,7 @@ pub struct Apply {
     pub anno: AstList<TypedCore>,
     pub op: Box<TypedCore>,
     pub args: AstList<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Apply {
@@ -17,7 +17,13 @@ impl From<Map<String, Value>> for Apply {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             op: Box::new(TypedCore::from(map.get("op").unwrap().clone())),
             args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Apply {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}apply {}({})", self.index, *self.op, self.args)
     }
 }

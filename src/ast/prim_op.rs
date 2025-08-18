@@ -9,7 +9,7 @@ pub struct PrimOp {
     pub name: Box<TypedCore>,
     pub args: AstList<TypedCore>, // NOTE We could probably be more precise here; rogers2018
     // enforces that PrimOp is always applied to names
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for PrimOp {
@@ -18,7 +18,13 @@ impl From<Map<String, Value>> for PrimOp {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
             args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for PrimOp {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

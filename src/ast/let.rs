@@ -10,7 +10,7 @@ pub struct Let {
     pub vars: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Let {
@@ -20,7 +20,17 @@ impl From<Map<String, Value>> for Let {
             vars: AstList::from(map.get("vars").unwrap().as_array().unwrap().clone()),
             arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Let {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}let <{}> = {} in {}",
+            self.index, self.vars, *self.arg, *self.body
+        )
     }
 }

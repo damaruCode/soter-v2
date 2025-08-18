@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Binary {
     pub anno: AstList<TypedCore>,
     pub segments: AstList<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Binary {
@@ -14,7 +14,13 @@ impl From<Map<String, Value>> for Binary {
         Binary {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             segments: AstList::from(map.get("segments").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Binary {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}binary {}", self.index, self.segments)
     }
 }

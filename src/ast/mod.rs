@@ -29,6 +29,8 @@ pub mod tuple;
 pub mod values;
 pub mod var;
 
+use std::fmt::Display;
+
 pub use alias::*;
 pub use apply::*;
 pub use ast_list::*;
@@ -110,41 +112,56 @@ pub trait Index {
     fn get_index(&self) -> Option<usize>;
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+pub enum MaybeIndex {
+    Some(usize),
+    None,
+}
+
+impl From<MaybeIndex> for Option<usize> {
+    fn from(value: MaybeIndex) -> Self {
+        match value {
+            MaybeIndex::Some(i) => Some(i),
+            MaybeIndex::None => None,
+        }
+    }
+}
+
 impl Index for TypedCore {
     fn get_index(&self) -> Option<usize> {
         match self {
-            TypedCore::AstTuple(ast) => ast.index,
-            TypedCore::AstList(list) => list.index,
+            TypedCore::AstTuple(ast) => ast.index.clone().into(),
+            TypedCore::AstList(list) => list.index.clone().into(),
 
-            TypedCore::Null(null) => null.index,
-            TypedCore::Bool(bool) => bool.index,
-            TypedCore::Number(number) => number.index,
-            TypedCore::String(string) => string.index,
+            TypedCore::Null(null) => null.index.clone().into(),
+            TypedCore::Bool(bool) => bool.index.clone().into(),
+            TypedCore::Number(number) => number.index.clone().into(),
+            TypedCore::String(string) => string.index.clone().into(),
 
-            TypedCore::Alias(alias) => alias.index,
-            TypedCore::Apply(apply) => apply.index,
-            TypedCore::Binary(binary) => binary.index,
-            TypedCore::BitStr(bitstr) => bitstr.index,
-            TypedCore::Call(call) => call.index,
-            TypedCore::Case(case) => case.index,
-            TypedCore::Catch(catch) => catch.index,
-            TypedCore::Clause(clause) => clause.index,
-            TypedCore::Cons(cons) => cons.index,
-            TypedCore::Fun(fun) => fun.index,
-            TypedCore::Let(let_) => let_.index,
-            TypedCore::LetRec(letrec) => letrec.index,
-            TypedCore::Literal(lit) => lit.index,
-            TypedCore::Map(map) => map.index,
-            TypedCore::MapPair(pair) => pair.index,
-            TypedCore::Module(module) => module.index,
-            TypedCore::Opaque(opq) => opq.index,
-            TypedCore::PrimOp(prim) => prim.index,
-            TypedCore::Receive(recv) => recv.index,
-            TypedCore::Seq(seq) => seq.index,
-            TypedCore::Try(try_) => try_.index,
-            TypedCore::Tuple(tuple) => tuple.index,
-            TypedCore::Values(vals) => vals.index,
-            TypedCore::Var(var) => var.index,
+            TypedCore::Alias(alias) => alias.index.clone().into(),
+            TypedCore::Apply(apply) => apply.index.clone().into(),
+            TypedCore::Binary(binary) => binary.index.clone().into(),
+            TypedCore::BitStr(bitstr) => bitstr.index.clone().into(),
+            TypedCore::Call(call) => call.index.clone().into(),
+            TypedCore::Case(case) => case.index.clone().into(),
+            TypedCore::Catch(catch) => catch.index.clone().into(),
+            TypedCore::Clause(clause) => clause.index.clone().into(),
+            TypedCore::Cons(cons) => cons.index.clone().into(),
+            TypedCore::Fun(fun) => fun.index.clone().into(),
+            TypedCore::Let(let_) => let_.index.clone().into(),
+            TypedCore::LetRec(letrec) => letrec.index.clone().into(),
+            TypedCore::Literal(lit) => lit.index.clone().into(),
+            TypedCore::Map(map) => map.index.clone().into(),
+            TypedCore::MapPair(pair) => pair.index.clone().into(),
+            TypedCore::Module(module) => module.index.clone().into(),
+            TypedCore::Opaque(opq) => opq.index.clone().into(),
+            TypedCore::PrimOp(prim) => prim.index.clone().into(),
+            TypedCore::Receive(recv) => recv.index.clone().into(),
+            TypedCore::Seq(seq) => seq.index.clone().into(),
+            TypedCore::Try(try_) => try_.index.clone().into(),
+            TypedCore::Tuple(tuple) => tuple.index.clone().into(),
+            TypedCore::Values(vals) => vals.index.clone().into(),
+            TypedCore::Var(var) => var.index.clone().into(),
         }
     }
 }
@@ -152,18 +169,20 @@ impl Index for TypedCore {
 impl From<Value> for TypedCore {
     fn from(core: Value) -> Self {
         match core {
-            Value::Null => TypedCore::Null(ErlNull { index: None }),
+            Value::Null => TypedCore::Null(ErlNull {
+                index: MaybeIndex::None,
+            }),
             Value::Bool(bool) => TypedCore::Bool(ErlBool {
                 inner: bool,
-                index: None,
+                index: MaybeIndex::None,
             }),
             Value::Number(number) => TypedCore::Number(ErlNumber {
                 inner: number,
-                index: None,
+                index: MaybeIndex::None,
             }),
             Value::String(string) => TypedCore::String(ErlString {
                 inner: string,
-                index: None,
+                index: MaybeIndex::None,
             }),
             Value::Array(vec) => TypedCore::AstList(AstList::from(vec)),
             Value::Object(map) => TypedCore::from(map),
@@ -199,6 +218,52 @@ impl From<Map<String, Value>> for TypedCore {
             "c_values" => TypedCore::Values(Values::from(map)),
             "c_var" => TypedCore::Var(Var::from(map)),
             type_name => panic!("{} not impled", type_name),
+        }
+    }
+}
+
+impl Display for TypedCore {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            TypedCore::AstList(x) => write!(f, "{}", x),
+            TypedCore::AstTuple(x) => write!(f, "{}", x),
+            TypedCore::Null(x) => write!(f, "{}", x),
+            TypedCore::Bool(x) => write!(f, "{}", x),
+            TypedCore::Number(x) => write!(f, "{}", x),
+            TypedCore::String(x) => write!(f, "{}", x),
+            TypedCore::Alias(x) => write!(f, "{}", x),
+            TypedCore::Apply(x) => write!(f, "{}", x),
+            TypedCore::Binary(x) => write!(f, "{}", x),
+            TypedCore::BitStr(x) => write!(f, "{}", x),
+            TypedCore::Call(x) => write!(f, "{}", x),
+            TypedCore::Case(x) => write!(f, "{}", x),
+            TypedCore::Catch(x) => write!(f, "{}", x),
+            TypedCore::Clause(x) => write!(f, "{}", x),
+            TypedCore::Cons(x) => write!(f, "{}", x),
+            TypedCore::Fun(x) => write!(f, "{}", x),
+            TypedCore::Let(x) => write!(f, "{}", x),
+            TypedCore::LetRec(x) => write!(f, "{}", x),
+            TypedCore::Literal(x) => write!(f, "{}", x),
+            TypedCore::Map(x) => write!(f, "{}", x),
+            TypedCore::MapPair(x) => write!(f, "{}", x),
+            TypedCore::Module(x) => write!(f, "{}", x),
+            TypedCore::Opaque(x) => write!(f, "{}", x),
+            TypedCore::PrimOp(x) => write!(f, "{}", x),
+            TypedCore::Receive(x) => write!(f, "{}", x),
+            TypedCore::Seq(x) => write!(f, "{}", x),
+            TypedCore::Try(x) => write!(f, "{}", x),
+            TypedCore::Tuple(x) => write!(f, "{}", x),
+            TypedCore::Values(x) => write!(f, "{}", x),
+            TypedCore::Var(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl Display for MaybeIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            MaybeIndex::Some(i) => write!(f, "{}: ", i),
+            MaybeIndex::None => write!(f, ""),
         }
     }
 }

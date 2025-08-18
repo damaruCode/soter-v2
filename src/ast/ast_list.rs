@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct AstList<T> {
     pub inner: Vec<T>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl<T> AstList<T> {
     pub fn new() -> Self {
         AstList {
             inner: Vec::new(),
-            index: None,
+            index: MaybeIndex::None,
         }
     }
 }
@@ -24,7 +24,7 @@ impl From<Vec<Value>> for AstList<TypedCore> {
         }
         AstList {
             inner: list,
-            index: None,
+            index: MaybeIndex::None,
         }
     }
 }
@@ -37,7 +37,7 @@ impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
         }
         AstList {
             inner: list,
-            index: None,
+            index: MaybeIndex::None,
         }
     }
 }
@@ -49,5 +49,12 @@ impl From<&AstList<TypedCore>> for Vec<usize> {
             vec.push(tc.get_index().unwrap());
         }
         vec
+    }
+}
+
+impl<T: Display> Display for AstList<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let items: Vec<String> = self.inner.iter().map(|item| format!("{}", item)).collect();
+        write!(f, "{}[{}]", self.index, items.join(", "))
     }
 }

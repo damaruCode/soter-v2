@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 pub struct AstTuple<T> {
     pub frst: Box<T>,
     pub scnd: Box<T>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Vec<Value>> for AstTuple<TypedCore> {
@@ -14,7 +14,7 @@ impl From<Vec<Value>> for AstTuple<TypedCore> {
         AstTuple {
             frst: Box::new(TypedCore::from(tuple.get(0).unwrap().clone())),
             scnd: Box::new(TypedCore::from(tuple.get(1).unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
     }
 }
@@ -22,5 +22,15 @@ impl From<Vec<Value>> for AstTuple<TypedCore> {
 impl From<&AstTuple<TypedCore>> for (usize, usize) {
     fn from(at: &AstTuple<TypedCore>) -> Self {
         (at.frst.get_index().unwrap(), at.scnd.get_index().unwrap())
+    }
+}
+
+impl<T: Display> Display for AstTuple<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}ast_tuple ({}, {})",
+            self.index, *self.frst, *self.scnd
+        )
     }
 }

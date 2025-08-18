@@ -8,7 +8,7 @@ pub struct Seq {
     pub anno: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Seq {
@@ -17,7 +17,13 @@ impl From<Map<String, Value>> for Seq {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Seq {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

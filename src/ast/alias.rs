@@ -8,7 +8,7 @@ pub struct Alias {
     pub anno: AstList<TypedCore>,
     pub var: Box<TypedCore>,
     pub pat: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Alias {
@@ -17,7 +17,13 @@ impl From<Map<String, Value>> for Alias {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             var: Box::new(TypedCore::from(map.get("var").unwrap().clone())),
             pat: Box::new(TypedCore::from(map.get("pat").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Alias {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}apply ({}, {})", self.index, *self.var, *self.pat)
     }
 }

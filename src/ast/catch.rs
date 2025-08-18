@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Catch {
     pub anno: AstList<TypedCore>,
     pub body: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Catch {
@@ -14,7 +14,13 @@ impl From<Map<String, Value>> for Catch {
         Catch {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Catch {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

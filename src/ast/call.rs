@@ -10,7 +10,7 @@ pub struct Call {
     pub module: Box<TypedCore>,
     pub name: Box<TypedCore>,
     pub args: AstList<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Call {
@@ -20,7 +20,17 @@ impl From<Map<String, Value>> for Call {
             module: Box::new(TypedCore::from(map.get("module").unwrap().clone())),
             name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
             args: AstList::from(map.get("args").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Call {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}call {}:{} ({})",
+            self.index, self.module, self.name, self.args
+        )
     }
 }

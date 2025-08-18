@@ -1,6 +1,5 @@
+pub mod anton;
 pub mod standard;
-
-pub use standard::*;
 
 use crate::state_space::{
     Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,

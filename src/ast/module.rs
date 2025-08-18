@@ -12,7 +12,7 @@ pub struct Module {
     pub exports: AstList<TypedCore>,
     pub attrs: AstList<AstTuple<TypedCore>>,
     pub defs: AstList<AstTuple<TypedCore>>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Module {
@@ -23,7 +23,17 @@ impl From<Map<String, Value>> for Module {
             exports: AstList::from(map.get("exports").unwrap().as_array().unwrap().to_vec()),
             attrs: AstList::from(map.get("attrs").unwrap().as_array().unwrap().to_vec()),
             defs: AstList::from(map.get("defs").unwrap().as_array().unwrap().to_vec()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Module {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}module {}\n[{}]\n{}",
+            self.index, *self.name, self.exports, self.defs
+        )
     }
 }

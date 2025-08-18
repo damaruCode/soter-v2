@@ -1,4 +1,5 @@
 use crate::ast::Index;
+use crate::ast::MaybeIndex;
 use crate::ast::TypedCore;
 use std::collections::HashMap;
 
@@ -26,36 +27,36 @@ impl<'helper> AstHelper<'helper> {
             ctx.next_id += 1;
             match node {
                 TypedCore::AstTuple(t) => {
-                    t.index = Some(id);
+                    t.index = MaybeIndex::Some(id);
                     visit(&mut *t.frst, ctx);
                     visit(&mut *t.scnd, ctx);
                 }
                 TypedCore::AstList(l) => {
-                    l.index = Some(id);
+                    l.index = MaybeIndex::Some(id);
                     for child in &mut *l.inner {
                         visit(child, ctx);
                     }
                 }
                 TypedCore::Alias(a) => {
-                    a.index = Some(id);
+                    a.index = MaybeIndex::Some(id);
                     visit(&mut *a.var, ctx);
                     visit(&mut *a.pat, ctx);
                 }
                 TypedCore::Apply(a) => {
-                    a.index = Some(id);
+                    a.index = MaybeIndex::Some(id);
                     visit(&mut *a.op, ctx);
                     for x in &mut *a.args.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::Binary(b) => {
-                    b.index = Some(id);
+                    b.index = MaybeIndex::Some(id);
                     for x in &mut *b.segments.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::BitStr(bs) => {
-                    bs.index = Some(id);
+                    bs.index = MaybeIndex::Some(id);
                     visit(&mut *bs.val, ctx);
                     visit(&mut *bs.size, ctx);
                     visit(&mut *bs.unit, ctx);
@@ -63,7 +64,7 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *bs.flags, ctx);
                 }
                 TypedCore::Call(c) => {
-                    c.index = Some(id);
+                    c.index = MaybeIndex::Some(id);
                     visit(&mut *c.module, ctx);
                     visit(&mut *c.name, ctx);
                     for x in &mut *c.args.inner {
@@ -71,18 +72,18 @@ impl<'helper> AstHelper<'helper> {
                     }
                 }
                 TypedCore::Case(c) => {
-                    c.index = Some(id);
+                    c.index = MaybeIndex::Some(id);
                     visit(&mut *c.arg, ctx);
                     for x in &mut *c.clauses.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::Catch(c) => {
-                    c.index = Some(id);
+                    c.index = MaybeIndex::Some(id);
                     visit(&mut *c.body, ctx);
                 }
                 TypedCore::Clause(c) => {
-                    c.index = Some(id);
+                    c.index = MaybeIndex::Some(id);
                     for x in &mut *c.pats.inner {
                         visit(x, ctx);
                     }
@@ -90,19 +91,19 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *c.body, ctx);
                 }
                 TypedCore::Cons(c) => {
-                    c.index = Some(id);
+                    c.index = MaybeIndex::Some(id);
                     visit(&mut *c.hd, ctx);
                     visit(&mut *c.tl, ctx);
                 }
                 TypedCore::Fun(f) => {
-                    f.index = Some(id);
+                    f.index = MaybeIndex::Some(id);
                     for x in &mut *f.vars.inner {
                         visit(x, ctx);
                     }
                     visit(&mut *f.body, ctx);
                 }
                 TypedCore::Let(l) => {
-                    l.index = Some(id);
+                    l.index = MaybeIndex::Some(id);
                     for x in &mut *l.vars.inner {
                         visit(x, ctx);
                     }
@@ -110,7 +111,7 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *l.body, ctx);
                 }
                 TypedCore::LetRec(lr) => {
-                    lr.index = Some(id);
+                    lr.index = MaybeIndex::Some(id);
                     for tuple in &mut *lr.defs.inner {
                         visit(&mut *tuple.frst, ctx);
                         visit(&mut *tuple.scnd, ctx);
@@ -118,24 +119,24 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *lr.body, ctx);
                 }
                 TypedCore::Literal(l) => {
-                    l.index = Some(id);
+                    l.index = MaybeIndex::Some(id);
                     visit(&mut *l.val, ctx);
                 }
                 TypedCore::Map(m) => {
-                    m.index = Some(id);
+                    m.index = MaybeIndex::Some(id);
                     visit(&mut *m.arg, ctx);
                     for x in &mut *m.es.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::MapPair(mp) => {
-                    mp.index = Some(id);
+                    mp.index = MaybeIndex::Some(id);
                     visit(&mut *mp.op, ctx);
                     visit(&mut *mp.key, ctx);
                     visit(&mut *mp.val, ctx);
                 }
                 TypedCore::Module(m) => {
-                    m.index = Some(id);
+                    m.index = MaybeIndex::Some(id);
                     visit(&mut *m.name, ctx);
                     for x in &mut *m.exports.inner {
                         visit(x, ctx);
@@ -150,18 +151,18 @@ impl<'helper> AstHelper<'helper> {
                     }
                 }
                 TypedCore::Opaque(o) => {
-                    o.index = Some(id);
+                    o.index = MaybeIndex::Some(id);
                     visit(&mut *o.val, ctx);
                 }
                 TypedCore::PrimOp(p) => {
-                    p.index = Some(id);
+                    p.index = MaybeIndex::Some(id);
                     visit(&mut *p.name, ctx);
                     for x in &mut *p.args.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::Receive(r) => {
-                    r.index = Some(id);
+                    r.index = MaybeIndex::Some(id);
                     for x in &mut *r.clauses.inner {
                         visit(x, ctx);
                     }
@@ -169,12 +170,12 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *r.action, ctx);
                 }
                 TypedCore::Seq(s) => {
-                    s.index = Some(id);
+                    s.index = MaybeIndex::Some(id);
                     visit(&mut *s.arg, ctx);
                     visit(&mut *s.body, ctx);
                 }
                 TypedCore::Try(t) => {
-                    t.index = Some(id);
+                    t.index = MaybeIndex::Some(id);
                     visit(&mut *t.arg, ctx);
                     for x in &mut *t.vars.inner {
                         visit(x, ctx);
@@ -186,32 +187,32 @@ impl<'helper> AstHelper<'helper> {
                     visit(&mut *t.handler, ctx);
                 }
                 TypedCore::Tuple(t) => {
-                    t.index = Some(id);
+                    t.index = MaybeIndex::Some(id);
                     for x in &mut *t.es.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::Values(v) => {
-                    v.index = Some(id);
+                    v.index = MaybeIndex::Some(id);
                     for x in &mut *v.es.inner {
                         visit(x, ctx);
                     }
                 }
                 TypedCore::Var(v) => {
-                    v.index = Some(id);
+                    v.index = MaybeIndex::Some(id);
                     visit(&mut *v.name, ctx);
                 }
                 TypedCore::Null(n) => {
-                    n.index = Some(id);
+                    n.index = MaybeIndex::Some(id);
                 }
                 TypedCore::Bool(b) => {
-                    b.index = Some(id);
+                    b.index = MaybeIndex::Some(id);
                 }
                 TypedCore::Number(n) => {
-                    n.index = Some(id);
+                    n.index = MaybeIndex::Some(id);
                 }
                 TypedCore::String(s) => {
-                    s.index = Some(id);
+                    s.index = MaybeIndex::Some(id);
                 }
             }
         }

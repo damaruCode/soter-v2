@@ -7,7 +7,7 @@ pub mod util;
 
 use std::env;
 
-use abstraction::StandardAbstraction;
+use abstraction::{anton::AntonAbstraction, standard::StandardAbstraction};
 use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
@@ -50,6 +50,7 @@ fn main() {
 
     let mut ast_helper = util::AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    println!("{}", indexed_typed_core);
     log::debug!("{:#?}", indexed_typed_core);
 
     ast_helper.build_lookup(&indexed_typed_core);
@@ -59,37 +60,23 @@ fn main() {
     let mut standard_analyzer =
         Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let mut non_standard_analyzer =
-        Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(100)));
+    let mut non_standard_analyzer = Analyzer::new(ast_helper, Box::new(AntonAbstraction::new(0)));
 
     let seen_one = standard_analyzer.run();
     let seen_two = non_standard_analyzer.run();
 
     // Eval
-    let mut stopped = Vec::new();
     for (pid, states) in seen_one.inner {
-        let mt = Vec::new();
-        let states_two = seen_two.get(&pid).unwrap_or(&mt);
-        log::debug!(
-            "{:#?} ONE {:#?} - TWO {:#?}",
-            pid,
-            states.len(),
-            states_two.len()
-        );
-
-        for state in states {
-            if state.k_addr._stop {
-                stopped.push(state.clone());
-            }
-        }
+        log::debug!("{:#?} ONE {:#?}", pid, states.len(),);
     }
-
-    log::debug!("FINAL STATES {:#?}", stopped);
+    for (pid, states) in seen_two.inner {
+        log::debug!("{:#?} TWO {:#?}", pid, states.len(),);
+    }
 }
 
 #[cfg(test)]
 mod benchmarks {
-    use crate::abstraction::StandardAbstraction;
+    use crate::abstraction::standard::StandardAbstraction;
     use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;

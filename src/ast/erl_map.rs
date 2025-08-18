@@ -12,7 +12,7 @@ pub struct ErlMap {
     pub arg: Box<TypedCore>,
     pub es: AstList<TypedCore>,
     pub is_pat: bool,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for ErlMap {
@@ -22,7 +22,13 @@ impl From<Map<String, Value>> for ErlMap {
             arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
             es: AstList::from(map.get("es").unwrap().as_array().unwrap().to_vec()),
             is_pat: map.get("is_pat").unwrap().as_bool().unwrap(),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for ErlMap {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

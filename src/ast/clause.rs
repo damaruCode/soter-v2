@@ -10,7 +10,7 @@ pub struct Clause {
     pub pats: AstList<TypedCore>,
     pub guard: Box<TypedCore>,
     pub body: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Clause {
@@ -20,7 +20,7 @@ impl From<Map<String, Value>> for Clause {
             pats: AstList::from(map.get("pats").unwrap().as_array().unwrap().clone()),
             body: Box::new(TypedCore::from(map.get("body").unwrap().clone())),
             guard: Box::new(TypedCore::from(map.get("guard").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
     }
 }
@@ -35,5 +35,15 @@ impl From<&AstList<TypedCore>> for Vec<Clause> {
             }
         }
         clauses
+    }
+}
+
+impl Display for Clause {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}clause <{}> when {} -> {}",
+            self.index, self.pats, self.guard, self.body
+        )
     }
 }

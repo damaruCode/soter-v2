@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Values {
     pub anno: AstList<TypedCore>,
     pub es: AstList<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for Values {
@@ -14,7 +14,13 @@ impl From<Map<String, Value>> for Values {
         Values {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             es: AstList::from(map.get("es").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Values {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}values {}", self.index, self.es)
     }
 }

@@ -11,7 +11,7 @@ pub struct MapPair {
     pub op: Box<TypedCore>,
     pub key: Box<TypedCore>,
     pub val: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Value> for MapPair {
@@ -27,7 +27,13 @@ impl From<Map<String, Value>> for MapPair {
             op: Box::new(TypedCore::from(map.get("op").unwrap().clone())),
             key: Box::new(TypedCore::from(map.get("key").unwrap().clone())),
             val: Box::new(TypedCore::from(map.get("val").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for MapPair {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

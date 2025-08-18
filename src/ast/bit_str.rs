@@ -14,7 +14,7 @@ pub struct BitStr {
     pub unit: Box<TypedCore>,
     pub r#type: Box<TypedCore>,
     pub flags: Box<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl From<Map<String, Value>> for BitStr {
@@ -26,7 +26,12 @@ impl From<Map<String, Value>> for BitStr {
             unit: Box::new(TypedCore::from(map.get("unit").unwrap().clone())),
             r#type: Box::new(TypedCore::from(map.get("type").unwrap().clone())),
             flags: Box::new(TypedCore::from(map.get("flags").unwrap().clone())),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+impl Display for BitStr {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

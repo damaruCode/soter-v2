@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     state_space::{Env, Value, ValueAddress, VarName},
     util::{AstHelper, SetMap},
@@ -5,7 +7,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
 
-use super::{AstList, Clause, TypedCore};
+use super::{AstList, Clause, MaybeIndex, TypedCore};
 
 pub enum VarNamesOrValue<V: ValueAddress> {
     VarNames(Vec<VarName>),
@@ -24,7 +26,7 @@ pub struct Case {
     pub anno: AstList<TypedCore>,
     pub arg: Box<TypedCore>,
     pub clauses: AstList<TypedCore>,
-    pub index: Option<usize>,
+    pub index: MaybeIndex,
 }
 
 impl Case {
@@ -35,7 +37,7 @@ impl Case {
         ast_helper: &AstHelper,
     ) -> Vec<Option<(usize, Env<V>)>> {
         let mut opts = Vec::new();
-        for i in 0..clauses.len() {
+        for i in 0..(clauses.len() - 1) {
             let mut new_env = Env::init();
             let p_env = Self::pmatch(
                 &clauses[i].pats.inner[i],
@@ -175,7 +177,13 @@ impl From<Map<String, serde_json::Value>> for Case {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             arg: Box::new(TypedCore::from(map.get("arg").unwrap().clone())),
             clauses: AstList::from(map.get("clauses").unwrap().as_array().unwrap().clone()),
-            index: None,
+            index: MaybeIndex::None,
         }
+    }
+}
+
+impl Display for Case {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}case <{}> of {}", self.index, self.arg, self.clauses)
     }
 }
