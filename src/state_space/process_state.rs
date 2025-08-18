@@ -1,4 +1,4 @@
-use super::{Data, Env, Kont, KontinuationAddress, Pid, ProgLoc, Time, Value, ValueAddress};
+use super::{Env, KontinuationAddress, Pid, ProgLoc, Time, ValueAddress};
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -14,10 +14,6 @@ pub struct ProcState<K: KontinuationAddress, V: ValueAddress> {
     pub env: Env<V>,
     pub k_addr: K,
     pub time: Time,
-
-    visited_data: Vec<Data>,
-    visited_values: Vec<Value<V>>,
-    visited_konts: Vec<Kont<K, V>>,
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
@@ -34,10 +30,6 @@ impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
             env,
             k_addr,
             time,
-
-            visited_data: Vec::new(),
-            visited_values: Vec::new(),
-            visited_konts: Vec::new(),
         }
     }
 
@@ -48,22 +40,6 @@ impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
             env: Env::init(),
             k_addr: init_k_addr,
             time: Time::init(),
-
-            visited_data: Vec::new(),
-            visited_values: Vec::new(),
-            visited_konts: Vec::new(),
         }
-    }
-
-    pub fn has_visited_data(&self, data: &Data) -> bool {
-        self.visited_data.contains(data)
-    }
-
-    pub fn has_visited_value(&self, value: &Value<V>) -> bool {
-        self.visited_values.contains(value)
-    }
-
-    pub fn has_visited_kontinuation(&self, kont: &Kont<K, V>) -> bool {
-        self.visited_konts.contains(kont)
     }
 }
