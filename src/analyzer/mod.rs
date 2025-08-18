@@ -119,6 +119,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 }
                 TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
+                TypedCore::Seq(s) => abs_push_seq(s, self, store, seen, abstraction, ast_helper),
                 // ProgLoc is irreducible via the previous transition rules; it's a Value
                 // We need to look at the continuation for the next computation
                 _ => match store.kont.get(&self.k_addr) {
@@ -139,7 +140,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                                 return abs_pop_let_closure(
                                                     self,
                                                     *pl,
-                                                    var_list,
+                                                    &var_list,
                                                     body,
                                                     &env,
                                                     &k_addr,
@@ -151,6 +152,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                             }
                                         },
                                     }
+                                }
+                                Kont::Seq(body, env, k_addr) => {
+                                    return abs_pop_seq(self, body, &env, &k_addr)
                                 }
                                 Kont::Stop => {
                                     // NOTE (successful)

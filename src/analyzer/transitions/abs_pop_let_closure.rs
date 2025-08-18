@@ -13,7 +13,7 @@ use super::TransitionResult;
 pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     proc_state_prog_loc: usize,
-    kont_var_list: Vec<usize>,
+    kont_var_list: &Vec<usize>,
     kont_body_prog_loc: usize,
     kont_env: &Env<V>,
     kont_k_addr: &K,

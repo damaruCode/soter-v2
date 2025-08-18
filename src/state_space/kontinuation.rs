@@ -7,5 +7,6 @@ use super::{Env, KontinuationAddress, ProgLoc, ValueAddress};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Kont<K: KontinuationAddress, V: ValueAddress> {
     Let(Vec<ProgLoc>, ProgLoc, Env<V>, K),
+    Seq(ProgLoc, Env<V>, K),
     Stop,
 }
