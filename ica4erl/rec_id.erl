@@ -3,8 +3,8 @@
 -compile(export_all).
 
 main() ->
-  X = a,
-  Y = id(id(X)).
+  Y = id(a),
+  Z = id(b).
 
 id(X) ->
   id(X).
