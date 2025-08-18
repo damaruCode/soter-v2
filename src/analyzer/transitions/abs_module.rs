@@ -9,7 +9,7 @@ use crate::{
 
 use super::TransitionResult;
 
-pub fn abs_push_module<K: KontinuationAddress, V: ValueAddress>(
+pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     module: &Module,
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,

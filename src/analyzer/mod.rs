@@ -101,10 +101,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 abs_pop_let_pid(pid, self, store, seen, abstraction, ast_helper)
             }
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                TypedCore::Module(m) => {
-                    // TODO Fix these transitions; for now we skip this
-                    abs_push_module(m, self, store, abstraction)
-                }
+                TypedCore::Module(m) => abs_module(m, self, store, abstraction),
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(a) => abs_apply(a, *pl, self, store, abstraction, ast_helper),
                 TypedCore::Call(c) => {
