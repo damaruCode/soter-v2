@@ -50,8 +50,6 @@ fn main() {
 
     let mut ast_helper = util::AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    println!("{}", indexed_typed_core);
-    log::debug!("{:#?}", indexed_typed_core);
 
     ast_helper.build_lookup(&indexed_typed_core);
 

@@ -91,7 +91,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         //TODO Delete log
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
-                log::debug!("{:#?}\nAST - {:#?}", self, ast_helper.get(pl))
+                log::debug!("{:#?}\nAST - {}", self, ast_helper.get(pl))
             }
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
         }
@@ -113,13 +113,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
                 TypedCore::Case(c) => abs_case(c, self, store, ast_helper),
                 TypedCore::Receive(r) => abs_receive(r, self, mailboxes, store, ast_helper),
-                TypedCore::PrimOp(_prim_op) => {
-                    // NOTE This would require another
-                    // match on the name. However, the PrimOps: self, spawn and send are the only
-                    // ones being considered, so parsing them in the ast module would probably be
-                    // more sensible
-                    todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND")
-                }
+                TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
                 // ProgLoc is irreducible via the previous transition rules; it's a Value
                 // We need to look at the continuation for the next computation
@@ -163,7 +157,6 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                         panic!();
                     }
                     None => {
-                        // NOTE also a fail
                         panic!()
                     }
                 },

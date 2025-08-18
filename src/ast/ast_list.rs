@@ -55,6 +55,6 @@ impl From<&AstList<TypedCore>> for Vec<usize> {
 impl<T: Display> Display for AstList<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let items: Vec<String> = self.inner.iter().map(|item| format!("{}", item)).collect();
-        write!(f, "{}[{}]", self.index, items.join(", "))
+        write!(f, "{}ast_list [{}]", self.index, items.join(", "))
     }
 }
