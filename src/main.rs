@@ -7,7 +7,7 @@ pub mod util;
 
 use std::env;
 
-use abstraction::{anton::AntonAbstraction, standard::StandardAbstraction};
+use abstraction::standard::StandardAbstraction;
 use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
@@ -58,20 +58,13 @@ fn main() {
     let mut standard_analyzer =
         Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let mut non_standard_analyzer = Analyzer::new(ast_helper, Box::new(AntonAbstraction::new(0)));
-
-    let (seen_one, store_one) = standard_analyzer.run();
-    let (seen_two, store_two) = non_standard_analyzer.run();
+    let (seen, store) = standard_analyzer.run();
 
     // Eval
-    for (pid, states) in seen_one.inner {
-        log::debug!("{:#?} ONE {:#?}", pid, states.len(),);
+    for (pid, states) in seen.inner {
+        log::debug!("{} {}", pid, states.len(),);
     }
-    log::debug!("ONE {:#?}", store_one);
-    for (pid, states) in seen_two.inner {
-        log::debug!("{:#?} TWO {:#?}", pid, states.len(),);
-    }
-    log::debug!("TWO {:#?}", store_two);
+    log::debug!("STORE - {}", store);
 }
 
 #[cfg(test)]

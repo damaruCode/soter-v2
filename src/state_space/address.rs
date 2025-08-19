@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-pub trait Address: Eq + Clone + Debug {}
+pub trait Address: Eq + Clone + Debug + Display {}
 
 impl<T: Eq + Clone + Debug + Display> Address for T {}
 

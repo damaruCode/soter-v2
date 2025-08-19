@@ -1,4 +1,3 @@
-pub mod anton;
 pub mod standard;
 
 use crate::state_space::{

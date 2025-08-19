@@ -32,6 +32,8 @@ impl<V: ValueAddress> Display for Env<V> {
             self.inner
                 .iter()
                 .map(|(var_name, v_addr)| { format!("{} -> {}", var_name, v_addr) })
+                .collect::<Vec<String>>()
+                .join(", ")
         )
     }
 }

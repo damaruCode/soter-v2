@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SetMap<K, V>
 where
     K: Eq,
