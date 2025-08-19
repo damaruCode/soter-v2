@@ -62,7 +62,7 @@ fn main() {
 
     // Eval
     for (pid, states) in seen.inner {
-        log::debug!("{} {}", pid, states.len(),);
+        log::debug!("STATES - {}/{}", pid, states.len(),);
     }
     log::debug!("STORE - {}", store);
 }
