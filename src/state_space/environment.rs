@@ -26,14 +26,17 @@ impl<V: ValueAddress> Env<V> {
 
 impl<V: ValueAddress> Display for Env<V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[{}]",
-            self.inner
-                .iter()
-                .map(|(var_name, v_addr)| { format!("{} -> {}", var_name, v_addr) })
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
+        let output = self
+            .inner
+            .iter()
+            .filter(|(var_name, _)| match var_name {
+                VarName::FnAtom(name, _) => name != "module_info",
+                _ => true,
+            })
+            .map(|(var_name, v_addr)| format!("{} |-> {}", var_name, v_addr))
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        write!(f, "[{}]", output)
     }
 }

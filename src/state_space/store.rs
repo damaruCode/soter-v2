@@ -23,6 +23,6 @@ impl<K: KontinuationAddress, V: ValueAddress> Store<K, V> {
 
 impl<K: KontinuationAddress, V: ValueAddress> Display for Store<K, V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "kont: {}\nvalue: {}", self.kont, self.value)
+        write!(f, "\nKONT: {}\nVALUE: {}", self.kont, self.value)
     }
 }

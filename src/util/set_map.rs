@@ -52,21 +52,17 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
 
 impl<K: Eq + Display, V: Eq + Display> Display for SetMap<K, V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let items: Vec<String> = self
-            .inner
-            .iter()
-            .map(|(key, values)| {
-                format!(
-                    "{}: {{{}}}",
-                    key,
-                    values
-                        .iter()
-                        .map(|value| format!("{}", value))
-                        .collect::<Vec<String>>()
-                        .join(", ")
-                )
-            })
-            .collect();
-        write!(f, "{:#?}", items)
+        let mut items = Vec::new();
+        for (key, set) in &self.inner {
+            items.push(format!(
+                "<|{}|>\n ==> <|{}|>",
+                key,
+                set.iter()
+                    .map(|value| format!("{}", value))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ));
+        }
+        write!(f, "{}", items.join("\n"))
     }
 }

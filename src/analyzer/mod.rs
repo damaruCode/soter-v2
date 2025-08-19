@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 
 mod dependency_checker;
 mod transitions;
+
 use transitions::*;
 
 pub enum TransitionError {
@@ -93,10 +94,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> (Vec<Self>, Vec<Self>) {
-        //TODO Delete log
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
-                log::debug!("{:#?}\nAST - {}", self, ast_helper.get(pl))
+                log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))
             }
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
         }
