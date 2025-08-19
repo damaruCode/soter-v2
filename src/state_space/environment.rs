@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 
 use super::ValueAddress;
 use super::VarName;
@@ -20,5 +21,17 @@ impl<V: ValueAddress> Env<V> {
         for (var_name, v_addr) in &other.inner {
             self.inner.insert(var_name.clone(), v_addr.clone());
         }
+    }
+}
+
+impl<V: ValueAddress> Display for Env<V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "[{}]",
+            self.inner
+                .iter()
+                .map(|(var_name, v_addr)| { format!("{} -> {}", var_name, v_addr) })
+        )
     }
 }

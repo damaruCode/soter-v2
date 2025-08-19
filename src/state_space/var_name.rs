@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::ast::AstList;
 use crate::ast::TypedCore;
 use crate::ast::Var;
@@ -45,5 +47,15 @@ impl From<&AstList<TypedCore>> for Vec<VarName> {
         }
 
         var_names
+    }
+}
+
+impl Display for VarName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self {
+            Self::Atom(s) => write!(f, "'{}'", s),
+            Self::Number(n) => write!(f, "{}", n),
+            Self::FnAtom(s, n) => write!(f, "'{}'/{}", s, n),
+        }
     }
 }

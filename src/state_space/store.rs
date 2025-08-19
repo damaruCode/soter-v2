@@ -1,3 +1,5 @@
+use std::fmt::{Debug, Display};
+
 use super::{Kont, KontinuationAddress, Value, ValueAddress};
 use crate::util::SetMap;
 
@@ -16,5 +18,11 @@ impl<K: KontinuationAddress, V: ValueAddress> Store<K, V> {
             kont,
             value: SetMap::new(),
         }
+    }
+}
+
+impl<K: KontinuationAddress, V: ValueAddress> Display for Store<K, V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "kont: {}\nvalue: {}", self.kont, self.value)
     }
 }

@@ -1,8 +1,8 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 
 pub trait Address: Eq + Clone + Debug {}
 
-impl<T: Eq + Clone + Debug> Address for T {}
+impl<T: Eq + Clone + Debug + Display> Address for T {}
 
 pub trait KontinuationAddress: Address {}
 

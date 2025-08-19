@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, fmt::Display};
 
 use super::ProgLoc;
 
@@ -15,5 +15,19 @@ impl Time {
     }
     pub fn append(&mut self, mut vec: VecDeque<ProgLoc>) {
         self.inner.append(&mut vec);
+    }
+}
+
+impl Display for Time {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.inner
+                .iter()
+                .map(|prog_loc| { format!("{}", prog_loc) })
+                .collect::<Vec<String>>()
+                .join(" "),
+        )
     }
 }

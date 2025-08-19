@@ -1,4 +1,6 @@
-#[derive(Clone, Debug)]
+use std::fmt::{Debug, Display};
+
+#[derive(Clone)]
 pub struct SetMap<K, V>
 where
     K: Eq,
@@ -45,5 +47,26 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
             }
         }
         None
+    }
+}
+
+impl<K: Eq + Display, V: Eq + Display> Display for SetMap<K, V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let items: Vec<String> = self
+            .inner
+            .iter()
+            .map(|(key, values)| {
+                format!(
+                    "{}: {{{}}}",
+                    key,
+                    values
+                        .iter()
+                        .map(|value| format!("{}", value))
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                )
+            })
+            .collect();
+        write!(f, "{:#?}", items)
     }
 }
