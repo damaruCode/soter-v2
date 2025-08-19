@@ -53,12 +53,13 @@ fn main() {
 
     ast_helper.build_lookup(&indexed_typed_core);
 
+    let mut graph_builder = util::graphviz::GraphBuilder::new();
+
     // Analysis
+    let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
+    let (seen, store) = standard_analyzer.run(&mut graph_builder);
 
-    let mut standard_analyzer =
-        Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (seen, store) = standard_analyzer.run();
+    graph_builder.print();
 
     // Eval
     for (pid, states) in seen.inner {

@@ -1,6 +1,7 @@
 use crate::abstraction::Abstraction;
 use crate::ast::TypedCore;
 use crate::state_space::*;
+use crate::util::graphviz::GraphBuilder;
 use crate::util::AstHelper;
 use crate::util::SetMap;
 
@@ -40,7 +41,10 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
-    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
+    pub fn run(
+        &mut self,
+        graph_builder: &mut GraphBuilder<K, V>,
+    ) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         while let Some(item) = self.queue.pop_front() {
             let (new_items, revisit_items) = item.process(
@@ -50,6 +54,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.abstraction,
                 &mut self.module_env,
                 &self.seen,
+                graph_builder,
             );
 
             for item in new_items {
@@ -81,6 +86,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
+        graph_builder: &mut GraphBuilder<K, V>,
     ) -> (Vec<Self>, Vec<Self>);
 }
 
@@ -93,6 +99,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
+        graph_builder: &mut GraphBuilder<K, V>,
     ) -> (Vec<Self>, Vec<Self>) {
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
@@ -101,7 +108,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
         }
 
-        match &self.prog_loc_or_pid {
+        let (new, revisit) = match &self.prog_loc_or_pid {
             ProgLocOrPid::Pid(pid) => {
                 abs_pop_let_pid(pid, self, store, seen, abstraction, ast_helper)
             }
@@ -171,6 +178,18 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     }
                 },
             },
+        };
+
+        for node in new {
+            graph_builder.add_node(&node);
+
+            graph_builder.add_edge(&self, &node);
         }
+
+        for node in revisit {
+            graph_builder.add_edge(&self, &node);
+        }
+
+        (new, revisit)
     }
 }
