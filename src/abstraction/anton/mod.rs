@@ -58,7 +58,6 @@ impl Abstraction<KAddr, VAddr> for AntonAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
-            env_keys: curr_proc_state.env.inner.keys().cloned().collect(),
             time: curr_proc_state.time.clone(),
         }
     }

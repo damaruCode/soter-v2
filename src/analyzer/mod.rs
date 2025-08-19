@@ -39,7 +39,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
-    pub fn run(&mut self) -> SetMap<Pid, ProcState<K, V>> {
+    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         while let Some(item) = self.queue.pop_front() {
             let (new_items, revisit_items) = item.process(
@@ -67,7 +67,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             }
         }
 
-        return self.seen.clone();
+        return (self.seen.clone(), self.store.clone());
     }
 }
 

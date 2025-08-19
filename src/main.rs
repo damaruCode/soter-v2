@@ -60,16 +60,18 @@ fn main() {
 
     let mut non_standard_analyzer = Analyzer::new(ast_helper, Box::new(AntonAbstraction::new(0)));
 
-    let seen_one = standard_analyzer.run();
-    let seen_two = non_standard_analyzer.run();
+    let (seen_one, store_one) = standard_analyzer.run();
+    let (seen_two, store_two) = non_standard_analyzer.run();
 
     // Eval
     for (pid, states) in seen_one.inner {
         log::debug!("{:#?} ONE {:#?}", pid, states.len(),);
     }
+    log::debug!("ONE {:#?}", store_one);
     for (pid, states) in seen_two.inner {
         log::debug!("{:#?} TWO {:#?}", pid, states.len(),);
     }
+    log::debug!("TWO {:#?}", store_two);
 }
 
 #[cfg(test)]
