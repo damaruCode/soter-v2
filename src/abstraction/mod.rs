@@ -1,3 +1,4 @@
+pub mod icfa;
 pub mod standard;
 
 use crate::state_space::{
@@ -23,6 +24,7 @@ pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
         curr_proc_state: &ProcState<K, V>,
         var_name: &VarName,
         next_prog_loc_or_pid: &ProgLocOrPid,
+        partial_next_env: &Env<V>,
         next_time: &Time,
     ) -> V;
 

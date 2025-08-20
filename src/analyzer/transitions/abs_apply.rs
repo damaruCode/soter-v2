@@ -65,6 +65,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                             proc_state,
                                             &fn_var_names[i],
                                             &new_item.prog_loc_or_pid,
+                                            &new_item.env,
                                             &new_item.time,
                                         );
 

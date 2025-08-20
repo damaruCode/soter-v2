@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg width="7255" height="4515" viewBox="0 0 7255 4515" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<marker id="startarrow" markerWidth="10" markerHeight="7"
+refX="0" refY="3.5" orient="auto">
+<polygon points="10 0, 10 7, 0 3.5" fill="context-stroke" />
+</marker>
+<marker id="endarrow" markerWidth="10" markerHeight="7"
+refX="10" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="context-stroke" />
+</marker>
+
+</defs><style>
+.a15 { font-size: 15px; font-family: Times, serif; }
+</style>
+<g >
+
+            <rect x="30" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="280" y="795" class="a15"><tspan x = "280" dy="1.0em">(0, ε)</tspan><tspan x = "280" dy="1.0em">Pl: 0</tspan><tspan x = "280" dy="1.0em">[]</tspan><tspan x = "280" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "280" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="590" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="840" y="795" class="a15"><tspan x = "840" dy="1.0em">(0, ε)</tspan><tspan x = "840" dy="1.0em">Pl: 45</tspan><tspan x = "840" dy="1.0em">[&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "840" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "840" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="1150" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="1400" y="795" class="a15"><tspan x = "1400" dy="1.0em">(0, ε)</tspan><tspan x = "1400" dy="1.0em">Pl: 48</tspan><tspan x = "1400" dy="1.0em">[&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "1400" dy="1.0em">((0, ε), 45, [&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "1400" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="1710" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="1960" y="795" class="a15"><tspan x = "1960" dy="1.0em">(0, ε)</tspan><tspan x = "1960" dy="1.0em">Pl: 83</tspan><tspan x = "1960" dy="1.0em">[0 |-&gt; ((0, ε), 0, ε)]</tspan><tspan x = "1960" dy="1.0em">((0, ε), 45, [&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "1960" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="2270" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="2520" y="795" class="a15"><tspan x = "2520" dy="1.0em">(0, ε)</tspan><tspan x = "2520" dy="1.0em">Pl: 91</tspan><tspan x = "2520" dy="1.0em">[&apos;X&apos; |-&gt; ((0, ε), 0, ε), 0 |-&gt; ((0, ε), 0, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "2520" dy="1.0em">((0, ε), 45, [&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "2520" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="2830" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="3080" y="795" class="a15"><tspan x = "3080" dy="1.0em">(0, ε)</tspan><tspan x = "3080" dy="1.0em">Pl: 53</tspan><tspan x = "3080" dy="1.0em">[&apos;X&apos; |-&gt; ((0, ε), 0, ε), 0 |-&gt; ((0, ε), 0, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "3080" dy="1.0em">((0, ε), 45, [&apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "3080" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="3390" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="3640" y="795" class="a15"><tspan x = "3640" dy="1.0em">(0, ε)</tspan><tspan x = "3640" dy="1.0em">Pl: 55</tspan><tspan x = "3640" dy="1.0em">[&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "3640" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "3640" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="3950" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="4200" y="795" class="a15"><tspan x = "4200" dy="1.0em">(0, ε)</tspan><tspan x = "4200" dy="1.0em">Pl: 58</tspan><tspan x = "4200" dy="1.0em">[&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "4200" dy="1.0em">((0, ε), 55, [&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "4200" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="4510" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="4760" y="795" class="a15"><tspan x = "4760" dy="1.0em">(0, ε)</tspan><tspan x = "4760" dy="1.0em">Pl: 83</tspan><tspan x = "4760" dy="1.0em">[0 |-&gt; ((0, ε), 0, ε)]</tspan><tspan x = "4760" dy="1.0em">((0, ε), 55, [&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "4760" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="5070" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="5320" y="795" class="a15"><tspan x = "5320" dy="1.0em">(0, ε)</tspan><tspan x = "5320" dy="1.0em">Pl: 91</tspan><tspan x = "5320" dy="1.0em">[&apos;X&apos; |-&gt; ((0, ε), 0, ε), 0 |-&gt; ((0, ε), 0, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "5320" dy="1.0em">((0, ε), 55, [&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "5320" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="5630" y="310" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="5880" y="515" class="a15"><tspan x = "5880" dy="1.0em">(0, ε)</tspan><tspan x = "5880" dy="1.0em">Pl: 53</tspan><tspan x = "5880" dy="1.0em">[&apos;X&apos; |-&gt; ((0, ε), 0, ε), 0 |-&gt; ((0, ε), 0, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "5880" dy="1.0em">((0, ε), 55, [&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "5880" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="5630" y="870" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="5880" y="1075" class="a15"><tspan x = "5880" dy="1.0em">(0, ε)</tspan><tspan x = "5880" dy="1.0em">Pl: 63</tspan><tspan x = "5880" dy="1.0em">[&apos;X&apos; |-&gt; ((0, ε), 0, ε), 0 |-&gt; ((0, ε), 0, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "5880" dy="1.0em">((0, ε), 55, [&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)], ε, false)</tspan><tspan x = "5880" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="6190" y="310" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="6440" y="515" class="a15"><tspan x = "6440" dy="1.0em">(0, ε)</tspan><tspan x = "6440" dy="1.0em">Pl: 65</tspan><tspan x = "6440" dy="1.0em">[&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;Z&apos; |-&gt; ((0, ε), &apos;Z&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "6440" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "6440" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="6750" y="30" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="7000" y="235" class="a15"><tspan x = "7000" dy="1.0em">(0, ε)</tspan><tspan x = "7000" dy="1.0em">Pl: 53</tspan><tspan x = "7000" dy="1.0em">[&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;Z&apos; |-&gt; ((0, ε), &apos;Z&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "7000" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "7000" dy="1.0em">ε</tspan></text><g >
+
+            <rect x="6750" y="590" width="500" height="500" fill="#ffffffff" 
+            stroke-width="2" stroke="#000000ff" rx="0"  />
+
+            </g>
+<text dominant-baseline="middle" text-anchor="middle" 
+            x="7000" y="795" class="a15"><tspan x = "7000" dy="1.0em">(0, ε)</tspan><tspan x = "7000" dy="1.0em">Pl: 63</tspan><tspan x = "7000" dy="1.0em">[&apos;Y&apos; |-&gt; ((0, ε), &apos;Y&apos;, ε), &apos;Z&apos; |-&gt; ((0, ε), &apos;Z&apos;, ε), &apos;id&apos;/1 |-&gt; ((0, ε), &apos;id&apos;/1, ε), &apos;id2&apos;/1 |-&gt; ((0, ε), &apos;id2&apos;/1, ε), &apos;main&apos;/0 |-&gt; ((0, ε), &apos;main&apos;/0, ε)]</tspan><tspan x = "7000" dy="1.0em">((0, ε), 0, [], ε, true)</tspan><tspan x = "7000" dy="1.0em">ε</tspan></text><g >
+
+            <path id="arrow0" d="M 530 840 C 560 840, 560 840, 590 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow0" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow1" d="M 1090 840 C 1120 840, 1120 840, 1150 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow1" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow2" d="M 1650 840 C 1680 840, 1680 840, 1710 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow2" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow3" d="M 2210 840 C 2240 840, 2240 840, 2270 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow3" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow4" d="M 2770 840 C 2800 840, 2800 840, 2830 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow4" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow5" d="M 3330 840 C 3360 840, 3360 840, 3390 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow5" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow6" d="M 3890 840 C 3920 840, 3920 840, 3950 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow6" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow7" d="M 4450 840 C 4480 840, 4480 840, 4510 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow7" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow8" d="M 5010 840 C 5040 840, 5040 840, 5070 840 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow8" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow9" d="M 5570 759.5402298850574 C 5595.225929143793 743.302850206294, 5609.603485633518 716.8240751414808, 5630 694.8244796520659 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow9" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow10" d="M 5570 920.4597701149426 C 5595.225929143793 936.697149793706, 5609.603485633518 963.1759248585192, 5630 985.1755203479341 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow10" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow11" d="M 6130 560 C 6160 560, 6160 560, 6190 560 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow11" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow12" d="M 6130 959.0804597701149 C 6148.403570132613 935.3885074154864, 6186.4913685952915 837.2177497590228, 6199.108582949309 810 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow12" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow13" d="M 6690 479.54022988505744 C 6715.225929143793 463.30285020629395, 6729.603485633518 436.8240751414807, 6750 414.82447965206586 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow13" startOffset="50%" text-anchor="middle" class="a15"></textPath></text><g >
+
+            <path id="arrow14" d="M 6690 640.4597701149426 C 6715.225929143793 656.697149793706, 6729.603485633518 683.1759248585192, 6750 705.1755203479341 " stroke="#000000ff" stroke-width="2"   marker-end="url(#endarrow)" 
+            fill="transparent" />
+
+            </g>
+<text><textPath href="#arrow14" startOffset="50%" text-anchor="middle" class="a15"></textPath></text></svg>

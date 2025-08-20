@@ -8,22 +8,23 @@ pub mod vaddr;
 pub use kaddr::KAddr;
 pub use vaddr::VAddr;
 
-pub struct StandardAbstraction {
+pub struct ICFAAbstraction {
     time_depth: usize,
 }
 
-impl StandardAbstraction {
+impl ICFAAbstraction {
     pub fn new(time_depth: usize) -> Self {
         Self { time_depth }
     }
 }
 
-impl Abstraction<KAddr, VAddr> for StandardAbstraction {
+impl Abstraction<KAddr, VAddr> for ICFAAbstraction {
     fn stop_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,
-            env: Env::init(),
+            call_site_env: Env::init(),
+            return_site_env: Env::init(),
             time: Time::init(),
             _stop: true,
         }
@@ -33,7 +34,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
         _next_prog_loc_or_pid: &ProgLocOrPid,
-        _next_env: &Env<VAddr>,
+        next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> KAddr {
         KAddr {
@@ -42,7 +43,8 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            env: curr_proc_state.env.clone(),
+            call_site_env: curr_proc_state.env.clone(),
+            return_site_env: next_env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
@@ -53,12 +55,13 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         curr_proc_state: &ProcState<KAddr, VAddr>,
         var_name: &VarName,
         _next_prog_loc_or_pid: &ProgLocOrPid,
-        _partial_next_env: &Env<VAddr>,
+        partial_next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> VAddr {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            scope: partial_next_env.inner.keys().cloned().collect(),
             time: curr_proc_state.time.clone(),
         }
     }

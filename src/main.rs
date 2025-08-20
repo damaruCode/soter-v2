@@ -7,7 +7,7 @@ pub mod util;
 
 use std::env;
 
-use abstraction::standard::StandardAbstraction;
+use abstraction::{icfa::ICFAAbstraction, standard::StandardAbstraction};
 use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
@@ -57,15 +57,17 @@ fn main() {
 
     let mut standard_analyzer =
         Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+    let mut icfa_analyzer = Analyzer::new(ast_helper, Box::new(ICFAAbstraction::new(0)));
 
-    let (seen, store) = standard_analyzer.run();
+    let standard = standard_analyzer.run();
+    let _icfa = icfa_analyzer.run();
 
     // Eval
-    for (pid, states) in seen.inner {
+    for (pid, states) in standard.0.inner {
         log::debug!("Seen:{}, {}", pid, states.len());
     }
-    log::debug!("KontStore:\n{}", store.kont);
-    log::debug!("ValueStore:\n{}", store.value);
+    log::debug!("KontStore:\n{}", standard.1.kont);
+    log::debug!("ValueStore:\n{}", standard.1.value);
 }
 
 #[cfg(test)]

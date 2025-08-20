@@ -57,6 +57,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                     proc_state,
                     &var_name,
                     &new_item.prog_loc_or_pid,
+                    &new_item.env,
                     &new_item.time,
                 );
 
