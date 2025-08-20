@@ -4,7 +4,7 @@ use crate::ast::AstList;
 use crate::ast::TypedCore;
 use crate::ast::Var;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum VarName {
     Atom(String),
     Number(u128),

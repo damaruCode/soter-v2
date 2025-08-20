@@ -1,19 +1,19 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 
 use super::ValueAddress;
 use super::VarName;
 
 // Env := Var -> VAddr
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Env<V: ValueAddress> {
-    pub inner: HashMap<VarName, V>,
+    pub inner: BTreeMap<VarName, V>,
 }
 
 impl<V: ValueAddress> Env<V> {
     pub fn init() -> Self {
         Env {
-            inner: HashMap::new(),
+            inner: BTreeMap::new(),
         }
     }
 

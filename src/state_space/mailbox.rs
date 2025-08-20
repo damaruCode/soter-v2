@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::{Env, Pid, Value, ValueAddress};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /// Mailbox := P(Value),
 /// in this case this represents the AbsMailbox_set abstraction
@@ -48,13 +48,13 @@ impl<V: ValueAddress> Mailbox<V> {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Mailboxes<V: ValueAddress> {
-    pub inner: HashMap<Pid, Mailbox<V>>,
+    pub inner: BTreeMap<Pid, Mailbox<V>>,
 }
 
 impl<V: ValueAddress> Mailboxes<V> {
     pub fn init() -> Self {
         Mailboxes {
-            inner: HashMap::from([(Pid::init(), Mailbox::init())]),
+            inner: BTreeMap::from([(Pid::init(), Mailbox::init())]),
         }
     }
 

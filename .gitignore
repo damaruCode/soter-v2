@@ -41,6 +41,9 @@ erl_crash.dump
 # Json
 *.json
 
+# Svg
+*.svg
+
 ### SublimeText ###
 
 # Cache files for Sublime Text

@@ -3,7 +3,7 @@ use std::fmt::Display;
 use super::{ProgLoc, Time};
 
 // Pid := ProgLoc x Time
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Pid {
     pub prog_loc: ProgLoc,
     pub time: Time,

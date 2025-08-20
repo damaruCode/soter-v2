@@ -46,6 +46,9 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         graph_builder: &mut GraphBuilder<K, V>,
     ) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
+        for node in self.queue.clone() {
+            graph_builder.add_node(node);
+        }
         while let Some(item) = self.queue.pop_front() {
             let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
@@ -54,22 +57,24 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.abstraction,
                 &mut self.module_env,
                 &self.seen,
-                graph_builder,
             );
 
-            for item in new_items {
+            for n in new_items {
                 // NOTE cloning here might become a memory issue
-                if let Some(items) = self.seen.get_mut(&item.pid) {
-                    if items.contains(&item) {
+                if let Some(seen_items) = self.seen.get_mut(&n.pid) {
+                    if seen_items.contains(&n) {
                         continue;
                     }
                 }
-                self.seen.push(item.pid.clone(), item.clone());
-                self.queue.push_back(item);
+                graph_builder.add_node(n.clone());
+                graph_builder.add_edge(item.clone(), n.clone());
+                self.seen.push(n.pid.clone(), n.clone());
+                self.queue.push_back(n);
             }
 
-            for item in revisit_items {
-                self.queue.push_back(item);
+            for r in revisit_items {
+                graph_builder.add_edge(item.clone(), r.clone());
+                self.queue.push_back(r);
             }
         }
 
@@ -86,7 +91,6 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-        graph_builder: &mut GraphBuilder<K, V>,
     ) -> (Vec<Self>, Vec<Self>);
 }
 
@@ -99,7 +103,6 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-        graph_builder: &mut GraphBuilder<K, V>,
     ) -> (Vec<Self>, Vec<Self>) {
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
@@ -108,7 +111,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
         }
 
-        let (new, revisit) = match &self.prog_loc_or_pid {
+        match &self.prog_loc_or_pid {
             ProgLocOrPid::Pid(pid) => {
                 abs_pop_let_pid(pid, self, store, seen, abstraction, ast_helper)
             }
@@ -178,18 +181,6 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     }
                 },
             },
-        };
-
-        for node in new {
-            graph_builder.add_node(&node);
-
-            graph_builder.add_edge(&self, &node);
         }
-
-        for node in revisit {
-            graph_builder.add_edge(&self, &node);
-        }
-
-        (new, revisit)
     }
 }

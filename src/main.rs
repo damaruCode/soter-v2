@@ -59,7 +59,9 @@ fn main() {
     let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
     let (seen, store) = standard_analyzer.run(&mut graph_builder);
 
-    graph_builder.print();
+    let mut graph_path = args[1].to_string();
+    graph_path.push_str(".svg");
+    graph_builder.print(&graph_path);
 
     // Eval
     for (pid, states) in seen.inner {
@@ -75,6 +77,7 @@ mod benchmarks {
     use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;
+    use crate::util::graphviz::GraphBuilder;
     use crate::util::AstHelper;
 
     fn run_and_check(erl_file: &str) {
@@ -85,7 +88,10 @@ mod benchmarks {
         let indexed_typed_core = ast_helper.build_indecies(typed_core);
         ast_helper.build_lookup(&indexed_typed_core);
         let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
-        analyzer.run();
+
+        let mut graph_builder = GraphBuilder::new();
+        analyzer.run(&mut graph_builder);
+        graph_builder.print(&format!("test/{}.svg", erl_file));
     }
 
     #[test]
