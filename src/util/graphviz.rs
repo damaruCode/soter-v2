@@ -53,11 +53,6 @@ impl<K: KontinuationAddress, V: ValueAddress> GraphBuilder<K, V> {
 
     pub fn add_edge(&mut self, start: ProcState<K, V>, end: ProcState<K, V>) {
         let arrow = Arrow::simple("");
-        //if let Some(start_handle) = self.lookup.get(&start) {
-        //    if let Some(end_handle) = self.lookup.get(&end) {
-        //        self.graph.add_edge(arrow, *start_handle, *end_handle);
-        //    }
-        //}
         self.graph.add_edge(
             arrow,
             *self.lookup.get(&start).unwrap(),
