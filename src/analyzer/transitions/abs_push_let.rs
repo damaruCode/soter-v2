@@ -35,14 +35,17 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
         proc_state.k_addr.clone(),
     );
 
-    v_revisit.append(&mut push_to_kont_store(
+    for state in push_to_kont_store(
         &ast_helper,
         &seen_proc_states,
         store,
         new_item.k_addr.clone(),
         kont,
-    ));
-    v_new.push(new_item);
+    ) {
+        v_revisit.push((state, "abs_push_let".to_string()));
+    }
+
+    v_new.push((new_item, "abs_push_let".to_string()));
 
     log::debug!(
         "ABS_PUSH_LET - {:?} New - {:?} Revisit",

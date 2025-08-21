@@ -83,15 +83,17 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 Value::Closure(clo) => ProgLocOrPid::ProgLoc(clo.prog_loc.clone()),
             };
 
-            v_new.push(new_item);
+            v_new.push((new_item, "abs_send".to_string()));
 
-            v_revisit.append(&mut push_to_mailboxes(
+            for state in push_to_mailboxes(
                 ast_helper,
                 seen_proc_states,
                 mailboxes,
                 pid.clone(),
                 value.clone(),
-            ));
+            ) {
+                v_revisit.push((state, "abs_send".to_string()));
+            }
         }
     }
     log::debug!(

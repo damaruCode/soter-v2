@@ -17,7 +17,7 @@ pub fn abs_pop_seq<K: KontinuationAddress, V: ValueAddress>(
     new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
-    v_new.push(new_item);
+    v_new.push((new_item, "abs_pop_seq".to_string()));
 
     (v_new, Vec::new())
 }

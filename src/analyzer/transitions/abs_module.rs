@@ -89,7 +89,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     // ... also update the module_env
     module_env.merge_with(&new_item.env);
 
-    v_new.push(new_item);
+    v_new.push((new_item, "abs_module".to_string()));
 
     log::debug!("ABS_PUSH_MODULE - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())

@@ -45,7 +45,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
         .inner
         .insert(new_var_name.clone(), new_v_addr.clone());
 
-    v_revisit.append(&mut push_to_value_store(
+    for state in push_to_value_store(
         &ast_helper,
         seen_proc_states,
         store,
@@ -54,8 +54,10 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
             prog_loc: proc_state_prog_loc,
             env: proc_state.env.clone(),
         }),
-    ));
-    v_new.push(new_item);
+    ) {
+        v_revisit.push((state, "abs_pop_let_closure".to_string()));
+    }
+    v_new.push((new_item, "abs_pop_let_closure".to_string()));
 
     log::debug!(
         "ABS_POP_LET_CLOSURE - {:?} New - {:?} Revisit",

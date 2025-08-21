@@ -24,7 +24,7 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
                         Value::Closure(c) => {
                             let mut new_item = proc_state.clone();
                             new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(c.prog_loc);
-                            v_new.push(new_item);
+                            v_new.push((new_item, "abs_var".to_string()));
                         }
                         Value::Pid(_) => {
                             panic!("Unexpected value: Expected Closure not Pid")

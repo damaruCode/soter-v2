@@ -72,7 +72,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                             .inner
                                             .insert(fn_var_names[i].clone(), v_addr.clone());
 
-                                        v_revisit.append(&mut push_to_value_store(
+                                        for state in push_to_value_store(
                                             ast_helper,
                                             seen_proc_states,
                                             store,
@@ -81,14 +81,16 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                                 prog_loc: apply.args.inner[i].get_index().unwrap(),
                                                 env: proc_state.env.clone(),
                                             }),
-                                        ))
+                                        ) {
+                                            v_revisit.push((state, "abs_apply".to_string()));
+                                        }
                                     }
                                     _ => panic!(),
                                 }
                             }
                             new_item.env = new_env;
 
-                            v_new.push(new_item);
+                            v_new.push((new_item, "abs_apply".to_string()));
                         }
                         _ => panic!(),
                     },

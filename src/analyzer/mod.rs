@@ -59,7 +59,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.seen,
             );
 
-            for n in new_items {
+            for (n, t) in new_items {
                 // NOTE cloning here might become a memory issue
                 if let Some(seen_items) = self.seen.get_mut(&n.pid) {
                     if seen_items.contains(&n) {
@@ -67,13 +67,13 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                     }
                 }
                 graph_builder.add_node(n.clone());
-                graph_builder.add_edge(item.clone(), n.clone());
+                graph_builder.add_edge(item.clone(), n.clone(), &t);
                 self.seen.push(n.pid.clone(), n.clone());
                 self.queue.push_back(n);
             }
 
-            for r in revisit_items {
-                graph_builder.add_edge(item.clone(), r.clone());
+            for (r, t) in revisit_items {
+                graph_builder.add_edge(item.clone(), r.clone(), &t);
                 self.queue.push_back(r);
             }
         }
@@ -91,7 +91,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<Self>, Vec<Self>);
+    ) -> (Vec<(Self, String)>, Vec<(Self, String)>);
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V> {
@@ -103,7 +103,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<Self>, Vec<Self>) {
+    ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
                 log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))

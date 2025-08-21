@@ -31,7 +31,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
         println!("{:#?} - {:#?}", clauses[index], env);
         new_item.env.merge_with(&env);
 
-        v_new.push(new_item);
+        v_new.push((new_item, "abs_receive".to_string()));
     }
     log::debug!("ABS_RECEIVE - {:?} New - {:?} Revisit", v_new.len(), 0);
     (v_new, Vec::new())
