@@ -46,7 +46,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     let mut new_proc_state_one = proc_state.clone();
                     new_proc_state_one.prog_loc_or_pid = ProgLocOrPid::Pid(new_pid.clone());
 
-                    v_new.push(new_proc_state_one);
+                    v_new.push((new_proc_state_one, "abs_spawn".to_string()));
 
                     match &*f.body {
                         TypedCore::Case(c) => match &c.clauses.inner[0] {
@@ -58,7 +58,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                     abstraction.stop_kaddr(),
                                     Time::init(),
                                 );
-                                v_new.push(new_proc_state_two);
+                                v_new.push((new_proc_state_two, "abs_spawn".to_string()));
 
                                 mailboxes.inner.insert(new_pid, Mailbox::init());
                             }

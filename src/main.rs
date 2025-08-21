@@ -53,21 +53,24 @@ fn main() {
 
     ast_helper.build_lookup(&indexed_typed_core);
 
+    let mut graph_builder = util::graphviz::GraphBuilder::new();
+
     // Analysis
+    let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
 
-    let mut standard_analyzer =
-        Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-    let mut icfa_analyzer = Analyzer::new(ast_helper, Box::new(ICFAAbstraction::new(0)));
+    let mut graph_path = args[1].to_string();
+    graph_path.push_str(".svg");
+    graph_builder.print(&graph_path);
 
-    let standard = standard_analyzer.run();
-    let _icfa = icfa_analyzer.run();
+    // let _icfa = icfa_analyzer.run();
+    let (seen, store) = standard_analyzer.run(&mut graph_builder);
 
     // Eval
-    for (pid, states) in standard.0.inner {
+    for (pid, states) in seen.inner {
         log::debug!("Seen:{}, {}", pid, states.len());
     }
-    log::debug!("KontStore:\n{}", standard.1.kont);
-    log::debug!("ValueStore:\n{}", standard.1.value);
+    log::debug!("KontStore:\n{}", store.kont);
+    log::debug!("ValueStore:\n{}", store.value);
 }
 
 #[cfg(test)]
@@ -76,6 +79,7 @@ mod benchmarks {
     use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;
+    use crate::util::graphviz::GraphBuilder;
     use crate::util::AstHelper;
 
     fn run_and_check(erl_file: &str) {
@@ -86,7 +90,10 @@ mod benchmarks {
         let indexed_typed_core = ast_helper.build_indecies(typed_core);
         ast_helper.build_lookup(&indexed_typed_core);
         let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
-        analyzer.run();
+
+        let mut graph_builder = GraphBuilder::new();
+        analyzer.run(&mut graph_builder);
+        graph_builder.print(&format!("test/{}.svg", erl_file));
     }
 
     #[test]

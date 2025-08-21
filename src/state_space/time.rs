@@ -2,7 +2,7 @@ use std::{collections::VecDeque, fmt::Display};
 
 use super::ProgLoc;
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Time {
     pub inner: VecDeque<ProgLoc>,
 }

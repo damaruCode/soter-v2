@@ -45,15 +45,18 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
                 );
 
                 new_item.env.inner.insert(var_name, new_v_addr.clone());
-                v_revisit.append(&mut push_to_value_store(
+
+                for state in push_to_value_store(
                     ast_helper,
                     seen_proc_states,
                     store,
                     new_v_addr,
                     Value::Pid(pid.clone()),
-                ));
+                ) {
+                    v_revisit.push((state, "abs_pop_let_pid".to_string()));
+                }
 
-                v_new.push(new_item);
+                v_new.push((new_item, "abs_pop_let_pid".to_string()));
             }
             Kont::Stop => {} // successful halt
             Kont::Seq(_, _, _) => panic!(),

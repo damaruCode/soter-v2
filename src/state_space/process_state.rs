@@ -1,13 +1,23 @@
 use super::{Env, KontinuationAddress, Pid, ProgLoc, Time, ValueAddress};
+use std::fmt::Display;
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum ProgLocOrPid {
     ProgLoc(ProgLoc),
     Pid(Pid),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+impl Display for ProgLocOrPid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProgLocOrPid::Pid(pid) => write!(f, "Pid: {}", pid),
+            ProgLocOrPid::ProgLoc(pl) => write!(f, "Pl: {}", pl),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct ProcState<K: KontinuationAddress, V: ValueAddress> {
     pub pid: Pid,
     pub prog_loc_or_pid: ProgLocOrPid,

@@ -1,6 +1,7 @@
 use crate::abstraction::Abstraction;
 use crate::ast::TypedCore;
 use crate::state_space::*;
+use crate::util::graphviz::GraphBuilder;
 use crate::util::AstHelper;
 use crate::util::SetMap;
 
@@ -40,8 +41,14 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
-    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
+    pub fn run(
+        &mut self,
+        graph_builder: &mut GraphBuilder<K, V>,
+    ) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
+        for node in self.queue.clone() {
+            graph_builder.add_node(node);
+        }
         while let Some(item) = self.queue.pop_front() {
             let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
@@ -52,19 +59,22 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.seen,
             );
 
-            for item in new_items {
+            for (n, t) in new_items {
                 // NOTE cloning here might become a memory issue
-                if let Some(items) = self.seen.get_mut(&item.pid) {
-                    if items.contains(&item) {
+                if let Some(seen_items) = self.seen.get_mut(&n.pid) {
+                    if seen_items.contains(&n) {
                         continue;
                     }
                 }
-                self.seen.push(item.pid.clone(), item.clone());
-                self.queue.push_back(item);
+                graph_builder.add_node(n.clone());
+                graph_builder.add_edge(item.clone(), n.clone(), &t);
+                self.seen.push(n.pid.clone(), n.clone());
+                self.queue.push_back(n);
             }
 
-            for item in revisit_items {
-                self.queue.push_back(item);
+            for (r, t) in revisit_items {
+                graph_builder.add_edge(item.clone(), r.clone(), &t);
+                self.queue.push_back(r);
             }
         }
 
@@ -81,7 +91,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<Self>, Vec<Self>);
+    ) -> (Vec<(Self, String)>, Vec<(Self, String)>);
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V> {
@@ -93,7 +103,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<Self>, Vec<Self>) {
+    ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
                 log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))

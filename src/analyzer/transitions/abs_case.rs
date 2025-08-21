@@ -31,7 +31,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                         new_item.prog_loc_or_pid =
                             ProgLocOrPid::ProgLoc((*clause.body).get_index().unwrap());
 
-                        v_new.push(new_item);
+                        v_new.push((new_item, "abs_case".to_string()));
 
                         return (v_new, Vec::new());
                     }
@@ -66,7 +66,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                 ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
             new_item.env.merge_with(&env);
 
-            v_new.push(new_item);
+            v_new.push((new_item, "abs_case".to_string()));
         }
     }
 

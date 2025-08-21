@@ -9,5 +9,5 @@ pub fn abs_self<K: KontinuationAddress, V: ValueAddress>(
     new_item.prog_loc_or_pid = ProgLocOrPid::Pid(proc_state.pid.clone());
 
     log::debug!("ABS_SELF - {:?} New - {:?} Revisit", 1, 0);
-    (Vec::from([new_item]), Vec::new())
+    (Vec::from([(new_item, "abs_self".to_string())]), Vec::new())
 }
