@@ -7,7 +7,7 @@ pub mod util;
 
 use std::env;
 
-use abstraction::{icfa::ICFAAbstraction, standard::StandardAbstraction};
+use abstraction::standard::StandardAbstraction;
 use analyzer::Analyzer;
 use chrono::Utc;
 use log4rs::{
@@ -57,13 +57,11 @@ fn main() {
 
     // Analysis
     let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
+    let (seen, store) = standard_analyzer.run(&mut graph_builder);
 
     let mut graph_path = args[1].to_string();
     graph_path.push_str(".svg");
     graph_builder.print(&graph_path);
-
-    // let _icfa = icfa_analyzer.run();
-    let (seen, store) = standard_analyzer.run(&mut graph_builder);
 
     // Eval
     for (pid, states) in seen.inner {
