@@ -2,7 +2,7 @@ use crate::{
     analyzer::dependency_checker::push_to_mailboxes,
     ast::{Index, TypedCore},
     state_space::{
-        Closure, Env, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
+        Closure, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
         ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
@@ -75,18 +75,12 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
                 .unwrap()
                 .clone(),
-            TypedCore::Literal(l) => Vec::from([Value::Closure(Closure {
-                prog_loc: (*l.val).get_index().unwrap(),
-                env: Env::init(),
-            })]),
-            TypedCore::AstList(_) => Vec::from([Value::Closure(Closure {
-                prog_loc: typed_core_msg.get_index().unwrap(),
-                env: proc_state.env.clone(),
-            })]),
-            TypedCore::Tuple(_) => Vec::from([Value::Closure(Closure {
-                prog_loc: typed_core_msg.get_index().unwrap(),
-                env: proc_state.env.clone(),
-            })]),
+            TypedCore::Literal(_) | TypedCore::AstList(_) | TypedCore::Tuple(_) => {
+                Vec::from([Value::Closure(Closure {
+                    prog_loc: typed_core_msg.get_index().unwrap(),
+                    env: proc_state.env.clone(),
+                })])
+            }
             tc => panic!("{:#?}", tc),
         }
     }

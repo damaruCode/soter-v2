@@ -24,7 +24,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
 
     let mailbox = mailboxes.inner.get(&proc_state.pid).unwrap();
     let clauses = &Vec::from(&receive.clauses);
-    let matching_msgs = mailbox.mmatch(clauses, &store.value, &proc_state.env, ast_helper);
+    let matching_msgs = mailbox.mmatch(clauses, &store.value, ast_helper);
 
     // NOTE the Mailbox_set abstraction does not extract any messages, so finding
     // the matched message is simply a case of looking at the message at `index`

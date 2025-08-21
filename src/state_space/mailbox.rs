@@ -1,5 +1,5 @@
 use crate::{
-    ast::{AstList, Clause, Index, TypedCore},
+    ast::{AstList, Clause, Index, Literal, TypedCore},
     util::{AstHelper, SetMap},
 };
 
@@ -18,11 +18,22 @@ impl<V: ValueAddress> Mailbox<V> {
         Mailbox { inner: Vec::new() }
     }
 
+    fn literal_match(msg_lit: &Literal, pattern_lit: &Literal) -> bool {
+        if let TypedCore::String(s1) = &*pattern_lit.val {
+            if let TypedCore::String(s2) = &*msg_lit.val {
+                if s1.inner == s2.inner {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     fn amatch<W: ValueAddress>(
         pattern: &TypedCore,
         msg: &Value<W>,
         value_store: &SetMap<W, Value<W>>,
-        proc_state_env: &Env<W>,
         ast_helper: &AstHelper,
     ) -> Vec<MailboxSubstitution<W>> {
         match pattern {
@@ -34,16 +45,8 @@ impl<V: ValueAddress> Mailbox<V> {
             TypedCore::Literal(pattern_l) => match msg {
                 Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                     TypedCore::Literal(msg_l) => {
-                        if let TypedCore::String(s1) = &*pattern_l.val {
-                            if let TypedCore::String(s2) = &*msg_l.val {
-                                if s1 == s2 {
-                                    Vec::from([MailboxSubstitution::new()])
-                                } else {
-                                    Vec::new()
-                                }
-                            } else {
-                                Vec::new()
-                            }
+                        if Self::literal_match(msg_l, pattern_l) {
+                            Vec::from([MailboxSubstitution::new()])
                         } else {
                             Vec::new()
                         }
@@ -53,7 +56,7 @@ impl<V: ValueAddress> Mailbox<V> {
                 _ => Vec::new(),
             },
             _ => match msg {
-                Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+                Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
                     TypedCore::Var(v) => {
                         let values = value_store
                             .get(clo.env.inner.get(&VarName::from(v)).unwrap())
@@ -62,18 +65,35 @@ impl<V: ValueAddress> Mailbox<V> {
                         let mut new_substs = Vec::new();
                         for value in values {
                             new_substs.append(&mut Self::amatch(
-                                pattern,
+                                &pattern,
                                 value,
                                 value_store,
-                                proc_state_env,
                                 ast_helper,
                             ));
                         }
                         new_substs
                     }
+                    TypedCore::Literal(msg_l) => match &pattern {
+                        TypedCore::Literal(pattern_l) => {
+                            if let TypedCore::String(msg_s) = &*msg_l.val {
+                                if let TypedCore::String(pattern_s) = &*pattern_l.val {
+                                    if msg_s.inner == pattern_s.inner {
+                                        Vec::from([MailboxSubstitution::new()])
+                                    } else {
+                                        Vec::new()
+                                    }
+                                } else {
+                                    return Vec::new();
+                                }
+                            } else {
+                                return Vec::new();
+                            }
+                        }
+                        _ => Vec::new(),
+                    },
                     _ => Vec::new(),
                 },
-                _ => Vec::new(),
+                Value::Pid(_) => Vec::new(), // unmatchable if the pattern is not a var
             },
         }
     }
@@ -83,7 +103,6 @@ impl<V: ValueAddress> Mailbox<V> {
         msg: &AstList<TypedCore>,
         env: &Env<W>,
         value_store: &SetMap<W, Value<W>>,
-        proc_state_env: &Env<W>,
         ast_helper: &AstHelper,
     ) -> Vec<MailboxSubstitution<W>> {
         let patterns = if clause.pats.inner.len() == 1 {
@@ -109,7 +128,6 @@ impl<V: ValueAddress> Mailbox<V> {
                     env: env.clone(),
                 }),
                 value_store,
-                proc_state_env,
                 ast_helper,
             );
 
@@ -128,55 +146,35 @@ impl<V: ValueAddress> Mailbox<V> {
         clause: &Clause,
         msg: &Value<W>,
         value_store: &SetMap<W, Value<W>>,
-        proc_state_env: &Env<W>,
         ast_helper: &AstHelper,
     ) -> Vec<MailboxSubstitution<W>> {
         match msg {
-            Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
-                TypedCore::Var(_) => {
-                    if clause.pats.inner.len() != 1 {
-                        // there should only be one pattern
-                        return Vec::new();
-                    }
+            Value::Closure(clo) => {
+                match ast_helper.get(clo.prog_loc) {
+                    TypedCore::Var(_) | TypedCore::Literal(_) => {
+                        if clause.pats.inner.len() != 1 {
+                            // there should only be one pattern
+                            return Vec::new();
+                        }
 
-                    Self::amatch(
-                        &clause.pats.inner[0],
-                        msg,
-                        value_store,
-                        proc_state_env,
-                        ast_helper,
-                    )
+                        Self::amatch(&clause.pats.inner[0], msg, value_store, ast_helper)
+                    }
+                    TypedCore::AstList(al) => {
+                        Self::lmatch(clause, al, &clo.env, value_store, ast_helper)
+                    }
+                    TypedCore::Tuple(tup) => {
+                        Self::lmatch(clause, &tup.es, &clo.env, value_store, ast_helper)
+                    }
+                    _ => Vec::new(),
                 }
-                TypedCore::AstList(al) => Self::lmatch(
-                    clause,
-                    al,
-                    &clo.env,
-                    value_store,
-                    proc_state_env,
-                    ast_helper,
-                ),
-                TypedCore::Tuple(tup) => Self::lmatch(
-                    clause,
-                    &tup.es,
-                    &clo.env,
-                    value_store,
-                    proc_state_env,
-                    ast_helper,
-                ),
-                _ => Vec::new(),
-            },
+            }
             Value::Pid(_pid) => {
                 if clause.pats.inner.len() != 1 {
+                    // there should only be one pattern
                     return Vec::new();
                 }
 
-                Self::amatch(
-                    &clause.pats.inner[0],
-                    msg,
-                    value_store,
-                    proc_state_env,
-                    ast_helper,
-                )
+                Self::amatch(&clause.pats.inner[0], msg, value_store, ast_helper)
             }
         }
     }
@@ -185,15 +183,13 @@ impl<V: ValueAddress> Mailbox<V> {
         &self,
         clauses: &Vec<Clause>,
         value_store: &SetMap<V, Value<V>>,
-        proc_state_env: &Env<V>,
         ast_helper: &AstHelper,
     ) -> Vec<(usize, MailboxSubstitution<V>)> {
         let mut matched_msgs = Vec::new();
 
         for msg in &self.inner {
             for i in 0..clauses.len() {
-                let substs =
-                    Self::cmatch(&clauses[i], msg, value_store, proc_state_env, ast_helper);
+                let substs = Self::cmatch(&clauses[i], msg, value_store, ast_helper);
                 for subst in substs {
                     matched_msgs.push((i, subst));
                 }

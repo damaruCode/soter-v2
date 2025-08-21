@@ -18,18 +18,17 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
         Some(v) => match store.value.get(&v) {
             Some(values) => {
                 for value in values {
-                    // consider each
-                    // non-deterministically
+                    let mut new_item = proc_state.clone();
                     match value {
-                        Value::Closure(c) => {
-                            let mut new_item = proc_state.clone();
-                            new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(c.prog_loc);
-                            v_new.push((new_item, "abs_var".to_string()));
+                        Value::Closure(clo) => {
+                            new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
+                            new_item.env = clo.env.clone();
                         }
                         Value::Pid(_) => {
-                            panic!("Unexpected value: Expected Closure not Pid")
+                            panic!("Expected closure not pid!")
                         }
                     }
+                    v_new.push((new_item, "abs_var".to_string()));
                 }
             }
             None => panic!("VAddr does not exist within value store"),

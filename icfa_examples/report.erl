@@ -7,5 +7,7 @@ main() ->
   P ! {a, self()},
   receive
     ok ->
-      self()
+      self();
+    _ ->
+      "Yay"
   end.
