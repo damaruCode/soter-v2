@@ -4,7 +4,7 @@ use crate::{
 };
 
 use super::{Closure, Env, Pid, Value, ValueAddress, VarName};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt::Display};
 
 /// Mailbox := P(Value),
 /// in this case this represents the AbsMailbox_set abstraction
@@ -227,6 +227,16 @@ impl<V: ValueAddress> Mailboxes<V> {
                 let _ = self.inner.insert(pid, Mailbox { inner: vec![value] });
             }
         }
+    }
+}
+
+impl<V: ValueAddress> Display for Mailbox<V> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut strs = Vec::new();
+        for msg in &self.inner {
+            strs.push(format!("{}", msg));
+        }
+        write!(f, "{}", strs.join(","))
     }
 }
 

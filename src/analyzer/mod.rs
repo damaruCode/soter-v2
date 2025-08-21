@@ -44,7 +44,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
     pub fn run(
         &mut self,
         graph_builder: &mut GraphBuilder<K, V>,
-    ) -> (SetMap<Pid, ProcState<K, V>>, Store<K, V>) {
+    ) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
             graph_builder.add_node(node);
@@ -82,7 +82,11 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             }
         }
 
-        return (self.seen.clone(), self.store.clone());
+        return (
+            self.seen.clone(),
+            self.mailboxes.clone(),
+            self.store.clone(),
+        );
     }
 }
 

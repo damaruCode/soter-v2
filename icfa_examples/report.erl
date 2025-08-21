@@ -4,4 +4,8 @@
 
 main() ->
   P = spawn(fun() -> receive {a, X} -> X ! ok end end),
-  P ! {a, self()}.
+  P ! {a, self()},
+  receive
+    ok ->
+      self()
+  end.

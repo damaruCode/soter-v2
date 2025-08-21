@@ -10,6 +10,32 @@ use crate::{
 
 use super::TransitionResult;
 
+fn resolve_pid<K: KontinuationAddress, V: ValueAddress>(
+    value: &Value<V>,
+    store: &Store<K, V>,
+    ast_helper: &AstHelper,
+) -> Vec<Pid> {
+    let mut pids = Vec::new();
+    match value {
+        Value::Pid(pid) => pids.push(pid.clone()),
+        Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+            TypedCore::Var(v) => {
+                let values = store
+                    .value
+                    .get(clo.env.inner.get(&VarName::from(v)).unwrap())
+                    .unwrap();
+
+                for value in values {
+                    pids.append(&mut resolve_pid(&value, store, ast_helper));
+                }
+            }
+            _ => panic!(),
+        },
+    };
+
+    pids
+}
+
 pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     typed_core_to: &TypedCore,
     typed_core_msg: &TypedCore,
@@ -31,10 +57,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
 
             let mut pids = Vec::new();
             for maybe_pid in maybe_pids {
-                match maybe_pid {
-                    Value::Pid(pid) => pids.push(pid),
-                    _ => {}
-                }
+                pids.append(&mut resolve_pid(maybe_pid, store, ast_helper));
             }
             pids
         }

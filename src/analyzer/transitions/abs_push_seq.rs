@@ -34,6 +34,7 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
         &new_item.env,
         &new_item.time,
     );
+    new_item.k_addr = new_k_addr.clone();
 
     v_new.push((new_item, "abs_push_seq".to_string()));
 

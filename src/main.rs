@@ -57,7 +57,7 @@ fn main() {
 
     // Analysis
     let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
-    let (seen, store) = standard_analyzer.run(&mut graph_builder);
+    let (seen, mailboxes, store) = standard_analyzer.run(&mut graph_builder);
 
     let mut graph_path = args[1].to_string();
     graph_path.push_str(".svg");
@@ -65,7 +65,10 @@ fn main() {
 
     // Eval
     for (pid, states) in seen.inner {
-        log::debug!("Seen:{}, {}", pid, states.len());
+        log::debug!("Seen: {}, {}", pid, states.len());
+    }
+    for (pid, mailbox) in mailboxes.inner {
+        log::debug!("Mailbox: {}, {}", pid, mailbox);
     }
     log::debug!("KontStore:\n{}", store.kont);
     log::debug!("ValueStore:\n{}", store.value);
