@@ -73,6 +73,10 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             }
 
             for (r, t) in revisit_items {
+                if self.queue.contains(&r) {
+                    continue;
+                }
+
                 graph_builder.add_edge(item.clone(), r.clone(), &t);
                 self.queue.push_back(r);
             }
@@ -127,7 +131,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
                 TypedCore::Case(c) => abs_case(c, self, store, module_env, ast_helper),
                 TypedCore::Receive(r) => {
-                    abs_receive(r, self, mailboxes, store, module_env, ast_helper)
+                    abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }
                 TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),

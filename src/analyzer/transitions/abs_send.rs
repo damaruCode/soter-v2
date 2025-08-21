@@ -33,7 +33,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
             for maybe_pid in maybe_pids {
                 match maybe_pid {
                     Value::Pid(pid) => pids.push(pid),
-                    _ => panic!(),
+                    _ => {}
                 }
             }
             pids
@@ -56,20 +56,14 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 prog_loc: (*l.val).get_index().unwrap(),
                 env: Env::init(),
             })]),
-            TypedCore::AstList(al) => {
-                let mut values = Vec::new();
-                for tc in &al.inner {
-                    values.append(&mut determine_values(&tc, proc_state, store));
-                }
-                values
-            }
-            TypedCore::Tuple(t) => {
-                let mut values = Vec::new();
-                for tc in &t.es.inner {
-                    values.append(&mut determine_values(&tc, proc_state, store));
-                }
-                values
-            }
+            TypedCore::AstList(_) => Vec::from([Value::Closure(Closure {
+                prog_loc: typed_core_msg.get_index().unwrap(),
+                env: proc_state.env.clone(),
+            })]),
+            TypedCore::Tuple(_) => Vec::from([Value::Closure(Closure {
+                prog_loc: typed_core_msg.get_index().unwrap(),
+                env: proc_state.env.clone(),
+            })]),
             tc => panic!("{:#?}", tc),
         }
     }
@@ -78,10 +72,13 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     for pid in pids {
         for value in &msg_values {
             let mut new_item = proc_state.clone();
-            new_item.prog_loc_or_pid = match value {
-                Value::Pid(pid) => ProgLocOrPid::Pid(pid.clone()),
-                Value::Closure(clo) => ProgLocOrPid::ProgLoc(clo.prog_loc.clone()),
-            };
+
+            match value {
+                Value::Pid(pid) => new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone()),
+                Value::Closure(clo) => {
+                    new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
+                }
+            }
 
             v_new.push((new_item, "abs_send".to_string()));
 
