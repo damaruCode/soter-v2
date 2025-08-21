@@ -51,7 +51,7 @@ impl<K: KontinuationAddress, V: ValueAddress> GraphBuilder<K, V> {
         let handle = self.graph.add_node(Element::create(
             shape,
             self.style.clone(),
-            Orientation::TopToBottom,
+            Orientation::LeftToRight,
             Point::new(125. + *max as f64 * 5., 125.),
         ));
 
