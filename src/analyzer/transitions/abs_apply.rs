@@ -101,5 +101,5 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     }
 
     log::debug!("ABS_APPLY - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, Vec::new())
+    (v_new, v_revisit)
 }
