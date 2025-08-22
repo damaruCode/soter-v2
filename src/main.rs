@@ -6,6 +6,7 @@ pub mod state_space;
 pub mod util;
 
 use std::env;
+use std::time::Instant;
 
 use abstraction::standard::StandardAbstraction;
 use analyzer::Analyzer;
@@ -55,9 +56,15 @@ fn main() {
 
     let mut graph_builder = util::graphviz::GraphBuilder::new();
 
-    // Analysis
+    // Build Analyzer
     let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
+    // Timing
+    let instance = Instant::now();
+    // Run
     let (seen, mailboxes, store) = standard_analyzer.run(&mut graph_builder);
+
+    let execution_time = instance.elapsed().as_nanos();
+    println!("Time: {} ns", execution_time);
 
     let mut graph_path = args[1].to_string();
     graph_path.push_str(".svg");
