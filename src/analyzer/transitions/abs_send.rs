@@ -50,7 +50,6 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
 
     let pids = match typed_core_to {
         TypedCore::Var(v) => {
-            dbg!(v, proc_state);
             let maybe_pids = store
                 .value
                 .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
