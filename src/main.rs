@@ -5,10 +5,11 @@ pub mod erlang;
 pub mod state_space;
 pub mod util;
 
-use std::time::Instant;
+use std::{fs, time::Instant};
 
 use abstraction::{
-    icfa::ICFAAbstraction, standard::StandardAbstraction, Abstraction, AbstractionKind,
+    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction,
+    vp4f::VP4FAbstraction, Abstraction, AbstractionKind,
 };
 use analyzer::Analyzer;
 use chrono::Utc;
@@ -28,19 +29,22 @@ struct Cli {
     /// Path to the Erlang file to analyze
     file: std::path::PathBuf,
 
-    #[arg(short, long)]
+    #[arg(short, long, default_value = "out")]
+    output_dir: std::path::PathBuf,
+
+    #[arg(short = 'l', long)]
     log: bool,
 
-    #[arg(short, long)]
+    #[arg(short = 'g', long)]
     export_graph: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     stop_time: bool,
 
-    #[arg(short, long)]
+    #[arg(short = 'a', long)]
     abstraction: AbstractionKind,
 
-    #[arg(short, long)]
+    #[arg(short = 't', long)]
     time_depth: usize,
 }
 
@@ -48,10 +52,18 @@ fn main() {
     // Arguments parsing
     let args = Cli::parse();
 
+    // output directory
+    if !args.output_dir.is_dir() {
+        fs::create_dir_all(&args.output_dir).unwrap();
+    }
+
     // Logging
     if args.log {
         let now = Utc::now();
-        let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
+        let logfile_path = args.output_dir.join(format!(
+            "logs/{}.log",
+            now.format("%Y-%m-%d_%H-%M-%S").to_string()
+        ));
 
         let logfile = FileAppender::builder()
             .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
@@ -85,6 +97,16 @@ fn main() {
     match args.abstraction {
         AbstractionKind::Standard => run_analysis_with(
             Box::new(StandardAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
+        AbstractionKind::P4F => run_analysis_with(
+            Box::new(P4FAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
+        AbstractionKind::VP4F => run_analysis_with(
+            Box::new(VP4FAbstraction::new(args.time_depth)),
             ast_helper,
             args,
         ),
@@ -126,7 +148,26 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     }
 
     // Printing Graph and logging output
-    let graph_path = args.file.with_extension("erl.svg");
+    let mut graph_dir = args.output_dir.join("graphs");
+    graph_dir.push(match args.abstraction {
+        AbstractionKind::Standard => "standard",
+        AbstractionKind::P4F => "p4f",
+        AbstractionKind::VP4F => "vp4f",
+        AbstractionKind::ICFA => "icfa",
+    });
+    if !graph_dir.is_dir() {
+        fs::create_dir_all(&graph_dir).unwrap();
+    }
+
+    let graph_path = graph_dir.join(
+        args.file
+            .with_extension(format!("{}.erl.svg", args.time_depth))
+            .file_name()
+            .unwrap()
+            .to_os_string()
+            .into_string()
+            .unwrap(),
+    );
     graph_builder.print(&graph_path.into_os_string().into_string().unwrap());
 
     // Eval

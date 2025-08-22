@@ -5,10 +5,14 @@
 main() ->
   Y = id(a),
   Z = id(b),
-  Y = Z.
+  W = id(c),
+  {Y, Z, W}.
 
 id(X) ->
-  X.
+  id2(X).
 
 id2(X) ->
-  id(X).
+  id3(X).
+
+id3(X) ->
+  X.

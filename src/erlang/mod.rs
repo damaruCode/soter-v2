@@ -22,7 +22,7 @@ pub fn compile() {
     for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
         match entry {
             Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
-            Err(e) => println!("{:?}", e),
+            Err(e) => log::debug!("{:?}", e),
         }
     }
 
@@ -31,7 +31,7 @@ pub fn compile() {
         .output()
         .expect("failed to compile jsx");
 
-    println!("jsx_compile_status: {}", c.status);
+    log::debug!("jsx_compile_status: {}", c.status);
     assert!(c.status.success());
 
     //erlc ecorej.erl
@@ -40,7 +40,7 @@ pub fn compile() {
         .output()
         .expect("failed to compile ecorej");
 
-    println!("ecorej_compile_status: {}", c.status);
+    log::debug!("ecorej_compile_status: {}", c.status);
     assert!(c.status.success());
 }
 
@@ -62,6 +62,6 @@ pub fn run(file: &String) {
         .output()
         .expect("failed to run erlang");
 
-    println!("erlang_run_status: {}", r.status);
+    log::debug!("erlang_run_status: {}", r.status);
     assert!(r.status.success());
 }

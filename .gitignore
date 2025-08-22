@@ -13,8 +13,8 @@ Cargo.lock
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-# Logging
-logs/
+# soter default output dir
+out/
 
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
