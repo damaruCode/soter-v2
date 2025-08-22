@@ -120,9 +120,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         }
 
         match &self.prog_loc_or_pid {
-            ProgLocOrPid::Pid(pid) => {
-                abs_pop_let_pid(pid, self, store, seen, abstraction, ast_helper)
-            }
+            ProgLocOrPid::Pid(pid) => abs_pid(pid, self, store, seen, abstraction, ast_helper),
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
                 TypedCore::Module(m) => abs_module(m, self, store, module_env, abstraction),
                 TypedCore::Var(v) => abs_name(v, self, store),
@@ -149,13 +147,13 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                         for kont in konts {
                             match kont {
                                 Kont::Let(var_list, body, env, k_addr) => {
-                                    //TODO ABS_POP_LET_VALUEADDR
+                                    // NOTE ABS_POP_LET_VALUEADDR will probably be left out ---
+                                    // where needed we consider each possible resolution of VAddrs
                                     match &self.prog_loc_or_pid {
-                                        // ABS_POP_LET_PID
-                                        ProgLocOrPid::Pid(_pid) => todo!(),
                                         ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                                            // ABS_POP_LET_VALUELIST
-                                            TypedCore::AstList(_al) => todo!(),
+                                            TypedCore::AstList(_al) => {
+                                                todo!("ABS_POP_LET_VALUELIST")
+                                            }
                                             _ => {
                                                 return abs_pop_let_closure(
                                                     self,
@@ -171,6 +169,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                                 );
                                             }
                                         },
+                                        _ => panic!(), //
                                     }
                                 }
                                 Kont::Seq(body, env, k_addr) => {

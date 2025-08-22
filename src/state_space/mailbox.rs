@@ -119,9 +119,9 @@ impl<V: ValueAddress> Mailbox<V> {
             return Vec::new();
         }
 
-        let mut new_substs = Vec::new();
+        let mut overall_substs = Vec::new();
         for i in 0..msg.inner.len() {
-            let substs = &Self::amatch(
+            let substs_i = &Self::amatch(
                 &patterns.inner[i],
                 &Value::Closure(Closure {
                     prog_loc: msg.inner[i].get_index().unwrap(),
@@ -131,15 +131,15 @@ impl<V: ValueAddress> Mailbox<V> {
                 ast_helper,
             );
 
-            let mut new_subst = MailboxSubstitution::new();
-            for subst in substs {
-                new_subst = new_subst.join_with(subst);
+            let mut overall_subst_i = MailboxSubstitution::new();
+            for subst in substs_i {
+                overall_subst_i = overall_subst_i.join_with(subst);
             }
-            if new_subst.inner.len() != 0 {
-                new_substs.push(new_subst);
+            if overall_subst_i.inner.len() != 0 {
+                overall_substs.push(overall_subst_i);
             }
         }
-        new_substs
+        overall_substs
     }
 
     fn cmatch<W: ValueAddress>(
@@ -184,15 +184,13 @@ impl<V: ValueAddress> Mailbox<V> {
         clauses: &Vec<Clause>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Vec<(usize, MailboxSubstitution<V>)> {
+    ) -> Vec<(usize, Vec<MailboxSubstitution<V>>)> {
         let mut matched_msgs = Vec::new();
 
         for msg in &self.inner {
             for i in 0..clauses.len() {
                 let substs = Self::cmatch(&clauses[i], msg, value_store, ast_helper);
-                for subst in substs {
-                    matched_msgs.push((i, subst));
-                }
+                matched_msgs.push((i, substs));
             }
         }
 

@@ -1,10 +1,11 @@
--module(rec_id).
+-module(id).
 
 -compile(export_all).
 
 main() ->
   Y = id(a),
-  Z = id(b).
+  Z = id(b),
+  {Y, Z}.
 
 id(X) ->
   id(X).
