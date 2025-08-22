@@ -1,9 +1,21 @@
 pub mod icfa;
 pub mod standard;
 
+use serde::Serialize;
+
 use crate::state_space::{
     Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
 };
+
+#[derive(clap::ValueEnum, Clone, Default, Debug, Serialize)]
+pub enum AbstractionKind {
+    /// Standard choice for KAddr and VAddr
+    #[default]
+    Standard,
+
+    /// Adapted choices of KAddr and VAddr according to the ICFA thesis
+    ICFA,
+}
 
 pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
     /// Creates a new KontinuationAddress for the Stop continuation of the abstract machine

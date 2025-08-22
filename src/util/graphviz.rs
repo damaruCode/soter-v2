@@ -18,22 +18,37 @@ pub struct GraphBuilder<K: KontinuationAddress, V: ValueAddress> {
     graph: VisualGraph,
     style: StyleAttr,
     lookup: BTreeMap<ProcState<K, V>, NodeHandle>,
+
+    _dummy: bool,
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> GraphBuilder<K, V> {
-    pub fn new() -> Self {
+    fn _new(dummy: bool) -> Self {
         let graph = VisualGraph::new(Orientation::TopToBottom);
         let style = StyleAttr::simple();
 
         GraphBuilder {
             graph,
             style,
-
             lookup: BTreeMap::new(),
+            _dummy: dummy,
         }
     }
 
+    pub fn new() -> Self {
+        Self::_new(false)
+    }
+
+    pub fn dummy() -> Self {
+        Self::_new(true)
+    }
+
     pub fn add_node(&mut self, node: ProcState<K, V>) {
+        if self._dummy {
+            // skip
+            return;
+        }
+
         let shape = ShapeKind::new_box(&format!(
             "{}\n{}\n{}\n{}\n{}",
             node.pid, node.prog_loc_or_pid, node.env, node.k_addr, node.time,
@@ -59,6 +74,11 @@ impl<K: KontinuationAddress, V: ValueAddress> GraphBuilder<K, V> {
     }
 
     pub fn add_edge(&mut self, start: ProcState<K, V>, end: ProcState<K, V>, name: &str) {
+        if self._dummy {
+            // skip
+            return;
+        }
+
         let arrow = Arrow::new(
             LineEndKind::None,
             LineEndKind::Arrow,
@@ -82,6 +102,11 @@ impl<K: KontinuationAddress, V: ValueAddress> GraphBuilder<K, V> {
     }
 
     pub fn print(&mut self, path: &str) {
+        if self._dummy {
+            // skip
+            return;
+        }
+
         // Render the nodes to some rendering backend.
         let mut svg = SVGWriter::new();
         self.graph.do_it(false, false, false, &mut svg);

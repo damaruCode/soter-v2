@@ -5,70 +5,129 @@ pub mod erlang;
 pub mod state_space;
 pub mod util;
 
-use std::env;
 use std::time::Instant;
 
-use abstraction::standard::StandardAbstraction;
+use abstraction::{
+    icfa::ICFAAbstraction, standard::StandardAbstraction, Abstraction, AbstractionKind,
+};
 use analyzer::Analyzer;
 use chrono::Utc;
+use clap::Parser;
 use log4rs::{
     append::file::FileAppender,
     config::{Appender, Root},
     encode::pattern::PatternEncoder,
     Config,
 };
+use state_space::{KontinuationAddress, ValueAddress};
+use util::AstHelper;
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Path to the Erlang file to analyze
+    file: std::path::PathBuf,
+
+    #[arg(short, long)]
+    log: bool,
+
+    #[arg(short, long)]
+    export_graph: bool,
+
+    #[arg(short, long)]
+    stop_time: bool,
+
+    #[arg(short, long)]
+    abstraction: AbstractionKind,
+
+    #[arg(short, long)]
+    time_depth: usize,
+}
 
 fn main() {
+    // Arguments parsing
+    let args = Cli::parse();
+
     // Logging
-    let now = Utc::now();
-    let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
+    if args.log {
+        let now = Utc::now();
+        let logfile_path = format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S").to_string());
 
-    let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-        .build(logfile_path)
-        .unwrap();
-    let config = Config::builder()
-        .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(
-            Root::builder()
-                .appender("logfile")
-                .build(log::LevelFilter::Debug),
-        )
-        .unwrap();
-    log4rs::init_config(config).unwrap();
+        let logfile = FileAppender::builder()
+            .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+            .build(logfile_path)
+            .unwrap();
+        let config = Config::builder()
+            .appender(Appender::builder().build("logfile", Box::new(logfile)))
+            .build(
+                Root::builder()
+                    .appender("logfile")
+                    .build(log::LevelFilter::Debug),
+            )
+            .unwrap();
+        log4rs::init_config(config).unwrap();
+    }
 
-    // Main Logic
-    let args: Vec<String> = env::args().collect();
-    assert_eq!(args.len(), 2, "cargo run --release <file_path>.erl");
-
+    // Compiling to Core (JSON format)
     erlang::compile();
-    erlang::run(&args[1]);
+    erlang::run(&args.file.clone().into_os_string().into_string().unwrap());
 
-    let mut core_path = args[1].to_string();
-    core_path.push_str(".json");
-    let core = erlang::get_core(&core_path);
+    let core_path = args.file.with_extension("erl.json");
+    let core = erlang::get_core(&core_path.into_os_string().into_string().unwrap());
     let typed_core = ast::TypedCore::from(core);
 
+    // Indexing the AST
     let mut ast_helper = util::AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
 
     ast_helper.build_lookup(&indexed_typed_core);
 
-    let mut graph_builder = util::graphviz::GraphBuilder::new();
+    match args.abstraction {
+        AbstractionKind::Standard => run_analysis_with(
+            Box::new(StandardAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
+        AbstractionKind::ICFA => run_analysis_with(
+            Box::new(ICFAAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
+    }
+}
 
-    // Build Analyzer
-    let mut standard_analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
+fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
+    abstraction: Box<dyn Abstraction<K, V>>,
+    ast_helper: AstHelper,
+    args: Cli,
+) {
+    let mut graph_builder;
+    if args.export_graph {
+        graph_builder = util::graphviz::GraphBuilder::new();
+    } else {
+        graph_builder = util::graphviz::GraphBuilder::dummy();
+    }
+
+    let mut analyzer = Analyzer::new(ast_helper, abstraction);
+
     // Timing
-    let instance = Instant::now();
-    // Run
-    let (seen, mailboxes, store) = standard_analyzer.run(&mut graph_builder);
+    let seen;
+    let mailboxes;
+    let store;
+    if args.stop_time {
+        let instance = Instant::now();
+        // Run
+        (seen, mailboxes, store) = analyzer.run(&mut graph_builder);
 
-    let execution_time = instance.elapsed().as_nanos();
-    println!("Time: {} ns", execution_time);
+        let execution_time = instance.elapsed().as_nanos();
+        println!("Time: {} ns", execution_time);
+    } else {
+        (seen, mailboxes, store) = analyzer.run(&mut graph_builder);
+    }
 
-    let mut graph_path = args[1].to_string();
-    graph_path.push_str(".svg");
-    graph_builder.print(&graph_path);
+    // Printing Graph and logging output
+    let graph_path = args.file.with_extension("erl.svg");
+    graph_builder.print(&graph_path.into_os_string().into_string().unwrap());
 
     // Eval
     for (pid, states) in seen.inner {

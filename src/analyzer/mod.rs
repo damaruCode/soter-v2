@@ -49,6 +49,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         for node in self.queue.clone() {
             graph_builder.add_node(node);
         }
+
         while let Some(item) = self.queue.pop_front() {
             let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
