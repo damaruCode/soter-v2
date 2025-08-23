@@ -1,7 +1,7 @@
 pub mod ast_helper;
-pub mod graphviz;
+pub mod graph;
 pub mod set_map;
 
 pub use ast_helper::*;
-pub use graphviz::*;
+pub use graph::*;
 pub use set_map::*;

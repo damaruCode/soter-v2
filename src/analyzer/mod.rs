@@ -1,8 +1,9 @@
 use crate::abstraction::Abstraction;
 use crate::ast::TypedCore;
 use crate::state_space::*;
-use crate::util::graphviz::GraphBuilder;
 use crate::util::AstHelper;
+use crate::util::Graph;
+use crate::util::Node;
 use crate::util::SetMap;
 
 use std::collections::VecDeque;
@@ -25,6 +26,7 @@ pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     store: Store<K, V>,
     queue: VecDeque<ProcState<K, V>>,
     seen: SetMap<Pid, ProcState<K, V>>,
+    transition_graph: Graph<ProcState<K, V>, String>,
 }
 
 impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, V> {
@@ -38,16 +40,14 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             store: Store::init(stop_k_addr.clone()),
             queue: VecDeque::from(vec![ProcState::init(stop_k_addr)]),
             seen: SetMap::new(),
+            transition_graph: Graph::new(),
         }
     }
 
-    pub fn run(
-        &mut self,
-        graph_builder: &mut GraphBuilder<K, V>,
-    ) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
+    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
-            graph_builder.add_node(node);
+            self.transition_graph.add_node(node);
         }
 
         while let Some(item) = self.queue.pop_front() {
@@ -60,26 +60,46 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.seen,
             );
 
-            for (n, t) in new_items {
+            for (new_proc_state, transition_name) in new_items {
                 // NOTE cloning here might become a memory issue
-                if let Some(seen_items) = self.seen.get_mut(&n.pid) {
-                    if seen_items.contains(&n) {
+                if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
+                    if seen_items.contains(&new_proc_state) {
+                        self.transition_graph
+                            .add_edge(
+                                Node::new(item.clone()),
+                                Node::new(new_proc_state.clone()),
+                                transition_name,
+                            )
+                            .unwrap();
                         continue;
                     }
                 }
-                graph_builder.add_node(n.clone());
-                graph_builder.add_edge(item.clone(), n.clone(), &t);
-                self.seen.push(n.pid.clone(), n.clone());
-                self.queue.push_back(n);
+                self.transition_graph.add_node(new_proc_state.clone());
+                self.transition_graph
+                    .add_edge(
+                        Node::new(item.clone()),
+                        Node::new(new_proc_state.clone()),
+                        transition_name,
+                    )
+                    .unwrap();
+                self.seen
+                    .push(new_proc_state.pid.clone(), new_proc_state.clone());
+                self.queue.push_back(new_proc_state);
             }
 
-            for (r, t) in revisit_items {
-                if self.queue.contains(&r) {
+            for (revisit_state, transition_name) in revisit_items {
+                if self.queue.contains(&revisit_state) {
                     continue;
                 }
 
-                graph_builder.add_edge(item.clone(), r.clone(), &t);
-                self.queue.push_back(r);
+                self.transition_graph
+                    .add_edge(
+                        Node::new(item.clone()),
+                        Node::new(revisit_state.clone()),
+                        transition_name,
+                    )
+                    .unwrap();
+                self.queue.push_back(revisit_state);
             }
         }
 
@@ -88,6 +108,10 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             self.mailboxes.clone(),
             self.store.clone(),
         );
+    }
+
+    pub fn get_transition_graph(&self) -> Graph<ProcState<K, V>, String> {
+        self.transition_graph.clone()
     }
 }
 

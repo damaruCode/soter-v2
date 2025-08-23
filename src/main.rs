@@ -123,13 +123,6 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     ast_helper: AstHelper,
     args: Cli,
 ) {
-    let mut graph_builder;
-    if args.export_graph {
-        graph_builder = util::graphviz::GraphBuilder::new();
-    } else {
-        graph_builder = util::graphviz::GraphBuilder::dummy();
-    }
-
     let mut analyzer = Analyzer::new(ast_helper, abstraction);
 
     // Timing
@@ -139,36 +132,58 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     if args.stop_time {
         let instance = Instant::now();
         // Run
-        (seen, mailboxes, store) = analyzer.run(&mut graph_builder);
+        (seen, mailboxes, store) = analyzer.run();
 
         let execution_time = instance.elapsed().as_nanos();
         println!("Time: {} ns", execution_time);
     } else {
-        (seen, mailboxes, store) = analyzer.run(&mut graph_builder);
+        (seen, mailboxes, store) = analyzer.run();
     }
 
     // Printing Graph and logging output
-    let mut graph_dir = args.output_dir.join("graphs");
-    graph_dir.push(match args.abstraction {
-        AbstractionKind::Standard => "standard",
-        AbstractionKind::P4F => "p4f",
-        AbstractionKind::VP4F => "vp4f",
-        AbstractionKind::ICFA => "icfa",
-    });
-    if !graph_dir.is_dir() {
-        fs::create_dir_all(&graph_dir).unwrap();
-    }
+    if args.export_graph {
+        // graphs/<FILE_NAME>/
+        let mut graph_dir = args.output_dir.join("graphs");
+        graph_dir.push(args.file.file_stem().unwrap());
 
-    let graph_path = graph_dir.join(
-        args.file
-            .with_extension(format!("{}.erl.svg", args.time_depth))
-            .file_name()
-            .unwrap()
-            .to_os_string()
-            .into_string()
-            .unwrap(),
-    );
-    graph_builder.print(&graph_path.into_os_string().into_string().unwrap());
+        if !graph_dir.is_dir() {
+            fs::create_dir_all(&graph_dir).unwrap();
+        }
+
+        let graph_path = graph_dir.join(
+            args.file
+                .with_extension(format!(
+                    "{}.{}.erl.svg",
+                    match args.abstraction {
+                        AbstractionKind::Standard => "standard",
+                        AbstractionKind::P4F => "p4f",
+                        AbstractionKind::VP4F => "vp4f",
+                        AbstractionKind::ICFA => "icfa",
+                    },
+                    args.time_depth
+                ))
+                .file_name()
+                .unwrap()
+                .to_os_string()
+                .into_string()
+                .unwrap(),
+        );
+
+        analyzer.get_transition_graph().export(
+            &graph_path.into_os_string().into_string().unwrap().as_str(),
+            |proc_state| {
+                format!(
+                    "{}\n{}\n{}\n{}\n{}",
+                    proc_state.pid,
+                    proc_state.prog_loc_or_pid,
+                    proc_state.env,
+                    proc_state.k_addr,
+                    proc_state.time,
+                )
+            },
+            |transtion_name| transtion_name,
+        );
+    }
 
     // Eval
     for (pid, states) in seen.inner {
@@ -187,7 +202,6 @@ mod benchmarks {
     use crate::analyzer::Analyzer;
     use crate::ast;
     use crate::erlang;
-    use crate::util::graphviz::GraphBuilder;
     use crate::util::AstHelper;
 
     fn run_and_check(erl_file: &str) {
@@ -199,9 +213,7 @@ mod benchmarks {
         ast_helper.build_lookup(&indexed_typed_core);
         let mut analyzer = Analyzer::new(ast_helper, Box::new(StandardAbstraction::new(0)));
 
-        let mut graph_builder = GraphBuilder::new();
-        analyzer.run(&mut graph_builder);
-        graph_builder.print(&format!("test/{}.svg", erl_file));
+        analyzer.run();
     }
 
     #[test]
