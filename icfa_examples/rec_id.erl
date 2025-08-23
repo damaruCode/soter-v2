@@ -3,7 +3,7 @@
 -compile(export_all).
 
 main() ->
-  Y = id(a),
+  Y = id({a}),
   Z = id(b),
   {Y, Z}.
 

@@ -23,16 +23,16 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
 
-    match *apply.op.clone() {
+    match &*apply.op.clone() {
         TypedCore::Var(v) => {
-            let values = store
+            let op_values = store
                 .value
-                .get(proc_state.env.inner.get(&VarName::from(&v)).unwrap())
+                .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
                 .unwrap()
                 .clone();
 
-            for value in values {
-                match value {
+            for op_value in &op_values {
+                match op_value {
                     Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                         TypedCore::Fun(f) => {
                             let fn_var_names = Vec::<VarName>::from(&f.vars);
@@ -60,10 +60,18 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                     }
                                     // for literals, we add a new v_addr according to the
                                     // fn_var_name
-                                    TypedCore::Literal(_) => {
+                                    TypedCore::Literal(l) => {
                                         let v_addr = abstraction.new_vaddr(
                                             proc_state,
-                                            &fn_var_names[i],
+                                            &match &*l.val {
+                                                TypedCore::String(s) => {
+                                                    VarName::Atom(s.inner.clone())
+                                                }
+                                                TypedCore::AstList(_) | TypedCore::Tuple(_) => {
+                                                    fn_var_names[i].clone()
+                                                }
+                                                tc => todo!("{:#?}", tc),
+                                            },
                                             &new_item.prog_loc_or_pid,
                                             &new_item.env,
                                             &new_item.time,

@@ -11,8 +11,8 @@ pub enum ProgLocOrPid {
 impl Display for ProgLocOrPid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ProgLocOrPid::Pid(pid) => write!(f, "Pid: {}", pid),
-            ProgLocOrPid::ProgLoc(pl) => write!(f, "Pl: {}", pl),
+            ProgLocOrPid::Pid(pid) => write!(f, "{}", pid),
+            ProgLocOrPid::ProgLoc(pl) => write!(f, "{}", pl),
         }
     }
 }

@@ -51,7 +51,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
 
         while let Some(item) = self.queue.pop_front() {
-            let (new_items, revisit_items) = item.process(
+            let (new_items, _revisit_items) = item.process(
                 &self.ast_helper,
                 &mut self.mailboxes,
                 &mut self.store,
@@ -87,20 +87,20 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 self.queue.push_back(new_proc_state);
             }
 
-            for (revisit_state, transition_name) in revisit_items {
-                if self.queue.contains(&revisit_state) {
-                    continue;
-                }
-
-                self.transition_graph
-                    .add_edge(
-                        Node::new(item.clone()),
-                        Node::new(revisit_state.clone()),
-                        transition_name,
-                    )
-                    .unwrap();
-                self.queue.push_back(revisit_state);
-            }
+            // for (revisit_state, transition_name) in revisit_items {
+            //     if self.queue.contains(&revisit_state) {
+            //         continue;
+            //     }
+            //
+            //     self.transition_graph
+            //         .add_edge(
+            //             Node::new(item.clone()),
+            //             Node::new(revisit_state.clone()),
+            //             format!("{} - revisit", transition_name),
+            //         )
+            //         .unwrap();
+            //     self.queue.push_back(revisit_state);
+            // }
         }
 
         return (
