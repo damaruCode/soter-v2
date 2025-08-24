@@ -33,13 +33,13 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
     fn new_kaddr(
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
-        _next_prog_loc_or_pid: &ProgLocOrPid,
+        next_prog_loc_or_pid: &ProgLocOrPid,
         next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> KAddr {
         KAddr {
             pid: curr_proc_state.pid.clone(),
-            prog_loc: match &curr_proc_state.prog_loc_or_pid {
+            prog_loc: match &next_prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
