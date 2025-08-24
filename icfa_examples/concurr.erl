@@ -4,7 +4,7 @@
 
 main() ->
   P = spawn(fun() -> receive {A, M} -> A ! M end end),
-  P ! a,
+  P ! {self(), a},
   receive
     M ->
       P ! M

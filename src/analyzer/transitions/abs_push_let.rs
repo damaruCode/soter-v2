@@ -1,6 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    analyzer::dependency_checker::push_to_kont_store,
+    // analyzer::dependency_checker::push_to_kont_store,
     ast::{Index, Let},
     state_space::{Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress},
     util::{AstHelper, SetMap},
@@ -35,15 +35,16 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
         proc_state.k_addr.clone(),
     );
 
-    for state in push_to_kont_store(
-        &ast_helper,
-        &seen_proc_states,
-        store,
-        new_item.k_addr.clone(),
-        kont,
-    ) {
-        v_revisit.push((state, "abs_push_let".to_string()));
-    }
+    store.kont.push(new_item.k_addr.clone(), kont);
+    // for state in push_to_kont_store(
+    //     &ast_helper,
+    //     &seen_proc_states,
+    //     store,
+    //     new_item.k_addr.clone(),
+    //     kont,
+    // ) {
+    //     v_revisit.push((state, "abs_push_let".to_string()));
+    // }
 
     v_new.push((new_item, "abs_push_let".to_string()));
 
