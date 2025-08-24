@@ -19,24 +19,57 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::Null(_) => String::from("null"),
             TypedCore::Bool(b) => b.inner.to_string(),
             TypedCore::Call(_) => String::from("call ..."),
-            TypedCore::Case(_) => String::from("case ..."),
+            TypedCore::Case(c) => format!(
+                "case <{}>\n\t{}\nend",
+                peek_name(&*c.arg),
+                c.clauses
+                    .inner
+                    .iter()
+                    .map(|e| peek_name(e))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            ),
             TypedCore::Cons(_) => String::from("cons ..."),
             TypedCore::Alias(_) => String::from("alias ..."),
             TypedCore::Catch(_) => String::from("catch ..."),
-            TypedCore::Tuple(_) => String::from("{...}"),
+            TypedCore::Tuple(tup) => format!(
+                "{{{}}}",
+                tup.es
+                    .inner
+                    .iter()
+                    .map(|e| peek_name(e))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
             TypedCore::Number(n) => n.inner.to_string(),
             TypedCore::Binary(b) => b.to_string(),
             TypedCore::BitStr(b) => b.to_string(),
-            TypedCore::Clause(_) => String::from("clause ..."),
+            TypedCore::Clause(c) => format!(
+                "clause <{}> when {} -> {}",
+                c.pats
+                    .inner
+                    .iter()
+                    .map(|e| peek_name(e))
+                    .collect::<Vec<String>>()
+                    .join(", "),
+                peek_name(&*c.guard),
+                peek_name(&*c.body)
+            ),
             TypedCore::LetRec(_) => String::from("letrec ..."),
             TypedCore::Module(_) => String::from("module ..."),
             TypedCore::Opaque(_) =>
                 String::from("If you see this, you are seeing ghosts --- congrats!"),
             TypedCore::PrimOp(_) => String::from("primop ..."),
             TypedCore::Values(_) => String::from("values ..."),
-            TypedCore::AstList(_) => String::from("[...]"),
+            TypedCore::AstList(al) => al
+                .inner
+                .iter()
+                .map(|e| peek_name(e))
+                .collect::<Vec<String>>()
+                .join(", "),
             TypedCore::Literal(l) => peek_name(&*l.val),
-            TypedCore::AstTuple(_) => String::from("{..., ...}"),
+            TypedCore::AstTuple(at) =>
+                format!("{{{}, {}}}", peek_name(&*at.frst), peek_name(&*at.scnd)),
             TypedCore::MapPair(_) => String::from("mappair ..."),
         }
     )
@@ -48,7 +81,17 @@ pub fn print(tc: &TypedCore) -> String {
         tc.get_index().unwrap(),
         match tc {
             TypedCore::Module(module) => format!("module {} [...] ...", peek_name(&*module.name)),
-            TypedCore::Apply(apply) => format!("apply {} ({})", peek_name(&*apply.op), apply.args),
+            TypedCore::Apply(apply) => format!(
+                "apply {} ({})",
+                peek_name(&*apply.op),
+                apply
+                    .args
+                    .inner
+                    .iter()
+                    .map(|e| peek_name(e))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
             TypedCore::Seq(seq) => {
                 format!("{}, {}", peek_name(&*seq.arg), peek_name(&*seq.body))
             }

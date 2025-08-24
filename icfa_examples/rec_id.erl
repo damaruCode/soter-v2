@@ -4,7 +4,7 @@
 
 main() ->
   Y = id({a}),
-  Z = id(b),
+  Z = id({b}),
   {Y, Z}.
 
 id(X) ->
