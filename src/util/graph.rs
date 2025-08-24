@@ -1,17 +1,4 @@
-use std::collections::BTreeMap;
-
-use layout::{
-    backends::svg::SVGWriter,
-    core::{
-        base::Orientation,
-        color::Color,
-        geometry::Point,
-        style::{LineStyleKind, StyleAttr},
-        utils::save_to_file,
-    },
-    std_shapes::shapes::{Arrow, Element, LineEndKind, ShapeKind},
-    topo::layout::VisualGraph,
-};
+use std::{collections::BTreeMap, usize};
 
 pub trait NodeData: Eq + Clone + Ord {}
 impl<T: Eq + Clone + Ord> NodeData for T {}
@@ -19,139 +6,137 @@ impl<T: Eq + Clone + Ord> NodeData for T {}
 pub trait EdgeData: Eq + Clone {}
 impl<T: Eq + Clone> EdgeData for T {}
 
-#[derive(Debug)]
-pub enum GraphError<N: NodeData> {
-    MissingNode(Node<N>),
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct Node<N: NodeData, E: EdgeData> {
+    handle: usize,
+    data: N,
+    edges_to: Vec<ToEdge<E>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Node<N: NodeData> {
-    data: N,
+pub struct NodeAttributes {
+    pub label: String,
+    pub tooltip: String,
+    pub group: String,
 }
-impl<N: NodeData> Node<N> {
-    pub fn new(data: N) -> Self {
-        Self { data }
+impl NodeAttributes {
+    pub fn new() -> Self {
+        Self {
+            label: String::new(),
+            tooltip: String::new(),
+            group: String::new(),
+        }
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ToEdge<N: NodeData, E: EdgeData> {
-    node: Node<N>,
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ToEdge<E: EdgeData> {
+    node_handle: usize,
     data: E,
 }
-impl<N: NodeData, E: EdgeData> ToEdge<N, E> {
-    pub fn new(node: Node<N>, edge_data: E) -> Self {
+impl<E: EdgeData> ToEdge<E> {
+    pub fn new(node_handle: usize, edge_data: E) -> Self {
         Self {
-            node,
+            node_handle,
             data: edge_data,
+        }
+    }
+}
+
+pub struct EdgeAttributes {
+    pub label: String,
+}
+impl EdgeAttributes {
+    pub fn new() -> Self {
+        Self {
+            label: String::new(),
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Graph<N: NodeData, E: EdgeData> {
-    map: BTreeMap<Node<N>, Vec<ToEdge<N, E>>>,
+    map: BTreeMap<N, Node<N, E>>,
+
+    counter: usize,
 }
 
 impl<N: NodeData, E: EdgeData> Graph<N, E> {
     pub fn new() -> Self {
         Self {
             map: BTreeMap::new(),
+            counter: 0,
         }
     }
 
-    pub fn add_node(&mut self, data: N) {
-        self.map.insert(Node::new(data), Vec::new());
+    pub fn add_node(&mut self, node: N) -> usize {
+        self.map.insert(
+            node.clone(),
+            Node {
+                handle: self.counter,
+                data: node,
+                edges_to: Vec::new(),
+            },
+        );
+        self.counter += 1;
+
+        return self.counter - 1;
     }
 
-    pub fn add_edge(
-        &mut self,
-        from: Node<N>,
-        to: Node<N>,
-        edge_data: E,
-    ) -> Result<(), GraphError<N>> {
+    pub fn add_edge(&mut self, from: N, to: N, edge_data: E) {
         // check if to node exists
-        if !self.map.contains_key(&to) {
-            return Err(GraphError::MissingNode(to));
-        }
+        let to_handle = match self.map.get(&to) {
+            Some(node) => node.handle,
+            None => self.add_node(to),
+        };
 
         // check if from node already exists
-        let edges;
+        let from_node;
         match self.map.get_mut(&from) {
-            Some(vec) => edges = vec,
-            None => return Err(GraphError::MissingNode(from)),
+            Some(node) => from_node = node,
+            None => {
+                self.add_node(from.clone());
+                from_node = self.map.get_mut(&from).unwrap()
+            }
         }
 
         // only add to edge if it doesn't already exist
-        let to_edge = ToEdge::new(to, edge_data);
-        if !edges.contains(&to_edge) {
-            edges.push(to_edge);
+        let to_edge = ToEdge {
+            node_handle: to_handle,
+            data: edge_data,
+        };
+        if !from_node.edges_to.contains(&to_edge) {
+            from_node.edges_to.push(to_edge);
         }
-
-        Ok(())
     }
 
-    pub fn export<F, G>(&self, export_path: &str, format_node: F, format_edge: G)
+    pub fn print_dot<F, G>(&self, format_node: F, format_edge: G) -> String
     where
-        F: Fn(N) -> String,
-        G: Fn(E) -> String,
+        F: Fn(&N) -> NodeAttributes,
+        G: Fn(&E) -> EdgeAttributes,
     {
-        let mut visual_graph = VisualGraph::new(Orientation::TopToBottom);
-        let mut lookup = BTreeMap::new();
-        let style = StyleAttr::simple();
-
-        for (node, _) in &self.map {
-            let node_content = format_node(node.data.clone());
-            let shape = ShapeKind::new_box(node_content.as_str());
-
-            let mut sizes = Vec::new();
-            for row in node_content.split("\n") {
-                sizes.push(row.len());
-            }
-            sizes.sort();
-            let max = sizes.last().unwrap();
-
-            let handle = visual_graph.add_node(Element::create(
-                shape,
-                style.clone(),
-                Orientation::LeftToRight,
-                Point::new(125. + *max as f64 * 5., 125.),
-            ));
-
-            lookup.insert(node.clone(), handle);
-        }
-
-        for (from_node, edges) in &self.map {
-            for edge in edges {
-                let arrow = Arrow::new(
-                    LineEndKind::None,
-                    LineEndKind::Arrow,
-                    LineStyleKind::Dotted,
-                    format_edge(edge.data.clone()).as_str(),
-                    &StyleAttr::new(
-                        Color::fast("black"),
-                        2,
-                        Option::Some(Color::fast("white")),
-                        2,
-                        20,
-                    ),
-                    &None,
-                    &None,
-                );
-
-                visual_graph.add_edge(
-                    arrow,
-                    *lookup.get(&from_node).unwrap(),
-                    *lookup.get(&edge.node).unwrap(),
+        let mut dot_code = String::from("digraph {");
+        for (_, node) in &self.map {
+            let node_attr = format_node(&node.data);
+            dot_code.push_str(
+                format!(
+                    "\t{}[label=\"{}\" shape=\"box\" tooltip=\"{}\", group=\"{}\"]\n",
+                    node.handle, node_attr.label, node_attr.tooltip, node_attr.group
+                )
+                .as_str(),
+            );
+            for edge in &node.edges_to {
+                let edge_attr = format_edge(&edge.data);
+                dot_code.push_str(
+                    format!(
+                        "\t{} -> {} [label=\"{}\"]\n",
+                        node.handle, edge.node_handle, edge_attr.label
+                    )
+                    .as_str(),
                 );
             }
         }
+        dot_code.push_str("}");
 
-        // Render the nodes to some rendering backend.
-        let mut svg = SVGWriter::new();
-        visual_graph.do_it(false, false, false, &mut svg);
-
-        // Save the output.
-        let _ = save_to_file(export_path, &svg.finalize());
+        dot_code
     }
 }

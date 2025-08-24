@@ -5,7 +5,10 @@ pub mod erlang;
 pub mod state_space;
 pub mod util;
 
-use std::{fs, time::Instant};
+use std::{
+    fs::{self, File},
+    time::Instant,
+};
 
 use abstraction::{
     icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction,
@@ -20,8 +23,9 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
-use state_space::{KontinuationAddress, ValueAddress};
-use util::AstHelper;
+use state_space::{KontinuationAddress, ProgLocOrPid, ValueAddress};
+use std::io::Write;
+use util::{peek_print, AstHelper, EdgeAttributes, NodeAttributes};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -123,7 +127,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     ast_helper: AstHelper,
     args: Cli,
 ) {
-    let mut analyzer = Analyzer::new(ast_helper, abstraction);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), abstraction);
 
     // Timing
     let seen;
@@ -153,7 +157,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         let graph_path = graph_dir.join(
             args.file
                 .with_extension(format!(
-                    "{}.{}.erl.svg",
+                    "{}.{}.erl.dot",
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
                         AbstractionKind::P4F => "p4f",
@@ -169,20 +173,38 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                 .unwrap(),
         );
 
-        analyzer.get_transition_graph().export(
-            &graph_path.into_os_string().into_string().unwrap().as_str(),
+        let dot_graph = analyzer.get_transition_graph().print_dot(
+            // &graph_path.into_os_string().into_string().unwrap().as_str(),
             |proc_state| {
-                format!(
-                    "{}\n{}\n{}\n{}\n{}",
+                let mut node_attr = NodeAttributes::new();
+                node_attr.label = match &proc_state.prog_loc_or_pid {
+                    ProgLocOrPid::Pid(pid) => format!("{}", pid),
+                    ProgLocOrPid::ProgLoc(prog_loc) => {
+                        let tc = ast_helper.get(*prog_loc);
+                        peek_print::print(tc)
+                    }
+                };
+                node_attr.tooltip = format!(
+                    "{}, {}, {}, {}, {}",
                     proc_state.pid,
                     proc_state.prog_loc_or_pid,
                     proc_state.env,
                     proc_state.k_addr,
                     proc_state.time,
-                )
+                );
+                node_attr.group = format!("{}", proc_state.pid);
+
+                node_attr
             },
-            |transtion_name| transtion_name,
+            |transtion_name| {
+                let mut edge_attr = EdgeAttributes::new();
+                edge_attr.label = transtion_name.clone();
+
+                edge_attr
+            },
         );
+        let mut graph_file = File::create(graph_path).unwrap();
+        write!(graph_file, "{}", dot_graph).unwrap();
     }
 
     // Eval

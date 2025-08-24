@@ -190,7 +190,9 @@ impl<V: ValueAddress> Mailbox<V> {
         for msg in &self.inner {
             for i in 0..clauses.len() {
                 let substs = Self::cmatch(&clauses[i], msg, value_store, ast_helper);
-                matched_msgs.push((i, substs));
+                if substs.len() > 0 {
+                    matched_msgs.push((i, substs));
+                }
             }
         }
 

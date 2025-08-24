@@ -3,7 +3,6 @@ use crate::ast::TypedCore;
 use crate::state_space::*;
 use crate::util::AstHelper;
 use crate::util::Graph;
-use crate::util::Node;
 use crate::util::SetMap;
 
 use std::collections::VecDeque;
@@ -51,7 +50,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
 
         while let Some(item) = self.queue.pop_front() {
-            let (new_items, _revisit_items) = item.process(
+            let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
                 &mut self.mailboxes,
                 &mut self.store,
@@ -64,43 +63,36 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 // NOTE cloning here might become a memory issue
                 if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
                     if seen_items.contains(&new_proc_state) {
-                        self.transition_graph
-                            .add_edge(
-                                Node::new(item.clone()),
-                                Node::new(new_proc_state.clone()),
-                                transition_name,
-                            )
-                            .unwrap();
+                        self.transition_graph.add_edge(
+                            item.clone(),
+                            new_proc_state.clone(),
+                            transition_name,
+                        );
                         continue;
                     }
                 }
-                self.transition_graph.add_node(new_proc_state.clone());
-                self.transition_graph
-                    .add_edge(
-                        Node::new(item.clone()),
-                        Node::new(new_proc_state.clone()),
-                        transition_name,
-                    )
-                    .unwrap();
+                self.transition_graph.add_edge(
+                    item.clone(),
+                    new_proc_state.clone(),
+                    transition_name,
+                );
                 self.seen
                     .push(new_proc_state.pid.clone(), new_proc_state.clone());
                 self.queue.push_back(new_proc_state);
             }
 
-            // for (revisit_state, transition_name) in revisit_items {
-            //     if self.queue.contains(&revisit_state) {
-            //         continue;
-            //     }
-            //
-            //     self.transition_graph
-            //         .add_edge(
-            //             Node::new(item.clone()),
-            //             Node::new(revisit_state.clone()),
-            //             format!("{} - revisit", transition_name),
-            //         )
-            //         .unwrap();
-            //     self.queue.push_back(revisit_state);
-            // }
+            for (revisit_state, transition_name) in revisit_items {
+                if self.queue.contains(&revisit_state) {
+                    continue;
+                }
+
+                self.transition_graph.add_edge(
+                    item.clone(),
+                    revisit_state.clone(),
+                    format!("{} - revisit", transition_name),
+                );
+                self.queue.push_back(revisit_state);
+            }
         }
 
         return (
