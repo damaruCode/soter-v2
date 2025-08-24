@@ -1,6 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    // analyzer::dependency_checker::push_to_value_store,
+    analyzer::dependency_checker::push_to_value_store,
     ast::{Apply, Index, TypedCore},
     state_space::{
         Closure, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
@@ -15,7 +15,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     apply: &Apply,
     prog_loc_proc_state: usize,
     proc_state: &ProcState<K, V>,
-    _seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
+    seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     store: &mut Store<K, V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
@@ -81,25 +81,18 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                             .inner
                                             .insert(fn_var_names[i].clone(), v_addr.clone());
 
-                                        store.value.push(
+                                        for state in push_to_value_store(
+                                            ast_helper,
+                                            seen_proc_states,
+                                            store,
                                             v_addr,
                                             Value::Closure(Closure {
                                                 prog_loc: apply.args.inner[i].get_index().unwrap(),
                                                 env: proc_state.env.clone(),
                                             }),
-                                        );
-                                        // for state in push_to_value_store(
-                                        //     ast_helper,
-                                        //     seen_proc_states,
-                                        //     store,
-                                        //     v_addr,
-                                        //     Value::Closure(Closure {
-                                        //         prog_loc: apply.args.inner[i].get_index().unwrap(),
-                                        //         env: proc_state.env.clone(),
-                                        //     }),
-                                        // ) {
-                                        //     v_revisit.push((state, "abs_apply".to_string()));
-                                        // }
+                                        ) {
+                                            v_revisit.push((state, "abs_apply".to_string()));
+                                        }
                                     }
                                     _ => panic!(),
                                 }

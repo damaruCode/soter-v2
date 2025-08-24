@@ -1,6 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    // analyzer::dependency_checker::push_to_kont_store,
+    analyzer::dependency_checker::push_to_kont_store,
     ast::{Index, Seq},
     state_space::{Kont, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress},
     util::{AstHelper, SetMap},
@@ -38,10 +38,14 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
 
     v_new.push((new_item, "abs_push_seq".to_string()));
 
-    store.kont.push(new_k_addr, new_kont);
-    // for state in push_to_kont_store(ast_helper, seen_proc_states, store, new_k_addr, new_kont) {
-    //     v_revisit.push((state, "abs_push_seq".to_string()));
-    // }
+    for state in push_to_kont_store(ast_helper, seen_proc_states, store, new_k_addr, new_kont) {
+        v_revisit.push((state, "abs_push_seq".to_string()));
+    }
 
+    log::debug!(
+        "ABS_PUSH_SEQ - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
     (v_new, v_revisit)
 }

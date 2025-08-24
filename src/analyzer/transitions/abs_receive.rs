@@ -1,6 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    // analyzer::dependency_checker::push_to_value_store,
+    analyzer::dependency_checker::push_to_value_store,
     ast::{Index, Receive},
     state_space::{
         KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
@@ -50,16 +50,15 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                 );
                 new_env.inner.insert(var_name.clone(), new_v_addr.clone());
 
-                store.value.push(new_v_addr, value.clone());
-                // for state in push_to_value_store(
-                //     ast_helper,
-                //     seen_proc_states,
-                //     store,
-                //     new_v_addr,
-                //     value.clone(),
-                // ) {
-                //     v_revisit.push((state, "abs_receive".to_string()));
-                // }
+                for state in push_to_value_store(
+                    ast_helper,
+                    seen_proc_states,
+                    store,
+                    new_v_addr,
+                    value.clone(),
+                ) {
+                    v_revisit.push((state, "abs_receive".to_string()));
+                }
             }
         }
         new_item.env = new_env;
