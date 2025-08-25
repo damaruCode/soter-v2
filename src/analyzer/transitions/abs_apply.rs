@@ -1,10 +1,10 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    ast::{Apply, Index, TypedCore},
+    ast::{Index, TypedCore},
     state_space::{
-        Closure, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
-        VarName,
+        Closure, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
+        ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -12,8 +12,10 @@ use crate::{
 use super::TransitionResult;
 
 pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
-    apply: &Apply,
-    prog_loc_proc_state: usize,
+    kont_op_value: &Value<V>,
+    kont_value_list: &Vec<Value<V>>,
+    kont_env: &Env<V>,
+    kont_k_addr: &K,
     proc_state: &ProcState<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     store: &mut Store<K, V>,
@@ -23,93 +25,73 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
 
-    match &*apply.op.clone() {
-        TypedCore::Var(v) => {
-            let op_values = store
-                .value
-                .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
-                .unwrap()
-                .clone();
+    let mut new_item = proc_state.clone();
+    new_item.env = kont_env.clone();
+    new_item.k_addr = kont_k_addr.clone();
 
-            for op_value in &op_values {
-                match op_value {
-                    Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
-                        TypedCore::Fun(f) => {
-                            let fn_var_names = Vec::<VarName>::from(&f.vars);
+    // expand kont_value_list with the value in the control string position
+    let mut value_list = kont_value_list.clone();
+    value_list.push(match &proc_state.prog_loc_or_pid {
+        ProgLocOrPid::Pid(pid) => Value::Pid(pid.clone()),
+        ProgLocOrPid::ProgLoc(prog_loc) => Value::Closure(Closure {
+            prog_loc: *prog_loc,
+            env: kont_env.clone(),
+        }),
+    });
 
-                            let mut new_item = proc_state.clone();
-                            new_item.prog_loc_or_pid =
-                                ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
-                            new_item.time = abstraction.tick(&new_item.time, prog_loc_proc_state);
+    match kont_op_value {
+        Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+            TypedCore::Fun(f) => {
+                let fn_var_names = Vec::<VarName>::from(&f.vars);
 
-                            let mut new_env = clo.env.clone();
-                            for i in 0..fn_var_names.len() {
-                                // check the type of the arg
-                                match &apply.args.inner[i] {
-                                    // for vars, we simply add a binding to the existent v_addr
-                                    TypedCore::Var(v) => {
-                                        new_env.inner.insert(
-                                            fn_var_names[i].clone(),
-                                            proc_state
-                                                .env
-                                                .inner
-                                                .get(&VarName::from(v))
-                                                .unwrap()
-                                                .clone(),
-                                        );
-                                    }
-                                    // for literals, we add a new v_addr according to the
-                                    // fn_var_name
-                                    TypedCore::Literal(l) => {
-                                        let v_addr = abstraction.new_vaddr(
-                                            proc_state,
-                                            &match &*l.val {
-                                                TypedCore::String(s) => {
-                                                    VarName::Atom(s.inner.clone())
-                                                }
-                                                TypedCore::AstList(_) | TypedCore::Tuple(_) => {
-                                                    fn_var_names[i].clone()
-                                                }
-                                                tc => todo!("{:#?}", tc),
-                                            },
-                                            &new_item.prog_loc_or_pid,
-                                            &new_item.env,
-                                            &new_item.time,
-                                        );
-
-                                        new_env
-                                            .inner
-                                            .insert(fn_var_names[i].clone(), v_addr.clone());
-
-                                        for state in push_to_value_store(
-                                            ast_helper,
-                                            seen_proc_states,
-                                            store,
-                                            v_addr,
-                                            Value::Closure(Closure {
-                                                prog_loc: apply.args.inner[i].get_index().unwrap(),
-                                                env: proc_state.env.clone(),
-                                            }),
-                                        ) {
-                                            v_revisit.push((state, "abs_apply".to_string()));
-                                        }
-                                    }
-                                    _ => panic!(),
-                                }
-                            }
-                            new_item.env = new_env;
-
-                            v_new.push((new_item, "abs_apply".to_string()));
-                        }
+                new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
+                new_item.time = abstraction.tick(
+                    &new_item.time,
+                    match proc_state.prog_loc_or_pid {
+                        ProgLocOrPid::ProgLoc(pl) => pl,
                         _ => panic!(),
                     },
-                    _ => panic!(),
+                );
+
+                // the number of supplied values should match the number of function arguments
+                if value_list.len() != fn_var_names.len() {
+                    panic!()
                 }
+
+                for i in 0..fn_var_names.len() {
+                    let new_v_addr = abstraction.new_vaddr(
+                        proc_state,
+                        &fn_var_names[i],
+                        &new_item.prog_loc_or_pid,
+                        &new_item.env,
+                        &new_item.time,
+                    );
+                    new_item
+                        .env
+                        .inner
+                        .insert(fn_var_names[i].clone(), new_v_addr.clone());
+
+                    for state in push_to_value_store(
+                        ast_helper,
+                        seen_proc_states,
+                        store,
+                        new_v_addr,
+                        value_list[i].clone(),
+                    ) {
+                        v_revisit.push((state, "abs_apply".to_string()));
+                    }
+                }
+                v_new.push((new_item.clone(), "abs_apply".to_string()));
             }
-        }
+            _ => panic!(),
+        },
         _ => panic!(),
     }
 
-    log::debug!("ABS_APPLY - {:?} New - {:?} Revisit", v_new.len(), 0);
+    log::debug!(
+        "ABS_APPLY - {:?} New - {:?} Revisit",
+        v_new.len(),
+        v_revisit.len()
+    );
     (v_new, v_revisit)
 }

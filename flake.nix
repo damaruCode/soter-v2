@@ -34,6 +34,7 @@
           buildInputs = [
             pkgs-old.erlangR22
             pkgs.rust-bin.stable.latest.default
+            pkgs.graphviz # for graphviz exports
           ];
         };
       }

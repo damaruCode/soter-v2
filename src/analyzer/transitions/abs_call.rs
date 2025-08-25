@@ -2,58 +2,52 @@ use core::panic;
 
 use crate::{
     abstraction::Abstraction,
-    ast::{Call, TypedCore},
-    state_space::{KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress, VarName},
-    util::{AstHelper, SetMap},
+    ast::TypedCore,
+    state_space::{KontinuationAddress, Mailboxes, ProcState, Value, ValueAddress},
+    util::AstHelper,
 };
 
-use super::{abs_self, abs_send, abs_spawn, TransitionResult};
+use super::{abs_self, abs_spawn, TransitionResult};
 
 pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
-    call: &Call,
+    kont_module: &TypedCore,
+    kont_op_value: &Value<V>,
+    kont_value_list: &Vec<Value<V>>,
     proc_state: &ProcState<K, V>,
     mailboxes: &mut Mailboxes<V>,
-    store: &Store<K, V>,
-    seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
     abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
     // check module name
-    match &*call.module {
-        TypedCore::Literal(l_mod) => match &*l_mod.val {
-            TypedCore::String(s_mod) => {
-                if s_mod.inner != "erlang" {
-                    todo!("Can't handle modules other than 'erlang'")
-                }
-            }
-            _ => panic!(),
-        },
+    let kont_module_atom = match kont_module {
+        TypedCore::Literal(l) => l.clone(),
         _ => panic!(),
     };
 
-    // NOTE only operations from the erlang module
-    match &*call.name {
-        TypedCore::Literal(l) => match &*l.val {
-            TypedCore::String(s) => match s.inner.as_str() {
-                "spawn" => abs_spawn(
-                    &VarName::from(&call.args.inner[0]),
-                    proc_state,
-                    mailboxes,
-                    store,
-                    ast_helper,
-                    abstraction,
-                ),
-                "!" | "send" => abs_send(
-                    &call.args.inner[0],
-                    &call.args.inner[1],
-                    proc_state,
-                    mailboxes,
-                    store,
-                    seen_proc_states,
-                    ast_helper,
-                ),
-                "self" => abs_self(proc_state),
-                _ => panic!("{:#?}", s),
+    match &*kont_module_atom.val {
+        TypedCore::String(s_mod) => {
+            if s_mod.inner != "erlang" {
+                todo!("Can't handle modules other than 'erlang'")
+            }
+        }
+        _ => panic!(),
+    };
+
+    match &*kont_op_value {
+        Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+            TypedCore::Literal(l) => match &*l.val {
+                TypedCore::String(s) => match s.inner.as_str() {
+                    "spawn" => abs_spawn(
+                        &kont_value_list[0],
+                        proc_state,
+                        mailboxes,
+                        ast_helper,
+                        abstraction,
+                    ),
+                    "self" => abs_self(proc_state),
+                    _ => todo!("{:#?}", s),
+                },
+                _ => panic!(),
             },
             _ => panic!(),
         },

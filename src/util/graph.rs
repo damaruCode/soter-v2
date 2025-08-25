@@ -114,12 +114,13 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
         F: Fn(&N) -> NodeAttributes,
         G: Fn(&E) -> EdgeAttributes,
     {
-        let mut dot_code = String::from("digraph {");
+        let mut dot_code = String::from("digraph {\n");
+        dot_code.push_str("\trankdir=TB\n\tnode [shape=box]\n");
         for (_, node) in &self.map {
             let node_attr = format_node(&node.data);
             dot_code.push_str(
                 format!(
-                    "\t{}[label=\"{}\" shape=\"box\" tooltip=\"{}\", group=\"{}\"]\n",
+                    "\t{}[label=\"{}\" tooltip=\"{}\", group=\"{}\"]\n",
                     node.handle, node_attr.label, node_attr.tooltip, node_attr.group
                 )
                 .as_str(),

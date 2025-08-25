@@ -5,8 +5,11 @@ pub mod vp4f;
 
 use serde::Serialize;
 
-use crate::state_space::{
-    Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
+use crate::{
+    ast::Literal,
+    state_space::{
+        Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
+    },
 };
 
 #[derive(clap::ValueEnum, Clone, Default, Debug, Serialize)]
@@ -38,6 +41,8 @@ pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
         next_env: &Env<V>,
         next_time: &Time,
     ) -> K;
+
+    fn literal_vaddr(&self, literal: &Literal) -> V;
 
     /// Creates a new ValueAddress for any given state of the abstract machine
     fn new_vaddr(

@@ -35,6 +35,7 @@ pub fn abs_pid<K: KontinuationAddress, V: ValueAddress>(
             Kont::Seq(next_prog_loc, env, k_addr) => {
                 return abs_pop_seq(proc_state, next_prog_loc, &env, &k_addr)
             }
+            Kont::Send(..) | Kont::Apply(..) => panic!(),
             Kont::Stop => {} // successful halt
         };
     }

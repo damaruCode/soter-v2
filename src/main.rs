@@ -7,6 +7,7 @@ pub mod util;
 
 use std::{
     fs::{self, File},
+    process,
     time::Instant,
 };
 
@@ -203,8 +204,22 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                 edge_attr
             },
         );
-        let mut graph_file = File::create(graph_path).unwrap();
+        let mut graph_file = File::create(&graph_path).unwrap();
         write!(graph_file, "{}", dot_graph).unwrap();
+
+        process::Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "dot -Tsvg {} > {}",
+                graph_path.clone().into_os_string().into_string().unwrap(),
+                graph_path
+                    .with_extension("svg")
+                    .into_os_string()
+                    .into_string()
+                    .unwrap()
+            ))
+            .output()
+            .expect("Failed to compile dot file with graphviz");
     }
 
     // Eval

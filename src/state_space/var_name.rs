@@ -17,6 +17,7 @@ impl From<&TypedCore> for VarName {
             TypedCore::Var(v) => VarName::from(&*v.name),
             TypedCore::String(s) => VarName::Atom(s.inner.clone()),
             TypedCore::Number(n) => VarName::Number(n.inner.as_u128().unwrap()),
+            TypedCore::Literal(l) => VarName::from(&*l.val),
             TypedCore::AstList(al) => {
                 let s = match &al.inner[0] {
                     TypedCore::String(s) => s.inner.clone(),

@@ -61,13 +61,17 @@ fn peek_name(tc: &TypedCore) -> String {
                 String::from("If you see this, you are seeing ghosts --- congrats!"),
             TypedCore::PrimOp(_) => String::from("primop ..."),
             TypedCore::Values(_) => String::from("values ..."),
-            TypedCore::AstList(al) => al
-                .inner
-                .iter()
-                .map(|e| peek_name(e))
-                .collect::<Vec<String>>()
-                .join(", "),
-            TypedCore::Literal(l) => peek_name(&*l.val),
+            TypedCore::AstList(al) => format!(
+                "[{}]",
+                al.inner
+                    .iter()
+                    .map(|e| peek_name(e))
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
+            TypedCore::Literal(l) => {
+                peek_name(&*l.val)
+            }
             TypedCore::AstTuple(at) =>
                 format!("{{{}, {}}}", peek_name(&*at.frst), peek_name(&*at.scnd)),
             TypedCore::MapPair(_) => String::from("mappair ..."),

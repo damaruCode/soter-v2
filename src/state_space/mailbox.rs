@@ -10,7 +10,7 @@ use std::{collections::BTreeMap, fmt::Display};
 /// in this case this represents the AbsMailbox_set abstraction
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Mailbox<V: ValueAddress> {
-    pub inner: Vec<Value<V>>,
+    pub inner: Vec<V>,
 }
 
 impl<V: ValueAddress> Mailbox<V> {
@@ -32,6 +32,7 @@ impl<V: ValueAddress> Mailbox<V> {
 
     fn amatch<W: ValueAddress>(
         pattern: &TypedCore,
+        msg_v_addr: &W,
         msg: &Value<W>,
         value_store: &SetMap<W, Value<W>>,
         ast_helper: &AstHelper,
@@ -39,7 +40,7 @@ impl<V: ValueAddress> Mailbox<V> {
         match pattern {
             TypedCore::Var(v) => {
                 let mut new_subst = MailboxSubstitution::new();
-                new_subst.inner.insert(VarName::from(v), msg.clone());
+                new_subst.inner.insert(VarName::from(v), msg_v_addr.clone());
                 Vec::from([new_subst])
             }
             TypedCore::Literal(pattern_l) => match msg {
@@ -58,14 +59,13 @@ impl<V: ValueAddress> Mailbox<V> {
             _ => match msg {
                 Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
                     TypedCore::Var(v) => {
-                        let values = value_store
-                            .get(clo.env.inner.get(&VarName::from(v)).unwrap())
-                            .unwrap();
+                        let v_addr = clo.env.inner.get(&VarName::from(v)).unwrap();
 
                         let mut new_substs = Vec::new();
-                        for value in values {
+                        for value in value_store.get(v_addr).unwrap() {
                             new_substs.append(&mut Self::amatch(
                                 &pattern,
+                                v_addr,
                                 value,
                                 value_store,
                                 ast_helper,
@@ -100,6 +100,7 @@ impl<V: ValueAddress> Mailbox<V> {
 
     fn lmatch<W: ValueAddress>(
         clause: &Clause,
+        msg_v_addr: &W,
         msg: &AstList<TypedCore>,
         env: &Env<W>,
         value_store: &SetMap<W, Value<W>>,
@@ -123,6 +124,7 @@ impl<V: ValueAddress> Mailbox<V> {
         for i in 0..msg.inner.len() {
             let substs_i = &Self::amatch(
                 &patterns.inner[i],
+                msg_v_addr,
                 &Value::Closure(Closure {
                     prog_loc: msg.inner[i].get_index().unwrap(),
                     env: env.clone(),
@@ -144,6 +146,7 @@ impl<V: ValueAddress> Mailbox<V> {
 
     fn cmatch<W: ValueAddress>(
         clause: &Clause,
+        msg_v_addr: &W,
         msg: &Value<W>,
         value_store: &SetMap<W, Value<W>>,
         ast_helper: &AstHelper,
@@ -157,14 +160,25 @@ impl<V: ValueAddress> Mailbox<V> {
                             return Vec::new();
                         }
 
-                        Self::amatch(&clause.pats.inner[0], msg, value_store, ast_helper)
+                        Self::amatch(
+                            &clause.pats.inner[0],
+                            msg_v_addr,
+                            msg,
+                            value_store,
+                            ast_helper,
+                        )
                     }
                     TypedCore::AstList(al) => {
-                        Self::lmatch(clause, al, &clo.env, value_store, ast_helper)
+                        Self::lmatch(clause, msg_v_addr, al, &clo.env, value_store, ast_helper)
                     }
-                    TypedCore::Tuple(tup) => {
-                        Self::lmatch(clause, &tup.es, &clo.env, value_store, ast_helper)
-                    }
+                    TypedCore::Tuple(tup) => Self::lmatch(
+                        clause,
+                        msg_v_addr,
+                        &tup.es,
+                        &clo.env,
+                        value_store,
+                        ast_helper,
+                    ),
                     _ => Vec::new(),
                 }
             }
@@ -174,7 +188,13 @@ impl<V: ValueAddress> Mailbox<V> {
                     return Vec::new();
                 }
 
-                Self::amatch(&clause.pats.inner[0], msg, value_store, ast_helper)
+                Self::amatch(
+                    &clause.pats.inner[0],
+                    msg_v_addr,
+                    msg,
+                    value_store,
+                    ast_helper,
+                )
             }
         }
     }
@@ -187,11 +207,14 @@ impl<V: ValueAddress> Mailbox<V> {
     ) -> Vec<(usize, Vec<MailboxSubstitution<V>>)> {
         let mut matched_msgs = Vec::new();
 
-        for msg in &self.inner {
-            for i in 0..clauses.len() {
-                let substs = Self::cmatch(&clauses[i], msg, value_store, ast_helper);
-                if substs.len() > 0 {
-                    matched_msgs.push((i, substs));
+        for msg_v_addr in &self.inner {
+            for msg in value_store.get(msg_v_addr).unwrap() {
+                for i in 0..clauses.len() {
+                    let substs =
+                        Self::cmatch(&clauses[i], msg_v_addr, msg, value_store, ast_helper);
+                    if substs.len() > 0 {
+                        matched_msgs.push((i, substs));
+                    }
                 }
             }
         }
@@ -212,15 +235,20 @@ impl<V: ValueAddress> Mailboxes<V> {
         }
     }
 
-    pub fn push(&mut self, pid: Pid, value: Value<V>) {
+    pub fn push(&mut self, pid: Pid, v_addr: V) {
         match self.inner.get_mut(&pid) {
             Some(mb) => {
-                if !mb.inner.contains(&value) {
-                    mb.inner.push(value);
+                if !mb.inner.contains(&v_addr) {
+                    mb.inner.push(v_addr);
                 }
             }
             None => {
-                let _ = self.inner.insert(pid, Mailbox { inner: vec![value] });
+                let _ = self.inner.insert(
+                    pid,
+                    Mailbox {
+                        inner: vec![v_addr],
+                    },
+                );
             }
         }
     }
@@ -238,7 +266,7 @@ impl<V: ValueAddress> Display for Mailbox<V> {
 
 #[derive(Debug)]
 pub struct MailboxSubstitution<V: ValueAddress> {
-    pub inner: BTreeMap<VarName, Value<V>>,
+    pub inner: BTreeMap<VarName, V>,
 }
 impl<V: ValueAddress> MailboxSubstitution<V> {
     pub fn new() -> Self {
