@@ -26,7 +26,6 @@ fn push_apply<K: KontinuationAddress, V: ValueAddress>(
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
 
-    dbg!(op_name);
     for op_value in &store
         .value
         .get(proc_state.env.inner.get(&op_name).unwrap())

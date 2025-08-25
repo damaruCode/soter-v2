@@ -68,45 +68,44 @@ pub fn push_to_value_store<K: KontinuationAddress, V: ValueAddress>(
     v_addr: V,
     value: Value<V>,
 ) -> Vec<ProcState<K, V>> {
-    store.value.push(v_addr.clone(), value);
+    log::debug!("push_to_value_store - Seen {} |-> {}", v_addr, value);
+    if !store.value.push(v_addr.clone(), value) {
+        // if this values was already part of the store, ignore it
+        return Vec::new();
+    }
 
     let mut dependencies = Vec::new();
-    // for (_pid, states) in &seen.inner {
-    //     log::debug!(
-    //         "push_to_value_store - Seen {:#?} with Pid {:#?}",
-    //         states.len(),
-    //         _pid
-    //     );
-    //     for state in states {
-    //         match state.prog_loc_or_pid {
-    //             ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-    //                 TypedCore::Var(v) => match_vaddr(&v_addr, state, v, &mut dependencies),
-    //                 TypedCore::Apply(apply) => {
-    //                     for arg in &apply.args.inner {
-    //                         match arg {
-    //                             TypedCore::Var(v) => {
-    //                                 match_vaddr(&v_addr, state, v, &mut dependencies)
-    //                             }
-    //                             _ => {}
-    //                         }
-    //                     }
-    //                 }
-    //                 TypedCore::Call(call) => {
-    //                     for arg in &call.args.inner {
-    //                         match arg {
-    //                             TypedCore::Var(v) => {
-    //                                 match_vaddr(&v_addr, state, v, &mut dependencies)
-    //                             }
-    //                             _ => {}
-    //                         }
-    //                     }
-    //                 }
-    //                 _ => {}
-    //             },
-    //             _ => {}
-    //         }
-    //     }
-    // }
+    for (_pid, states) in &seen.inner {
+        for state in states {
+            match state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
+                    TypedCore::Var(v) => match_vaddr(&v_addr, state, v, &mut dependencies),
+                    TypedCore::Apply(apply) => {
+                        for arg in &apply.args.inner {
+                            match arg {
+                                TypedCore::Var(v) => {
+                                    match_vaddr(&v_addr, state, v, &mut dependencies)
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    TypedCore::Call(call) => {
+                        for arg in &call.args.inner {
+                            match arg {
+                                TypedCore::Var(v) => {
+                                    match_vaddr(&v_addr, state, v, &mut dependencies)
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+    }
     dependencies
 }
 
@@ -117,38 +116,37 @@ pub fn push_to_kont_store<K: KontinuationAddress, V: ValueAddress>(
     k_addr: K,
     kont: Kont<K, V>,
 ) -> Vec<ProcState<K, V>> {
-    store.kont.push(k_addr.clone(), kont);
+    log::debug!("push_to_kont_store - {} |-> {}", k_addr, kont);
+    if !store.kont.push(k_addr.clone(), kont) {
+        // if this values was already part of the store, ignore it
+        return Vec::new();
+    }
 
     let mut dependencies = Vec::new();
-    // for (_pid, states) in &seen.inner {
-    //     log::debug!(
-    //         "push_to_kont_store - Seen {:#?} with Pid {:#?}",
-    //         states.len(),
-    //         _pid
-    //     );
-    //     for state in states {
-    //         if state.k_addr != k_addr {
-    //             continue;
-    //         }
-    //         match state.prog_loc_or_pid {
-    //             ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-    //                 TypedCore::Module(_)
-    //                 | TypedCore::Var(_)
-    //                 | TypedCore::Apply(_)
-    //                 | TypedCore::Call(_)
-    //                 | TypedCore::LetRec(_)
-    //                 | TypedCore::Case(_)
-    //                 | TypedCore::Receive(_)
-    //                 | TypedCore::PrimOp(_)
-    //                 | TypedCore::Let(_) => {}
-    //                 _ => dependencies.push(state.clone()),
-    //             },
-    //             ProgLocOrPid::Pid(_) => {
-    //                 // NOTE cloning here might become a memory issue
-    //                 dependencies.push(state.clone());
-    //             }
-    //         }
-    //     }
-    // }
+    for (_pid, states) in &seen.inner {
+        for state in states {
+            if state.k_addr != k_addr {
+                continue;
+            }
+            match state.prog_loc_or_pid {
+                ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
+                    TypedCore::Module(_)
+                    | TypedCore::Var(_)
+                    | TypedCore::Apply(_)
+                    | TypedCore::Call(_)
+                    | TypedCore::LetRec(_)
+                    | TypedCore::Case(_)
+                    | TypedCore::Receive(_)
+                    | TypedCore::PrimOp(_)
+                    | TypedCore::Let(_) => {}
+                    _ => dependencies.push(state.clone()),
+                },
+                ProgLocOrPid::Pid(_) => {
+                    // NOTE cloning here might become a memory issue
+                    dependencies.push(state.clone());
+                }
+            }
+        }
+    }
     dependencies
 }

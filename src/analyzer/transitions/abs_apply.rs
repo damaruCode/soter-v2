@@ -26,7 +26,6 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     let mut v_revisit = Vec::new();
 
     let mut new_item = proc_state.clone();
-    new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
     // expand kont_value_list with the value in the control string position
@@ -45,6 +44,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                 let fn_var_names = Vec::<VarName>::from(&f.vars);
 
                 new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
+                new_item.env = clo.env.clone();
                 new_item.time = abstraction.tick(
                     &new_item.time,
                     match proc_state.prog_loc_or_pid {

@@ -171,9 +171,13 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 // We need to look at the continuation for the next computation
                 _ => match store.kont.get(&self.k_addr) {
                     Some(konts) => {
+                        log::debug!("{} |-> {:#?}", self.k_addr, konts);
                         let konts = konts.clone();
                         // consider each possible continuation
+                        let mut v_new = Vec::new();
+                        let mut v_revisit = Vec::new();
                         for kont in konts {
+                            let mut res;
                             match kont {
                                 Kont::Let(var_list, body, env, k_addr) => {
                                     // NOTE ABS_POP_LET_VALUEADDR will probably be left out ---
@@ -184,7 +188,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                                 todo!("ABS_POP_LET_VALUELIST")
                                             }
                                             _ => {
-                                                return abs_pop_let_closure(
+                                                res = abs_pop_let_closure(
                                                     self,
                                                     *pl,
                                                     &var_list,
@@ -209,11 +213,10 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                     env,
                                     k_addr,
                                 ) => {
-                                    log::debug!("SADD{:#?} {:#?}", args_list, value_list);
                                     if args_list.len() == 0 {
                                         match module_atom {
                                             Some(module) => {
-                                                return abs_call(
+                                                res = abs_call(
                                                     &module,
                                                     &op_value,
                                                     &value_list,
@@ -224,7 +227,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                                 );
                                             }
                                             None => {
-                                                return abs_apply(
+                                                res = abs_apply(
                                                     &op_value,
                                                     &value_list,
                                                     &env,
@@ -238,7 +241,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                             }
                                         }
                                     } else {
-                                        return abs_pop_apply(
+                                        res = abs_pop_apply(
                                             self,
                                             &args_list,
                                             &value_list,
@@ -254,7 +257,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                     }
                                 }
                                 Kont::Send(msg_prog_loc, env, k_addr) => {
-                                    return abs_pop_send(
+                                    res = abs_pop_send(
                                         msg_prog_loc,
                                         &env,
                                         &k_addr,
@@ -262,18 +265,20 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                         mailboxes,
                                         seen,
                                         ast_helper,
-                                    )
+                                    );
                                 }
                                 Kont::Seq(body, env, k_addr) => {
-                                    return abs_pop_seq(self, body, &env, &k_addr);
+                                    res = abs_pop_seq(self, body, &env, &k_addr);
                                 }
                                 Kont::Stop => {
                                     // NOTE (successful)
-                                    return (Vec::new(), Vec::new());
+                                    res = (Vec::new(), Vec::new());
                                 }
                             }
+                            v_new.append(&mut res.0);
+                            v_revisit.append(&mut res.1);
                         }
-                        panic!();
+                        (v_new, v_revisit)
                     }
                     None => {
                         panic!()

@@ -15,17 +15,18 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
     }
 
     /// Inserts a new value into the value set for the given key
-    pub fn push(&mut self, key: K, value: V) {
+    pub fn push(&mut self, key: K, value: V) -> bool {
         for (k, v) in &mut self.inner {
             if k == &key {
                 if v.contains(&value) {
-                    return;
+                    return false;
                 }
                 v.push(value);
-                return;
+                return true;
             }
         }
         self.inner.push((key, vec![value]));
+        return true;
     }
 
     /// Returns a reference to the set of values associated with a given key, if the key exists
@@ -55,12 +56,12 @@ impl<K: Eq + Display, V: Eq + Display> Display for SetMap<K, V> {
         let mut items = Vec::new();
         for (key, set) in &self.inner {
             items.push(format!(
-                "<|{}|>\n ==> <|{}|>",
+                "<|{}|>\n {}\n",
                 key,
                 set.iter()
-                    .map(|value| format!("{}", value))
+                    .map(|value| format!("=> {}", value))
                     .collect::<Vec<String>>()
-                    .join(", ")
+                    .join("\n")
             ));
         }
         write!(f, "{}", items.join("\n"))

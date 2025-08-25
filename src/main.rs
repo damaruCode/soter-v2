@@ -199,7 +199,12 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
             },
             |transtion_name| {
                 let mut edge_attr = EdgeAttributes::new();
-                edge_attr.label = transtion_name.clone();
+
+                if transtion_name.ends_with("revisit") {
+                    edge_attr.style = "invis".to_string();
+                } else {
+                    edge_attr.label = transtion_name.clone();
+                }
 
                 edge_attr
             },
@@ -210,7 +215,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         process::Command::new("sh")
             .arg("-c")
             .arg(format!(
-                "dot -Tsvg {} > {}",
+                "unflatten -f -l3 -c6 {} | dot | neato -s -n2 -Tsvg > {}",
                 graph_path.clone().into_os_string().into_string().unwrap(),
                 graph_path
                     .with_extension("svg")

@@ -44,11 +44,13 @@ impl<E: EdgeData> ToEdge<E> {
 
 pub struct EdgeAttributes {
     pub label: String,
+    pub style: String,
 }
 impl EdgeAttributes {
     pub fn new() -> Self {
         Self {
             label: String::new(),
+            style: String::new(),
         }
     }
 }
@@ -129,8 +131,8 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
                 let edge_attr = format_edge(&edge.data);
                 dot_code.push_str(
                     format!(
-                        "\t{} -> {} [label=\"{}\"]\n",
-                        node.handle, edge.node_handle, edge_attr.label
+                        "\t{} -> {} [label=\"{}\" style=\"{}\"]\n",
+                        node.handle, edge.node_handle, edge_attr.label, edge_attr.style
                     )
                     .as_str(),
                 );
