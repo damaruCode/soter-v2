@@ -23,7 +23,6 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,
-            call_site_env: Env::init(),
             return_site_env: Env::init(),
             time: Time::init(),
             _stop: true,
@@ -43,7 +42,6 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            call_site_env: curr_proc_state.env.clone(),
             return_site_env: next_env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
@@ -61,6 +59,7 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            call_site_prog_loc: curr_proc_state.prog_loc_or_pid.clone(),
             time: curr_proc_state.time.clone(),
         }
     }

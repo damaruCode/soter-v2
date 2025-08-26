@@ -1,7 +1,6 @@
 pub mod icfa;
 pub mod p4f;
 pub mod standard;
-pub mod vp4f;
 
 use serde::Serialize;
 
@@ -17,9 +16,6 @@ pub enum AbstractionKind {
 
     /// Adapted choice of KAddr according to P4F (Gilray et al.) in ICFA thesis
     P4F,
-
-    /// Adapted choice of VAddr according to the ICFA thesis; inspired by P4F (Gilray et al.)
-    VP4F,
 
     /// Adapted choices of KAddr and VAddr according to the ICFA thesis including the P4F
     /// allocation strategy

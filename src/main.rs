@@ -7,12 +7,13 @@ pub mod util;
 
 use std::{
     fs::{self, File},
+    process,
     time::Instant,
 };
 
 use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction,
-    vp4f::VP4FAbstraction, Abstraction, AbstractionKind,
+    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction, Abstraction,
+    AbstractionKind,
 };
 use analyzer::Analyzer;
 use chrono::Utc;
@@ -109,11 +110,6 @@ fn main() {
             ast_helper,
             args,
         ),
-        AbstractionKind::VP4F => run_analysis_with(
-            Box::new(VP4FAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
         AbstractionKind::ICFA => run_analysis_with(
             Box::new(ICFAAbstraction::new(args.time_depth)),
             ast_helper,
@@ -161,7 +157,6 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
                         AbstractionKind::P4F => "p4f",
-                        AbstractionKind::VP4F => "vp4f",
                         AbstractionKind::ICFA => "icfa",
                     },
                     args.time_depth
@@ -203,8 +198,22 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                 edge_attr
             },
         );
-        let mut graph_file = File::create(graph_path).unwrap();
+        let mut graph_file = File::create(&graph_path).unwrap();
         write!(graph_file, "{}", dot_graph).unwrap();
+
+        process::Command::new("sh")
+            .arg("-c")
+            .arg(format!(
+                "unflatten -f -l3 -c6 {} | dot | neato -s -n2 -Tsvg > {}",
+                graph_path.clone().into_os_string().into_string().unwrap(),
+                graph_path
+                    .with_extension("svg")
+                    .into_os_string()
+                    .into_string()
+                    .unwrap()
+            ))
+            .output()
+            .expect("Failed to compile dot file with graphviz");
     }
 
     // Eval
