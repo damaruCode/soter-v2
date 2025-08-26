@@ -19,11 +19,6 @@ pub fn push_to_mailboxes<K: KontinuationAddress, V: ValueAddress>(
     let mut dependencies = Vec::new();
     match seen.get(&pid) {
         Some(set) => {
-            log::debug!(
-                "push_to_mailboxes - Seen {:#?} with Pid {:#?}",
-                set.len(),
-                pid
-            );
             for state in set {
                 match state.prog_loc_or_pid {
                     ProgLocOrPid::ProgLoc(location) => {
@@ -95,11 +90,6 @@ pub fn push_to_kont_store<K: KontinuationAddress, V: ValueAddress>(
 
     let mut dependencies = Vec::new();
     for (_pid, states) in &seen.inner {
-        log::debug!(
-            "push_to_kont_store - Seen {:#?} with Pid {:#?}",
-            states.len(),
-            _pid
-        );
         for state in states {
             if state.k_addr != k_addr {
                 continue;
