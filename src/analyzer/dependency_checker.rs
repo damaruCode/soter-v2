@@ -51,15 +51,13 @@ pub fn push_to_value_store<K: KontinuationAddress, V: ValueAddress>(
     v_addr: V,
     value: Value<V>,
 ) -> Vec<ProcState<K, V>> {
-    store.value.push(v_addr.clone(), value);
+    if !store.value.push(v_addr.clone(), value) {
+        // if this value is already part of the store, ignore it
+        return Vec::new();
+    }
 
     let mut dependencies = Vec::new();
     for (_pid, states) in &seen.inner {
-        log::debug!(
-            "push_to_value_store - Seen {:#?} with Pid {:#?}",
-            states.len(),
-            _pid
-        );
         for state in states {
             match state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
@@ -90,7 +88,10 @@ pub fn push_to_kont_store<K: KontinuationAddress, V: ValueAddress>(
     k_addr: K,
     kont: Kont<K, V>,
 ) -> Vec<ProcState<K, V>> {
-    store.kont.push(k_addr.clone(), kont);
+    if !store.kont.push(k_addr.clone(), kont) {
+        // if this value is already part of the store, ignore it
+        return Vec::new();
+    }
 
     let mut dependencies = Vec::new();
     for (_pid, states) in &seen.inner {

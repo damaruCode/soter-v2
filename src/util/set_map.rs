@@ -14,18 +14,20 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
         SetMap { inner: Vec::new() }
     }
 
-    /// Inserts a new value into the value set for the given key
-    pub fn push(&mut self, key: K, value: V) {
+    /// Inserts a new value into the value set for the given key, returning wether the value has
+    /// been pushed (true) or was already part of the set (false)
+    pub fn push(&mut self, key: K, value: V) -> bool {
         for (k, v) in &mut self.inner {
             if k == &key {
                 if v.contains(&value) {
-                    return;
+                    return false;
                 }
                 v.push(value);
-                return;
+                return true;
             }
         }
         self.inner.push((key, vec![value]));
+        return true;
     }
 
     /// Returns a reference to the set of values associated with a given key, if the key exists
