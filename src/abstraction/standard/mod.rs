@@ -46,7 +46,8 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            env: curr_proc_state.env.clone(),
+            // env: curr_proc_state.env.clone(),
+            env: Env::init(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
@@ -56,6 +57,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         VAddr {
             pid: Pid::init(),
             var_name: VarName::Atom(plain_print::print(&*literal.val)),
+            prog_loc_or_pid: ProgLocOrPid::ProgLoc(0),
             time: Time::init(),
         }
     }
@@ -71,6 +73,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            prog_loc_or_pid: curr_proc_state.prog_loc_or_pid.clone(),
             time: curr_proc_state.time.clone(),
         }
     }

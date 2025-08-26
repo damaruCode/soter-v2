@@ -12,8 +12,8 @@ use std::{
 };
 
 use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction,
-    vp4f::VP4FAbstraction, Abstraction, AbstractionKind,
+    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction, Abstraction,
+    AbstractionKind,
 };
 use analyzer::Analyzer;
 use chrono::Utc;
@@ -110,11 +110,6 @@ fn main() {
             ast_helper,
             args,
         ),
-        AbstractionKind::VP4F => run_analysis_with(
-            Box::new(VP4FAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
         AbstractionKind::ICFA => run_analysis_with(
             Box::new(ICFAAbstraction::new(args.time_depth)),
             ast_helper,
@@ -162,7 +157,6 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
                         AbstractionKind::P4F => "p4f",
-                        AbstractionKind::VP4F => "vp4f",
                         AbstractionKind::ICFA => "icfa",
                     },
                     args.time_depth
