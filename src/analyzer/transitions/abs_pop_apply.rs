@@ -3,7 +3,6 @@ use std::collections::VecDeque;
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_kont_store,
-    ast::TypedCore,
     state_space::{
         Closure, Env, Kont, KontinuationAddress, Pid, ProcState, ProgLoc, ProgLocOrPid, Store,
         Value, ValueAddress,
@@ -17,7 +16,6 @@ pub fn abs_pop_apply<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     kont_arg_list: &VecDeque<ProgLoc>,
     kont_value_list: &Vec<Value<V>>,
-    kont_module_atom: Option<TypedCore>,
     kont_op_value: &Value<V>,
     kont_env: &Env<V>,
     kont_k_addr: &K,
@@ -54,7 +52,6 @@ pub fn abs_pop_apply<K: KontinuationAddress, V: ValueAddress>(
     let kont = Kont::Apply(
         new_kont_arg_list.clone(),
         new_value_list,
-        kont_module_atom.clone(),
         kont_op_value.clone(),
         kont_env.clone(),
         kont_k_addr.clone(),

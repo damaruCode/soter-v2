@@ -4,12 +4,32 @@ use crate::ast::AstList;
 use crate::ast::TypedCore;
 use crate::ast::Var;
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Debug, Ord, PartialOrd)]
 pub enum VarName {
     Atom(String),
     Number(u128),
     FnAtom(String, u128),
 }
+
+impl PartialEq for VarName {
+    fn eq(&self, other: &Self) -> bool {
+        match self {
+            Self::Atom(s1) => match other {
+                Self::Atom(s2) => s1 == s2,
+                _ => false,
+            },
+            Self::Number(n1) => match other {
+                Self::Number(n2) => n1 == n2,
+                _ => false,
+            },
+            Self::FnAtom(s1, n1) => match other {
+                Self::FnAtom(s2, n2) => s1 == s2 && n1 == n2,
+                _ => false,
+            },
+        }
+    }
+}
+impl Eq for VarName {}
 
 impl From<&TypedCore> for VarName {
     fn from(tc: &TypedCore) -> Self {

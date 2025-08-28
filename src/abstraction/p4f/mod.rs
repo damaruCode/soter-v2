@@ -1,8 +1,4 @@
-use crate::{
-    ast::Literal,
-    state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarName},
-    util::plain_print,
-};
+use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarName};
 
 use super::Abstraction;
 
@@ -49,15 +45,6 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
             env: next_env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
-        }
-    }
-
-    fn literal_vaddr(&self, literal: &Literal) -> VAddr {
-        VAddr {
-            pid: Pid::init(),
-            var_name: VarName::Atom(plain_print::print(&*literal.val)),
-            prog_loc_or_pid: ProgLocOrPid::ProgLoc(0),
-            time: Time::init(),
         }
     }
 

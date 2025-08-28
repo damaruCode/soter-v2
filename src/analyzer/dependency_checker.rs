@@ -12,9 +12,9 @@ pub fn push_to_mailboxes<K: KontinuationAddress, V: ValueAddress>(
     seen: &SetMap<Pid, ProcState<K, V>>,
     mailboxes: &mut Mailboxes<V>,
     pid: Pid,
-    v_addr: V,
+    value: Value<V>,
 ) -> Vec<ProcState<K, V>> {
-    mailboxes.push(pid.clone(), v_addr);
+    mailboxes.push(pid.clone(), value);
 
     let mut dependencies = Vec::new();
     match seen.get(&pid) {

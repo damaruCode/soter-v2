@@ -4,11 +4,8 @@ pub mod standard;
 
 use serde::Serialize;
 
-use crate::{
-    ast::Literal,
-    state_space::{
-        Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
-    },
+use crate::state_space::{
+    Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
 };
 
 #[derive(clap::ValueEnum, Clone, Default, Debug, Serialize)]
@@ -16,6 +13,9 @@ pub enum AbstractionKind {
     /// Standard choice for KAddr and VAddr
     #[default]
     Standard,
+
+    /// Standard choice with 1-CFA VAddr
+    StandardV1CFA,
 
     /// Adapted choice of KAddr according to P4F (Gilray et al.) in ICFA thesis
     P4F,
@@ -37,8 +37,6 @@ pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
         next_env: &Env<V>,
         next_time: &Time,
     ) -> K;
-
-    fn literal_vaddr(&self, literal: &Literal) -> V;
 
     /// Creates a new ValueAddress for any given state of the abstract machine
     fn new_vaddr(

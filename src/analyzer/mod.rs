@@ -8,8 +8,10 @@ use crate::util::SetMap;
 use std::collections::VecDeque;
 
 mod dependency_checker;
+mod match_helper;
 mod transitions;
 
+pub use match_helper::*;
 use transitions::*;
 
 pub enum TransitionError {
@@ -142,7 +144,6 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 TypedCore::Module(m) => abs_module(m, self, store, module_env, abstraction),
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(a) => abs_push_apply(
-                    None,
                     &*a.op,
                     &a.args.inner,
                     self,
@@ -151,8 +152,8 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     abstraction,
                     ast_helper,
                 ),
-                TypedCore::Call(c) => abs_push_apply(
-                    Some((*c.module).clone()),
+                TypedCore::Call(c) => abs_push_call(
+                    &*c.module,
                     &*c.name,
                     &c.args.inner,
                     self,
@@ -163,7 +164,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 ),
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
                 TypedCore::Case(c) => abs_case(c, self, store, module_env, ast_helper),
-                TypedCore::Receive(r) => abs_receive(r, self, mailboxes, store, ast_helper),
+                TypedCore::Receive(r) => {
+                    abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
+                }
                 TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
                 TypedCore::Seq(s) => abs_push_seq(s, self, store, seen, abstraction, ast_helper),
@@ -205,47 +208,24 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                         _ => panic!(), //
                                     }
                                 }
-                                Kont::Apply(
-                                    args_list,
-                                    value_list,
-                                    module_atom,
-                                    op_value,
-                                    env,
-                                    k_addr,
-                                ) => {
+                                Kont::Apply(args_list, value_list, op_value, env, k_addr) => {
                                     if args_list.len() == 0 {
-                                        match module_atom {
-                                            Some(module) => {
-                                                res = abs_call(
-                                                    &module,
-                                                    &op_value,
-                                                    &value_list,
-                                                    self,
-                                                    mailboxes,
-                                                    ast_helper,
-                                                    abstraction,
-                                                );
-                                            }
-                                            None => {
-                                                res = abs_apply(
-                                                    &op_value,
-                                                    &value_list,
-                                                    &env,
-                                                    &k_addr,
-                                                    self,
-                                                    seen,
-                                                    store,
-                                                    abstraction,
-                                                    ast_helper,
-                                                );
-                                            }
-                                        }
+                                        res = abs_apply(
+                                            &op_value,
+                                            &value_list,
+                                            &env,
+                                            &k_addr,
+                                            self,
+                                            seen,
+                                            store,
+                                            abstraction,
+                                            ast_helper,
+                                        );
                                     } else {
                                         res = abs_pop_apply(
                                             self,
                                             &args_list,
                                             &value_list,
-                                            module_atom,
                                             &op_value,
                                             &env,
                                             &k_addr,
@@ -256,16 +236,20 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                         );
                                     }
                                 }
-                                Kont::Send(msg_prog_loc, env, k_addr) => {
+                                Kont::Send(msg_prog_loc, k_addr) => {
                                     res = abs_pop_send(
                                         msg_prog_loc,
-                                        &env,
                                         &k_addr,
                                         self,
                                         mailboxes,
+                                        store,
                                         seen,
                                         ast_helper,
                                     );
+                                }
+                                Kont::Spawn(k_addr) => {
+                                    res =
+                                        abs_spawn(&k_addr, self, mailboxes, ast_helper, abstraction)
                                 }
                                 Kont::Seq(body, env, k_addr) => {
                                     res = abs_pop_seq(self, body, &env, &k_addr);

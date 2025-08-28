@@ -24,8 +24,8 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
                             new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
                             new_item.env = clo.env.clone();
                         }
-                        Value::Pid(_) => {
-                            panic!("Expected closure not pid!")
+                        Value::Pid(pid) => {
+                            new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone());
                         }
                     }
                     v_new.push((new_item, "abs_var".to_string()));

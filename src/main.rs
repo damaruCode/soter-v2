@@ -105,6 +105,11 @@ fn main() {
             ast_helper,
             args,
         ),
+        AbstractionKind::StandardV1CFA => run_analysis_with(
+            Box::new(StandardAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
         AbstractionKind::P4F => run_analysis_with(
             Box::new(P4FAbstraction::new(args.time_depth)),
             ast_helper,
@@ -156,6 +161,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     "{}.{}.erl.dot",
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
+                        AbstractionKind::StandardV1CFA => "standard-v1cfa",
                         AbstractionKind::P4F => "p4f",
                         AbstractionKind::ICFA => "icfa",
                     },

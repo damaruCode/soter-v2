@@ -2,8 +2,7 @@ use crate::{
     abstraction::Abstraction,
     ast::{Index, TypedCore},
     state_space::{
-        KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Time, Value,
-        ValueAddress,
+        KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Time, ValueAddress,
     },
     util::AstHelper,
 };
@@ -11,7 +10,7 @@ use crate::{
 use super::TransitionResult;
 
 pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
-    fun: &Value<V>,
+    kont_k_addr: &K,
     proc_state: &ProcState<K, V>,
     mailboxes: &mut Mailboxes<V>,
     ast_helper: &AstHelper,
@@ -19,8 +18,8 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
-    match fun {
-        Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+    match &proc_state.prog_loc_or_pid {
+        ProgLocOrPid::ProgLoc(prog_loc) => match ast_helper.get(*prog_loc) {
             TypedCore::Fun(f) => {
                 if f.vars.inner.len() != 0 {
                     panic!();
@@ -37,6 +36,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
 
                 let mut new_proc_state_one = proc_state.clone();
                 new_proc_state_one.prog_loc_or_pid = ProgLocOrPid::Pid(new_pid.clone());
+                new_proc_state_one.k_addr = kont_k_addr.clone();
 
                 v_new.push((new_proc_state_one, "abs_spawn".to_string()));
 
@@ -46,7 +46,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                             let new_proc_state_two = ProcState::new(
                                 new_pid.clone(),
                                 ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap()),
-                                clo.env.clone(),
+                                proc_state.env.clone(),
                                 abstraction.stop_kaddr(),
                                 Time::init(),
                             );

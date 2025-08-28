@@ -18,7 +18,6 @@ fn push_apply<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     new_item: ProcState<K, V>,
     op_name: &VarName,
-    module: Option<TypedCore>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
@@ -43,7 +42,6 @@ fn push_apply<K: KontinuationAddress, V: ValueAddress>(
         let kont = Kont::Apply(
             arg_list,
             Vec::new(),
-            module.clone(),
             op_value.clone(),
             proc_state.env.clone(),
             proc_state.k_addr.clone(),
@@ -65,7 +63,6 @@ fn push_apply<K: KontinuationAddress, V: ValueAddress>(
 }
 
 pub fn abs_push_apply<K: KontinuationAddress, V: ValueAddress>(
-    module: Option<TypedCore>,
     op: &TypedCore,
     args: &Vec<TypedCore>,
     proc_state: &ProcState<K, V>,
@@ -74,8 +71,8 @@ pub fn abs_push_apply<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let v_new;
+    let v_revisit;
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(args[0].get_index().unwrap());
@@ -88,58 +85,15 @@ pub fn abs_push_apply<K: KontinuationAddress, V: ValueAddress>(
 
     let op_name = VarName::from(op);
 
-    match module {
-        Some(ref tc) => {
-            // peek into module_name in case the operation is an erlang:send/2
-            let module_name = VarName::from(tc);
-
-            if module_name == VarName::Atom("example".to_string())
-                && op_name == VarName::FnAtom("send".to_string(), 2)
-            {
-                // Send
-                let kont = Kont::Send(
-                    args[1].get_index().unwrap(), // message prog_loc
-                    proc_state.env.clone(),
-                    proc_state.k_addr.clone(),
-                );
-
-                for state in push_to_kont_store(
-                    &ast_helper,
-                    &seen_proc_states,
-                    store,
-                    new_item.k_addr.clone(),
-                    kont,
-                ) {
-                    v_revisit.push((state, "abs_push_apply".to_string()));
-                }
-
-                v_new.push((new_item, "abs_push_apply".to_string()));
-            } else {
-                (v_new, v_revisit) = push_apply(
-                    args,
-                    proc_state,
-                    new_item,
-                    &op_name,
-                    module,
-                    store,
-                    seen_proc_states,
-                    ast_helper,
-                );
-            }
-        }
-        None => {
-            (v_new, v_revisit) = push_apply(
-                args,
-                proc_state,
-                new_item,
-                &op_name,
-                module,
-                store,
-                seen_proc_states,
-                ast_helper,
-            );
-        }
-    }
+    (v_new, v_revisit) = push_apply(
+        args,
+        proc_state,
+        new_item,
+        &op_name,
+        store,
+        seen_proc_states,
+        ast_helper,
+    );
 
     log::debug!(
         "ABS_PUSH_APPLY - {:?} New - {:?} Revisit",

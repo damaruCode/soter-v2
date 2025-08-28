@@ -3,7 +3,8 @@
 -compile(export_all).
 
 main() ->
-  P = spawn(fun() -> receive {A, M} -> A ! M end end),
+  F = fun() -> receive {A, M} -> A ! M end end,
+  P = spawn(F),
   P ! {self(), a},
   receive
     M ->
