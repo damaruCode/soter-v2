@@ -3,8 +3,8 @@ use crate::{
     analyzer::dependency_checker::push_to_value_store,
     ast::{Apply, Index, TypedCore},
     state_space::{
-        Closure, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
-        VarName,
+        Closure, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
+        ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -15,6 +15,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     apply: &Apply,
     prog_loc_proc_state: usize,
     proc_state: &ProcState<K, V>,
+    module_env: &Env<V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     store: &mut Store<K, V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
@@ -42,13 +43,14 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                 ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
                             new_item.time = abstraction.tick(&new_item.time, prog_loc_proc_state);
 
-                            let mut new_env = clo.env.clone();
+                            new_item.env = clo.env.clone();
+                            new_item.env.merge_with(module_env);
                             for i in 0..fn_var_names.len() {
                                 // check the type of the arg
                                 match &apply.args.inner[i] {
                                     // for vars, we simply add a binding to the existent v_addr
                                     TypedCore::Var(v) => {
-                                        new_env.inner.insert(
+                                        new_item.env.inner.insert(
                                             fn_var_names[i].clone(),
                                             proc_state
                                                 .env
@@ -58,34 +60,29 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                                 .clone(),
                                         );
                                     }
-                                    // for literals, we add a new v_addr according to the
-                                    // fn_var_name
-                                    TypedCore::Literal(l) => {
-                                        let v_addr = abstraction.new_vaddr(
+                                    TypedCore::Literal(_) // NOTE could handle this with a constant
+                                                          // address
+                                    | TypedCore::AstList(_)
+                                    | TypedCore::Tuple(_)
+                                    | TypedCore::Fun(_) => {
+                                        let new_v_addr = abstraction.new_vaddr(
                                             proc_state,
-                                            &match &*l.val {
-                                                TypedCore::String(s) => {
-                                                    VarName::Atom(s.inner.clone())
-                                                }
-                                                TypedCore::AstList(_) | TypedCore::Tuple(_) => {
-                                                    fn_var_names[i].clone()
-                                                }
-                                                tc => todo!("{:#?}", tc),
-                                            },
+                                            &fn_var_names[i],
                                             &new_item.prog_loc_or_pid,
                                             &new_item.env,
                                             &new_item.time,
                                         );
 
-                                        new_env
+                                        new_item
+                                            .env
                                             .inner
-                                            .insert(fn_var_names[i].clone(), v_addr.clone());
+                                            .insert(fn_var_names[i].clone(), new_v_addr.clone());
 
                                         for state in push_to_value_store(
                                             ast_helper,
                                             seen_proc_states,
                                             store,
-                                            v_addr,
+                                            new_v_addr,
                                             Value::Closure(Closure {
                                                 prog_loc: apply.args.inner[i].get_index().unwrap(),
                                                 env: proc_state.env.clone(),
@@ -97,7 +94,6 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                     _ => panic!(),
                                 }
                             }
-                            new_item.env = new_env;
 
                             v_new.push((new_item, "abs_apply".to_string()));
                         }

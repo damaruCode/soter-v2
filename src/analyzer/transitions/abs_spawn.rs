@@ -2,8 +2,8 @@ use crate::{
     abstraction::Abstraction,
     ast::{Index, TypedCore},
     state_space::{
-        KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Time, Value,
-        ValueAddress, VarName,
+        Env, KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Time,
+        Value, ValueAddress, VarName,
     },
     util::AstHelper,
 };
@@ -15,6 +15,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     mailboxes: &mut Mailboxes<V>,
     store: &Store<K, V>,
+    module_env: &Env<V>,
     ast_helper: &AstHelper,
     abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
@@ -51,13 +52,20 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     match &*f.body {
                         TypedCore::Case(c) => match &c.clauses.inner[0] {
                             TypedCore::Clause(c) => {
-                                let new_proc_state_two = ProcState::new(
+                                let mut new_proc_state_two = ProcState::new(
                                     new_pid.clone(),
                                     ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap()),
                                     clo.env.clone(),
                                     abstraction.stop_kaddr(),
                                     Time::init(),
                                 );
+                                for (var_name, v_addr) in &module_env.inner {
+                                    new_proc_state_two
+                                        .env
+                                        .inner
+                                        .insert(var_name.clone(), v_addr.clone());
+                                }
+
                                 v_new.push((new_proc_state_two, "abs_spawn".to_string()));
 
                                 mailboxes.inner.insert(new_pid, Mailbox::init());

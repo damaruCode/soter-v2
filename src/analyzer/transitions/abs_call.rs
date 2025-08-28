@@ -3,7 +3,9 @@ use core::panic;
 use crate::{
     abstraction::Abstraction,
     ast::{Call, TypedCore},
-    state_space::{KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress, VarName},
+    state_space::{
+        Env, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress, VarName,
+    },
     util::{AstHelper, SetMap},
 };
 
@@ -14,6 +16,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     mailboxes: &mut Mailboxes<V>,
     store: &Store<K, V>,
+    module_env: &Env<V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
     abstraction: &Box<dyn Abstraction<K, V>>,
@@ -40,6 +43,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     proc_state,
                     mailboxes,
                     store,
+                    module_env,
                     ast_helper,
                     abstraction,
                 ),

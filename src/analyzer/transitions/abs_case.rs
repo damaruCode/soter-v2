@@ -1,9 +1,11 @@
 use crate::{
-    ast::{Case, Clause, Index, TypedCore, ValueAddressOrValue},
+    abstraction::Abstraction,
+    analyzer::{dependency_checker::push_to_value_store, match_helper::MatchHelper},
+    ast::{Case, Clause, Index, TypedCore},
     state_space::{
-        Env, KontinuationAddress, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
+        KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
     },
-    util::AstHelper,
+    util::{AstHelper, SetMap},
 };
 
 use super::TransitionResult;
@@ -11,11 +13,13 @@ use super::TransitionResult;
 pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     case: &Case,
     proc_state: &ProcState<K, V>,
-    store: &Store<K, V>,
-    module_env: &Env<V>,
+    store: &mut Store<K, V>,
+    seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
+    abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
+    let mut v_revisit = Vec::new();
 
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
     let v_addr;
@@ -51,23 +55,43 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
         tc => panic!("{:#?}", tc),
     }
 
-    let mats = Case::cmatch(
-        &clauses,
-        &ValueAddressOrValue::ValueAddress(v_addr.clone()),
-        &store.value,
-        module_env,
-        ast_helper,
-    );
+    let mats = MatchHelper::vmatch(&clauses, v_addr, &store.value, ast_helper);
 
-    for opt in mats {
-        if let Some((index, env)) = opt {
-            let mut new_item = proc_state.clone();
-            new_item.prog_loc_or_pid =
-                ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
-            new_item.env.merge_with(&env);
+    for (_, matches) in mats {
+        // only consider first match
+        let (index, substs) = &matches[0];
 
-            v_new.push((new_item, "abs_case".to_string()));
+        let mut new_item = proc_state.clone();
+        new_item.prog_loc_or_pid =
+            ProgLocOrPid::ProgLoc((*(clauses[*index].body)).get_index().unwrap());
+
+        for i in 0..substs.len() {
+            for (var_name, value) in &substs[i].inner {
+                let new_v_addr = abstraction.new_vaddr(
+                    proc_state,
+                    var_name,
+                    &new_item.prog_loc_or_pid,
+                    &new_item.env,
+                    &new_item.time,
+                );
+                new_item
+                    .env
+                    .inner
+                    .insert(var_name.clone(), new_v_addr.clone());
+
+                for state in push_to_value_store(
+                    ast_helper,
+                    seen_proc_states,
+                    store,
+                    new_v_addr,
+                    value.clone(),
+                ) {
+                    v_revisit.push((state, "abs_case".to_string()));
+                }
+            }
         }
+
+        v_new.push((new_item, "abs_case".to_string()));
     }
 
     log::debug!("ABS_CASE - {:?} New - {:?} Revisit", v_new.len(), 0);

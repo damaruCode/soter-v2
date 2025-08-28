@@ -23,8 +23,7 @@ impl Abstraction<KAddr, VAddr> for ICFAAbstraction {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,
-            call_site_env: Env::init(),
-            return_site_env: Env::init(),
+            env: Env::init(),
             time: Time::init(),
             _stop: true,
         }
@@ -43,8 +42,7 @@ impl Abstraction<KAddr, VAddr> for ICFAAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            call_site_env: curr_proc_state.env.clone(),
-            return_site_env: next_env.clone(),
+            env: next_env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
@@ -61,6 +59,7 @@ impl Abstraction<KAddr, VAddr> for ICFAAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            prog_loc_or_pid: curr_proc_state.prog_loc_or_pid.clone(),
             scope: partial_next_env.inner.keys().cloned().collect(),
             time: curr_proc_state.time.clone(),
         }

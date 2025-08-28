@@ -8,8 +8,10 @@ use crate::util::SetMap;
 use std::collections::VecDeque;
 
 mod dependency_checker;
+mod match_helper;
 mod transitions;
 
+pub use match_helper::*;
 use transitions::*;
 
 pub enum TransitionError {
@@ -141,18 +143,34 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
                 TypedCore::Module(m) => abs_module(m, self, store, module_env, abstraction),
                 TypedCore::Var(v) => abs_name(v, self, store),
-                TypedCore::Apply(a) => {
-                    abs_apply(a, *pl, self, seen, store, abstraction, ast_helper)
-                }
-                TypedCore::Call(c) => {
-                    abs_call(c, self, mailboxes, store, seen, ast_helper, abstraction)
-                }
+                TypedCore::Apply(a) => abs_apply(
+                    a,
+                    *pl,
+                    self,
+                    module_env,
+                    seen,
+                    store,
+                    abstraction,
+                    ast_helper,
+                ),
+                TypedCore::Call(c) => abs_call(
+                    c,
+                    self,
+                    mailboxes,
+                    store,
+                    module_env,
+                    seen,
+                    ast_helper,
+                    abstraction,
+                ),
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                TypedCore::Case(c) => abs_case(c, self, store, module_env, ast_helper),
+                TypedCore::Case(c) => abs_case(c, self, store, seen, abstraction, ast_helper),
                 TypedCore::Receive(r) => {
                     abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }
-                TypedCore::PrimOp(_prim_op) => todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND"),
+                TypedCore::PrimOp(_prim_op) => {
+                    todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND, {:#?}", _prim_op)
+                }
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
                 TypedCore::Seq(s) => abs_push_seq(s, self, store, seen, abstraction, ast_helper),
                 // ProgLoc is irreducible via the previous transition rules; it's a Value

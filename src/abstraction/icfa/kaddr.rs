@@ -10,8 +10,7 @@ use super::VAddr;
 pub struct KAddr {
     pub pid: Pid,
     pub prog_loc: usize,
-    pub call_site_env: Env<VAddr>,
-    pub return_site_env: Env<VAddr>,
+    pub env: Env<VAddr>,
     pub time: Time,
     pub _stop: bool,
 }
@@ -22,13 +21,8 @@ impl Display for KAddr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({}, {}, {}, {}, {}, {})",
-            self.pid,
-            self.prog_loc,
-            self.call_site_env,
-            self.return_site_env,
-            self.time,
-            self._stop
+            "({}, {}, {}, {}, {})",
+            self.pid, self.prog_loc, self.env, self.time, self._stop
         )
     }
 }

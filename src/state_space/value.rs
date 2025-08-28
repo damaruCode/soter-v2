@@ -3,7 +3,7 @@ use std::fmt::Display;
 use super::{Closure, Pid, ValueAddress};
 
 // Value := Closure U+ Pid
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub enum Value<V: ValueAddress> {
     Closure(Closure<V>),
     Pid(Pid),

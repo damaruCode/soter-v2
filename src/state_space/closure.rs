@@ -3,7 +3,7 @@ use std::fmt::Display;
 use super::{Env, ProgLoc, ValueAddress};
 
 // Closure := ProgLoc x Env
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Closure<V: ValueAddress> {
     pub prog_loc: ProgLoc,
     pub env: Env<V>,
