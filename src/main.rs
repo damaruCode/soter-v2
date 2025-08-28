@@ -12,8 +12,8 @@ use std::{
 };
 
 use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction, Abstraction,
-    AbstractionKind,
+    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction,
+    standard_v1cfa::StandardV1CFAAbstraction, Abstraction, AbstractionKind,
 };
 use analyzer::Analyzer;
 use chrono::Utc;
@@ -105,6 +105,11 @@ fn main() {
             ast_helper,
             args,
         ),
+        AbstractionKind::StandardV1CFA => run_analysis_with(
+            Box::new(StandardV1CFAAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
         AbstractionKind::P4F => run_analysis_with(
             Box::new(P4FAbstraction::new(args.time_depth)),
             ast_helper,
@@ -135,7 +140,11 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         (seen, mailboxes, store) = analyzer.run();
 
         let execution_time = instance.elapsed().as_nanos();
-        println!("Time: {} ns", execution_time);
+        let mut sum_states = 0;
+        for (_, states) in &seen.inner {
+            sum_states = sum_states + states.len();
+        }
+        println!("Time: {}, States: {}", execution_time, sum_states);
     } else {
         (seen, mailboxes, store) = analyzer.run();
     }
@@ -156,6 +165,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     "{}.{}.erl.dot",
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
+                        AbstractionKind::StandardV1CFA => "standard_v1cfa",
                         AbstractionKind::P4F => "p4f",
                         AbstractionKind::ICFA => "icfa",
                     },

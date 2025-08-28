@@ -3,13 +3,9 @@
 -compile(exports_all).
 
 main() ->
-  Y = id(a),
-  Z = id(b),
-  {Y, Z}.
-
-id(X) ->
-  A = a,
-  id2(X).
-
-id2(X) ->
-  X.
+  P = spawn(fun() -> receive {X, a} -> X ! ok end end),
+  P ! {self(), a},
+  receive
+    ok ->
+      b
+  end.

@@ -1,6 +1,7 @@
 pub mod icfa;
 pub mod p4f;
 pub mod standard;
+pub mod standard_v1cfa;
 
 use serde::Serialize;
 
@@ -13,6 +14,9 @@ pub enum AbstractionKind {
     /// Standard choice for KAddr and VAddr
     #[default]
     Standard,
+
+    /// Standard choice with VAddr in 1-CFA
+    StandardV1CFA,
 
     /// Adapted choice of KAddr according to P4F (Gilray et al.) in ICFA thesis
     P4F,
