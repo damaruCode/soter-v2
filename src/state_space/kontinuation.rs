@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, fmt::Display};
 
-use super::{Env, KontinuationAddress, ProgLoc, Value, ValueAddress};
+use super::{Env, KontinuationAddress, Pid, ProgLoc, Value, ValueAddress};
 
 // Kont :=
 //       | List<Var>, ProgLoc, Env, KAddr // Let
@@ -11,7 +11,7 @@ pub enum Kont<K: KontinuationAddress, V: ValueAddress> {
     Let(Vec<ProgLoc>, ProgLoc, Env<V>, K),
     Apply(VecDeque<ProgLoc>, Vec<Value<V>>, Value<V>, Env<V>, K),
     Spawn(K),
-    Send(ProgLoc, K),
+    Send(Option<ProgLoc>, Option<Pid>, Env<V>, K),
     Seq(ProgLoc, Env<V>, K),
     Stop,
 }
@@ -51,8 +51,21 @@ impl<K: KontinuationAddress, V: ValueAddress> Display for Kont<K, V> {
                     k_addr
                 )
             }
-            Kont::Send(msg_prog_loc, k_addr) => {
-                write!(f, "Send({}, {})", msg_prog_loc, k_addr)
+            Kont::Send(msg_prog_loc, pid, env, k_addr) => {
+                write!(
+                    f,
+                    "Send({}, {}, {}, {})",
+                    match msg_prog_loc {
+                        Some(prog_loc) => format!("{}", prog_loc),
+                        None => String::new(),
+                    },
+                    match pid {
+                        Some(pid) => format!("{}", pid),
+                        None => String::new(),
+                    },
+                    env,
+                    k_addr
+                )
             }
             Kont::Spawn(k_addr) => {
                 write!(f, "Spawn({})", k_addr)

@@ -42,7 +42,9 @@ pub fn abs_push_call<K: KontinuationAddress, V: ValueAddress>(
             new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(args[0].get_index().unwrap());
             // Send
             kont = Kont::Send(
-                args[1].get_index().unwrap(), // message prog_loc
+                Some(args[1].get_index().unwrap()), // message prog_loc
+                None,
+                proc_state.env.clone(),
                 proc_state.k_addr.clone(),
             );
             for state in push_to_kont_store(

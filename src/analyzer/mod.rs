@@ -236,14 +236,17 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                         );
                                     }
                                 }
-                                Kont::Send(msg_prog_loc, k_addr) => {
+                                Kont::Send(msg_prog_loc, pid, env, k_addr) => {
                                     res = abs_pop_send(
                                         msg_prog_loc,
+                                        pid,
+                                        &env,
                                         &k_addr,
                                         self,
                                         mailboxes,
                                         store,
                                         seen,
+                                        abstraction,
                                         ast_helper,
                                     );
                                 }
