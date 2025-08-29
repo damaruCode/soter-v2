@@ -140,7 +140,11 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         (seen, mailboxes, store) = analyzer.run();
 
         let execution_time = instance.elapsed().as_nanos();
-        println!("Time: {} ns", execution_time);
+        let mut sum_states = 0;
+        for (_, states) in &seen.inner {
+            sum_states = sum_states + states.len();
+        }
+        println!("Time: {}, States: {}", execution_time, sum_states);
     } else {
         (seen, mailboxes, store) = analyzer.run();
     }

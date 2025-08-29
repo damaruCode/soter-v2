@@ -81,7 +81,7 @@ pub fn abs_pop_send<K: KontinuationAddress, V: ValueAddress>(
                 None,
                 match &proc_state.prog_loc_or_pid {
                     ProgLocOrPid::Pid(pid) => Some(pid.clone()),
-                    _ => panic!(),
+                    _ => return (Vec::new(), Vec::new()), // ignore
                 },
                 kont_env.clone(),
                 kont_k_addr.clone(),
