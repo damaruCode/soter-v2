@@ -14,6 +14,10 @@ impl ValueAddress for VAddr {}
 
 impl Display for VAddr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}, {}, {})", self.pid, self.var_name, self.time)
+        write!(
+            f,
+            "({}, {}, {}, {})",
+            self.pid, self.var_name, self.prog_loc_or_pid, self.time
+        )
     }
 }
