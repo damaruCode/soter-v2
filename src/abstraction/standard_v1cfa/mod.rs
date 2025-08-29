@@ -23,7 +23,6 @@ impl Abstraction<KAddr, VAddr> for StandardV1CFAAbstraction {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,
-            env: Env::init(),
             time: Time::init(),
             _stop: true,
         }
@@ -42,7 +41,6 @@ impl Abstraction<KAddr, VAddr> for StandardV1CFAAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            env: Env::init(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
