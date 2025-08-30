@@ -8,17 +8,17 @@ pub mod vaddr;
 pub use kaddr::KAddr;
 pub use vaddr::VAddr;
 
-pub struct StandardAbstraction {
+pub struct StandardV1CFAAbstraction {
     time_depth: usize,
 }
 
-impl StandardAbstraction {
+impl StandardV1CFAAbstraction {
     pub fn new(time_depth: usize) -> Self {
         Self { time_depth }
     }
 }
 
-impl Abstraction<KAddr, VAddr> for StandardAbstraction {
+impl Abstraction<KAddr, VAddr> for StandardV1CFAAbstraction {
     fn stop_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
@@ -42,8 +42,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            // env: curr_proc_state.env.clone(),
-            env: Env::init(),
+            env: curr_proc_state.env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
@@ -60,6 +59,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            prog_loc_or_pid: curr_proc_state.prog_loc_or_pid.clone(),
             time: curr_proc_state.time.clone(),
         }
     }

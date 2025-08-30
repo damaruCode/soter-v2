@@ -12,7 +12,8 @@ use std::{
 };
 
 use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, standard::StandardAbstraction, Abstraction,
+    icfa::ICFAAbstraction, p4f::P4FAbstraction, p4f_v1cfa::P4FV1CFAAbstraction,
+    standard::StandardAbstraction, standard_v1cfa::StandardV1CFAAbstraction, Abstraction,
     AbstractionKind,
 };
 use analyzer::Analyzer;
@@ -106,12 +107,17 @@ fn main() {
             args,
         ),
         AbstractionKind::StandardV1CFA => run_analysis_with(
-            Box::new(StandardAbstraction::new(args.time_depth)),
+            Box::new(StandardV1CFAAbstraction::new(args.time_depth)),
             ast_helper,
             args,
         ),
         AbstractionKind::P4F => run_analysis_with(
             Box::new(P4FAbstraction::new(args.time_depth)),
+            ast_helper,
+            args,
+        ),
+        AbstractionKind::P4FV1CFA => run_analysis_with(
+            Box::new(P4FV1CFAAbstraction::new(args.time_depth)),
             ast_helper,
             args,
         ),
@@ -167,6 +173,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                         AbstractionKind::Standard => "standard",
                         AbstractionKind::StandardV1CFA => "standard-v1cfa",
                         AbstractionKind::P4F => "p4f",
+                        AbstractionKind::P4FV1CFA => "p4f-v1cfa",
                         AbstractionKind::ICFA => "icfa",
                     },
                     args.time_depth
@@ -189,14 +196,14 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                         peek_print::print(tc)
                     }
                 };
-                node_attr.tooltip = format!(
-                    "{}, {}, {}, {}, {}",
-                    proc_state.pid,
-                    proc_state.prog_loc_or_pid,
-                    proc_state.env,
-                    proc_state.k_addr,
-                    proc_state.time,
-                );
+                // node_attr.tooltip = format!(
+                //     "{}, {}, {}, {}, {}",
+                //     proc_state.pid,
+                //     proc_state.prog_loc_or_pid,
+                //     proc_state.env,
+                //     proc_state.k_addr,
+                //     proc_state.time,
+                // );
                 node_attr.group = format!("{}", proc_state.pid);
 
                 node_attr
