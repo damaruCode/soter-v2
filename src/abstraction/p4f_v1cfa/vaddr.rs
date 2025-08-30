@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::state_space::{Pid, ProgLocOrPid, Time, ValueAddress, VarName};
 
 // VAddr := Pid x Var x Data x Time
-#[derive(Eq, PartialEq, Clone, Debug, Ord, PartialOrd)]
+#[derive(Eq, PartialEq, Clone, Debug, PartialOrd, Ord)]
 pub struct VAddr {
     pub pid: Pid,
     pub var_name: VarName,
@@ -16,7 +16,7 @@ impl Display for VAddr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "({}, {}, {}. {})",
+            "({}, {}, {}, {})",
             self.pid, self.var_name, self.prog_loc_or_pid, self.time
         )
     }

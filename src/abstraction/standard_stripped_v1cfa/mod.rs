@@ -8,22 +8,21 @@ pub mod vaddr;
 pub use kaddr::KAddr;
 pub use vaddr::VAddr;
 
-pub struct P4FAbstraction {
+pub struct StrippedStandardV1CFAAbstraction {
     time_depth: usize,
 }
 
-impl P4FAbstraction {
+impl StrippedStandardV1CFAAbstraction {
     pub fn new(time_depth: usize) -> Self {
         Self { time_depth }
     }
 }
 
-impl Abstraction<KAddr, VAddr> for P4FAbstraction {
+impl Abstraction<KAddr, VAddr> for StrippedStandardV1CFAAbstraction {
     fn stop_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
             prog_loc: 0,
-            env: Env::init(),
             time: Time::init(),
             _stop: true,
         }
@@ -33,7 +32,7 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
         next_prog_loc_or_pid: &ProgLocOrPid,
-        next_env: &Env<VAddr>,
+        _next_env: &Env<VAddr>,
         _next_time: &Time,
     ) -> KAddr {
         KAddr {
@@ -42,7 +41,6 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
                 ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
                 _ => panic!("ProgLoc expected"),
             },
-            env: next_env.clone(),
             time: curr_proc_state.time.clone(),
             _stop: false,
         }
@@ -59,6 +57,7 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            prog_loc_or_pid: curr_proc_state.prog_loc_or_pid.clone(),
             time: curr_proc_state.time.clone(),
         }
     }

@@ -8,17 +8,17 @@ pub mod vaddr;
 pub use kaddr::KAddr;
 pub use vaddr::VAddr;
 
-pub struct P4FAbstraction {
+pub struct P4FV1CFAAbstraction {
     time_depth: usize,
 }
 
-impl P4FAbstraction {
+impl P4FV1CFAAbstraction {
     pub fn new(time_depth: usize) -> Self {
         Self { time_depth }
     }
 }
 
-impl Abstraction<KAddr, VAddr> for P4FAbstraction {
+impl Abstraction<KAddr, VAddr> for P4FV1CFAAbstraction {
     fn stop_kaddr(&self) -> KAddr {
         KAddr {
             pid: Pid::init(),
@@ -59,6 +59,7 @@ impl Abstraction<KAddr, VAddr> for P4FAbstraction {
         VAddr {
             pid: curr_proc_state.pid.clone(),
             var_name: var_name.clone(),
+            prog_loc_or_pid: curr_proc_state.prog_loc_or_pid.clone(),
             time: curr_proc_state.time.clone(),
         }
     }
