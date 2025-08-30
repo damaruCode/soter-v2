@@ -1,8 +1,6 @@
 use std::fmt::Display;
 
-use crate::state_space::{Env, KontinuationAddress, Pid, Time};
-
-use super::VAddr;
+use crate::state_space::{KontinuationAddress, Pid, Time};
 
 // KAddr := (Pid x ProgLoc x Env x Time) U+ {*}
 // NOTE * might be possible to depict in control flow rather then as a  data struct

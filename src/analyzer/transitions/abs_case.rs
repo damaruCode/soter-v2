@@ -3,7 +3,7 @@ use crate::{
     analyzer::{dependency_checker::push_to_value_store, MatchHelper},
     ast::{Case, Clause, Index, TypedCore},
     state_space::{
-        Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
+        KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
 };
