@@ -2,6 +2,8 @@ pub mod icfa;
 pub mod p4f;
 pub mod p4f_v1cfa;
 pub mod standard;
+pub mod standard_stripped;
+pub mod standard_stripped_v1cfa;
 pub mod standard_v1cfa;
 
 use serde::Serialize;
@@ -18,6 +20,12 @@ pub enum AbstractionKind {
 
     /// Standard choice with 1-CFA VAddr
     StandardV1CFA,
+
+    /// Standard choice without Env
+    StandardStripped,
+
+    /// Standard choice without Env but with 1-CFA VAddr
+    StandardStrippedV1CFA,
 
     /// Adapted choice of KAddr according to P4F (Gilray et al.) in ICFA thesis
     P4F,

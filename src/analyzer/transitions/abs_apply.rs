@@ -18,6 +18,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     kont_k_addr: &K,
     proc_state: &ProcState<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
+    module_env: &Env<V>,
     store: &mut Store<K, V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
@@ -44,7 +45,9 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                 let fn_var_names = Vec::<VarName>::from(&f.vars);
 
                 new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*f.body).get_index().unwrap());
-                new_item.env = clo.env.clone();
+                new_item.env = module_env.clone();
+                new_item.env.merge_with(&clo.env);
+
                 new_item.time = abstraction.tick(
                     &new_item.time,
                     match proc_state.prog_loc_or_pid {

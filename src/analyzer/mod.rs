@@ -163,7 +163,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     ast_helper,
                 ),
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                TypedCore::Case(c) => abs_case(c, self, store, module_env, ast_helper),
+                TypedCore::Case(c) => abs_case(c, self, store, seen, abstraction, ast_helper),
                 TypedCore::Receive(r) => {
                     abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }
@@ -217,6 +217,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                             &k_addr,
                                             self,
                                             seen,
+                                            &module_env,
                                             store,
                                             abstraction,
                                             ast_helper,
