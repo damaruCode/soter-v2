@@ -1,9 +1,0 @@
-% This is a .prop file for huch.erl
-% The only property states that there shall not be
-% two or more processes allocating a new entry at the
-% same time; this is of course disallows behaviours where
-% two processes allocate two independent keys.
-% Nevertheless the implementation at hand still
-% fullfills this stronger requirement.
-
-Mutual exclusion on writes: client_writes >= 2.
