@@ -1,52 +1,59 @@
+use soter_v2::abstraction::standard::KAddr;
 use soter_v2::abstraction::standard::StandardAbstraction;
+use soter_v2::abstraction::standard::VAddr;
 use soter_v2::analyzer::Analyzer;
 use soter_v2::ast;
 use soter_v2::ast::TypedCore;
 use soter_v2::erlang;
+use soter_v2::state_space::Store;
 use soter_v2::state_space::Value;
 use soter_v2::state_space::VarName;
 use soter_v2::util::AstHelper;
 
-#[test]
-fn test_id() {
-    erlang::run(&"icfa_examples/rec_id.erl".to_string());
-    let core = erlang::get_core(&"icfa_examples/rec_id.erl.json".to_string());
-
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (proc_states, mailboxes, store) = analyzer.run();
-
-    let mut is_contained = false;
-    for (vaddr, values) in store.value.inner {
-        if vaddr.var_name == VarName::Atom("Y".to_string()) {
-            for value in values {
+fn check_store(
+    store: &Store<KAddr, VAddr>,
+    ast_helper: AstHelper,
+    var_name: &str,
+    values: Vec<&str>,
+) {
+    for (vaddr, val) in &store.value.inner {
+        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
+            for value in val {
                 match value {
                     Value::Closure(c) => {
                         let tc = ast_helper.get(c.prog_loc);
                         match tc {
                             TypedCore::Literal(l) => match *l.val.clone() {
                                 TypedCore::String(erls) => {
-                                    if erls.inner == "a" {
-                                        is_contained = true;
-                                        continue;
+                                    if !values.contains(&erls.inner.as_str()) {
+                                        panic!("\"{}\" contains \"{}\"", var_name, erls.inner);
                                     }
                                 }
-                                _ => panic!(),
+                                _ => panic!("{} is not a string", l),
                             },
-                            _ => panic!(),
+                            _ => panic!("{} is not a literal", tc),
                         }
                     }
-                    _ => panic!(),
+                    _ => panic!("{} is not a closure", value),
                 }
             }
         }
     }
+}
 
-    if !is_contained {
-        panic!();
-    }
+#[test]
+fn test_standard_id() {
+    erlang::run(&format!("tests/icfa_examples/id.erl"));
+    let core = erlang::get_core(&format!("tests/icfa_examples/id.erl.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let (_ps, _m, s) = analyzer.run();
+
+    check_store(&s, ast_helper.clone(), "Y", vec!["a"]);
+    check_store(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
+    check_store(&s, ast_helper.clone(), "X", vec!["a", "b"]);
 }
