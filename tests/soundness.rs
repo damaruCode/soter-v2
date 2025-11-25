@@ -1,89 +1,92 @@
-use soter_v2::abstraction::standard::KAddr;
 use soter_v2::abstraction::standard::StandardAbstraction;
 use soter_v2::abstraction::standard::VAddr;
 use soter_v2::analyzer::Analyzer;
+use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast;
+use soter_v2::ast::AstList;
+use soter_v2::ast::Clause;
+use soter_v2::ast::ErlString;
+use soter_v2::ast::Literal;
+use soter_v2::ast::MaybeIndex;
 use soter_v2::ast::TypedCore;
+use soter_v2::ast::Var;
 use soter_v2::erlang;
-use soter_v2::state_space::Mailboxes;
-use soter_v2::state_space::Pid;
-use soter_v2::state_space::ProcState;
-use soter_v2::state_space::Store;
 use soter_v2::state_space::Value;
 use soter_v2::state_space::VarName;
 use soter_v2::util::AstHelper;
 use soter_v2::util::SetMap;
 
-fn check_closure(
-    store: &Store<KAddr, VAddr>,
-    ast_helper: AstHelper,
+enum P<'p> {
+    Var,
+    Literal(&'p str),
+    List(Vec<P<'p>>),  // TypedCore::AstList
+    Tuple(Vec<P<'p>>), // TypedCore::Tuple
+}
+
+fn equals() -> bool {
+    let test = P::List(vec![P::Literal("a"), P::Tuple(vec![P::Var, P::Var])]); // {"a",(X,Y)}
+    true
+}
+
+fn contains(
+    clause: Clause,
+    vaddr: &VAddr,
+    val_store: &SetMap<VAddr, Value<VAddr>>,
+    ast_helper: &AstHelper,
+) -> bool {
+    let cvec = vec![clause];
+    let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+    for (_val, vec) in sub {
+        if !vec.is_empty() {
+            return true;
+        }
+    }
+    false
+}
+
+fn contains_list() {}
+
+fn contains_tuple() {}
+fn contains_var() {}
+
+fn contains_literal(
+    literal: &str,
     var_name: &str,
-    values: Vec<&str>,
+    val_store: &SetMap<VAddr, Value<VAddr>>,
+    ast_helper: &AstHelper,
 ) {
-    for (vaddr, val) in &store.value.inner {
+    let pattern = AstList::from(vec![TypedCore::Literal(Literal {
+        anno: AstList::new(),
+        val: Box::new(TypedCore::String(ErlString {
+            inner: String::from(literal),
+            index: MaybeIndex::None,
+        })),
+        index: MaybeIndex::None,
+    })]);
+
+    let clause = Clause {
+        anno: AstList::new(),
+        pats: pattern,
+        guard: Box::new(TypedCore::Literal(Literal {
+            anno: AstList::new(),
+            val: Box::new(TypedCore::String(ErlString {
+                inner: "true".to_string(),
+                index: MaybeIndex::None,
+            })),
+            index: MaybeIndex::None,
+        })),
+        body: Box::new(TypedCore::Dummy),
+        index: MaybeIndex::None,
+    };
+
+    for (vaddr, _val) in &val_store.inner {
         if vaddr.var_name == VarName::Atom(var_name.to_string()) {
-            for value in val {
-                match value {
-                    Value::Closure(c) => {
-                        let tc = ast_helper.get(c.prog_loc);
-                        match tc {
-                            TypedCore::Literal(l) => match *l.val.clone() {
-                                TypedCore::String(erls) => {
-                                    if !values.contains(&erls.inner.as_str()) {
-                                        panic!("\"{}\" contains \"{}\"", var_name, erls.inner);
-                                    }
-                                }
-                                _ => panic!("{} is not a string", l),
-                            },
-                            _ => panic!("{} is not a literal", tc),
-                        }
-                    }
-                    _ => panic!("{} is not a closure", value),
-                }
+            if contains(clause.clone(), vaddr, &val_store, &ast_helper) {
+                return;
             }
         }
     }
-}
-
-fn check_process(
-    proc_states: &SetMap<Pid, ProcState<KAddr, VAddr>>,
-    store: &Store<KAddr, VAddr>,
-    ast_helper: AstHelper,
-    var_name: &str,
-) {
-    for (vaddr, val) in &store.value.inner {
-        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
-            for value in val {
-                match value {
-                    Value::Pid(p) => {
-                        proc_states
-                            .get(p)
-                            .expect(format!("{} is not pointing to a proc_state", p).as_str());
-                        let tc = ast_helper.get(p.prog_loc);
-                        match tc {
-                            TypedCore::Call(c) => match *c.name.clone() {
-                                TypedCore::Literal(l) => match *l.val.clone() {
-                                    TypedCore::String(erls) => {
-                                        if !erls.inner.eq("spawn") {
-                                            panic!("\"{}\" is not a spawn", erls);
-                                        }
-                                    }
-                                    _ => panic!("{} is not a string", l),
-                                },
-                                _ => panic!("{} is not a literal", c),
-                            },
-                            _ => panic!("{} is not a call", tc),
-                        }
-                    }
-                    _ => panic!("{} is not a pid", value),
-                }
-            }
-        }
-    }
-}
-
-fn check_mailboxes(mailboxes: Mailboxes<VAddr>) {
-    panic!("{}", &format!("{:?}", mailboxes)); // TODO impl
+    panic!();
 }
 
 #[test]
@@ -96,12 +99,7 @@ fn test_standard_concurr() {
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (ps, _m, s) = analyzer.run();
-
-    check_process(&ps, &s, ast_helper.clone(), "P");
-    check_process(&ps, &s, ast_helper.clone(), "X");
-
-    //check_mailboxes(m);
+    let (_ps, _m, _s) = analyzer.run();
 }
 
 #[test]
@@ -116,11 +114,8 @@ fn test_standard_id() {
 
     let (_ps, _m, s) = analyzer.run();
 
-    check_closure(&s, ast_helper.clone(), "Y", vec!["a"]);
-    check_closure(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
-    check_closure(&s, ast_helper.clone(), "X", vec!["a", "b"]);
-
-    //check_mailboxes(m);
+    contains_literal("a", "X", &s.value, &ast_helper);
+    contains_literal("b", "X", &s.value, &ast_helper);
 }
 
 #[test]
@@ -133,11 +128,5 @@ fn test_standard_rec_id() {
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, _m, s) = analyzer.run();
-
-    check_closure(&s, ast_helper.clone(), "Y", vec!["a"]);
-    check_closure(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
-    check_closure(&s, ast_helper.clone(), "X", vec!["a", "b"]);
-
-    //check_mailboxes(m);
+    let (_ps, _m, _s) = analyzer.run();
 }

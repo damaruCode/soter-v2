@@ -25,8 +25,10 @@ pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     module_env: Env<V>,
     mailboxes: Mailboxes<V>,
     store: Store<K, V>,
+
     queue: VecDeque<ProcState<K, V>>,
     seen: SetMap<Pid, ProcState<K, V>>,
+
     transition_graph: Graph<ProcState<K, V>, String>,
 }
 
@@ -131,6 +133,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
+        //logging
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
                 log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))
