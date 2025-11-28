@@ -91,6 +91,7 @@ fn contains_literal(
 
 #[test]
 fn test_standard_concurr() {
+    erlang::compile();
     erlang::run(&format!("tests/icfa_examples/concurr.erl"));
     let core = erlang::get_core(&format!("tests/icfa_examples/concurr.erl.json"));
     let typed_core = ast::TypedCore::from(core);
@@ -104,6 +105,7 @@ fn test_standard_concurr() {
 
 #[test]
 fn test_standard_id() {
+    erlang::compile();
     erlang::run(&format!("tests/icfa_examples/id.erl"));
     let core = erlang::get_core(&format!("tests/icfa_examples/id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
@@ -120,6 +122,7 @@ fn test_standard_id() {
 
 #[test]
 fn test_standard_rec_id() {
+    erlang::compile();
     erlang::run(&format!("tests/icfa_examples/rec_id.erl"));
     let core = erlang::get_core(&format!("tests/icfa_examples/rec_id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
