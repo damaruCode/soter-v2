@@ -20,7 +20,9 @@ pub fn get_core(file: &String) -> serde_json::Value {
 pub fn compile() {
     match fs::create_dir("erlang/ebin") {
         Ok(()) => {}
-        Err(_e) => {}
+        Err(_e) => {
+            return;
+        }
     }
 
     //erlc -o ebin src/jsx*.erl
