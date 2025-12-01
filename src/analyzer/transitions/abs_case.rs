@@ -58,6 +58,20 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     let mats = MatchHelper::vmatch(&clauses, v_addr, &store.value, ast_helper);
 
     for (_, matches) in mats {
+        if matches.len() == 0 {
+            panic!(
+                "No matches for {} with VAddr {}",
+                match store.value.get(v_addr) {
+                    Some(v) => v
+                        .iter()
+                        .map(|e| format!("{}", e))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    _ => "NONE".to_string(),
+                },
+                v_addr,
+            );
+        }
         // only consider first match
         let (index, substs) = &matches[0];
 

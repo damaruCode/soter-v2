@@ -5,6 +5,7 @@ use crate::{
         Closure, Env, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
         VarName,
     },
+    util::AstHelper,
 };
 
 use super::TransitionResult;
@@ -15,38 +16,11 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     store: &mut Store<K, V>,
     module_env: &mut Env<V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
+    ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
 
-    // We'll skip into the main function
     let mut new_item = proc_state.clone();
-    for def in &*module.defs.inner {
-        match &*def.frst {
-            TypedCore::Var(v) => match VarName::from(v) {
-                VarName::FnAtom(atom, arity) => match atom.as_str() == "main" && arity == 0 {
-                    true => match &*def.scnd {
-                        TypedCore::Fun(f) => match &*f.body {
-                            TypedCore::Case(c) => match &c.clauses.inner[0] {
-                                TypedCore::Clause(c) => {
-                                    new_item.prog_loc_or_pid =
-                                        ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap());
-
-                                    break;
-                                }
-                                _ => panic!(),
-                            },
-                            _ => panic!(),
-                        },
-                        _ => panic!(),
-                    },
-                    _ => todo!(),
-                },
-                _ => todo!(),
-            },
-            _ => panic!(),
-        };
-    }
-
     // For every definition in the module...
     for def in &module.defs.inner {
         match &*def.frst {
@@ -85,6 +59,37 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
             }
             _ => panic!(),
         }
+    }
+
+    match new_item
+        .env
+        .inner
+        .get(&VarName::FnAtom("main".to_string(), 0))
+    {
+        Some(v) => match store.value.get(v) {
+            Some(values) => {
+                for value in values {
+                    match value {
+                        Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+                            TypedCore::Fun(f) => match &*f.body {
+                                TypedCore::Case(c) => match &c.clauses.inner[0] {
+                                    TypedCore::Clause(c) => {
+                                        new_item.prog_loc_or_pid =
+                                            ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap());
+                                    }
+                                    _ => panic!(),
+                                },
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        },
+                        _ => panic!(),
+                    }
+                }
+            }
+            _ => panic!(),
+        },
+        _ => panic!(),
     }
 
     // ... also update the module_env
