@@ -141,7 +141,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         match &self.prog_loc_or_pid {
             ProgLocOrPid::Pid(pid) => abs_pid(pid, self, store, seen, abstraction, ast_helper),
             ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                TypedCore::Module(m) => abs_module(m, self, store, module_env, abstraction),
+                TypedCore::Module(m) => {
+                    abs_module(m, self, store, module_env, abstraction, ast_helper)
+                }
                 TypedCore::Var(v) => abs_name(v, self, store),
                 TypedCore::Apply(a) => abs_apply(
                     a,

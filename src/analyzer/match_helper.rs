@@ -8,6 +8,8 @@ use crate::{
 
 pub struct MatchHelper {}
 impl MatchHelper {
+    /// Matches all values bound to a VAddr in the Store to a set of clauses and returns all
+    /// matching substitutions
     pub fn vmatch<V: ValueAddress>(
         clauses: &Vec<Clause>,
         v_addr: &V,
@@ -32,6 +34,7 @@ impl MatchHelper {
         matched_map
     }
 
+    /// Matches a value to a clause
     pub fn cmatch<V: ValueAddress>(
         clause: &Clause,
         value: &Value<V>,
@@ -69,6 +72,7 @@ impl MatchHelper {
         }
     }
 
+    // Matches an AstList of TypedCore against a clause
     fn lmatch<V: ValueAddress>(
         clause: &Clause,
         value: &AstList<TypedCore>,
@@ -85,6 +89,7 @@ impl MatchHelper {
         } else {
             &clause.pats
         };
+        println!("VAL: {}\nPAT: {}", value, patterns);
 
         if value.inner.len() != patterns.inner.len() {
             return Vec::new();
@@ -92,6 +97,11 @@ impl MatchHelper {
 
         let mut overall_substs = Vec::new();
         for i in 0..value.inner.len() {
+            println!(
+                "PATi: {}\nVALi: {}",
+                patterns.inner[i],
+                value.inner[i].get_index().unwrap()
+            );
             let substs_i = &Self::amatch(
                 &patterns.inner[i],
                 &Value::Closure(Closure {

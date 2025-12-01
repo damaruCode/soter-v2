@@ -7,6 +7,7 @@
 %%
 
 -module(match2).
+
 -compile(export_all).
 
 -include_lib("soter.hrl").
@@ -14,12 +15,15 @@
 -soter_config(peano).
 
 g(X) ->
-    Y = {s, X},
-    case Y of
-        {s, a} ->   ?label(branch2);
-        {s, b} ->   ?label(branch1)
-    end,
-    {bla,X}.
+  Y = {s, X},
+  case Y of
+    {s, a} ->
+      ?label(branch2);
+    {s, b} ->
+      ?label(branch1)
+  end,
+  {bla, X}.
 
 main() ->
-    g(a),g(b).
+  g(a),
+  g(b).
