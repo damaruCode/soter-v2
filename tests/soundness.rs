@@ -1,3 +1,4 @@
+use serde_json::Number;
 use soter_v2::abstraction::standard::StandardAbstraction;
 use soter_v2::abstraction::standard::VAddr;
 use soter_v2::analyzer::Analyzer;
@@ -5,6 +6,7 @@ use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast;
 use soter_v2::ast::AstList;
 use soter_v2::ast::Clause;
+use soter_v2::ast::ErlNumber;
 use soter_v2::ast::ErlString;
 use soter_v2::ast::Literal;
 use soter_v2::ast::MaybeIndex;
@@ -30,7 +32,10 @@ impl From<P<'_>> for AstList<TypedCore> {
             match pattern {
                 P::Var => TypedCore::Var(Var {
                     anno: AstList::new(),
-                    name: Box::new(TypedCore::Dummy),
+                    name: Box::new(TypedCore::Number(ErlNumber {
+                        inner: Number::from(0),
+                        index: MaybeIndex::None,
+                    })),
                     index: MaybeIndex::None,
                 }),
                 P::Literal(s) => TypedCore::Literal(Literal {
@@ -89,11 +94,6 @@ impl From<P<'_>> for Clause {
     }
 }
 
-fn equals() -> bool {
-    let test = P::List(vec![P::Literal("a"), P::Tuple(vec![P::Var, P::Var])]); // {"a",(X,Y)}
-    true
-}
-
 fn contains(
     pattern: P,
     var_name: &str,
@@ -116,11 +116,66 @@ fn contains(
     panic!()
 }
 
+fn ncontains(
+    pattern: P,
+    var_name: &str,
+    val_store: &SetMap<VAddr, Value<VAddr>>,
+    ast_helper: &AstHelper,
+) {
+    let cvec = vec![Clause::from(pattern)];
+
+    for (vaddr, _val) in &val_store.inner {
+        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
+            let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+
+            for (_val, vec) in sub {
+                if !vec.is_empty() {
+                    panic!();
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn test_standard_receive_lit() {
+    //erlang::compile();
+    erlang::run(&format!("tests/soundness/receive_lit.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/receive_lit.erl.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let (_ps, _m, s) = analyzer.run();
+
+    contains(P::Literal("a"), "X", &s.value, &ast_helper);
+    ncontains(P::Literal("M"), "X", &s.value, &ast_helper);
+}
+
+#[test]
+fn test_standard_receive_lit_broken() {
+    //erlang::compile();
+    erlang::run(&format!("tests/soundness/receive_lit_broken.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/receive_lit_broken.erl.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let (_ps, _m, s) = analyzer.run();
+
+    contains(P::Literal("a"), "R", &s.value, &ast_helper);
+    ncontains(P::Literal("M"), "R", &s.value, &ast_helper);
+}
+
 #[test]
 fn test_standard_concurr() {
     //erlang::compile(); //TODO wierd bug when running from uncompiled erlang
-    erlang::run(&format!("tests/icfa_examples/concurr.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/concurr.erl.json"));
+    erlang::run(&format!("tests/soundness/concurr.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/concurr.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
@@ -133,8 +188,8 @@ fn test_standard_concurr() {
 #[test]
 fn test_standard_id() {
     //erlang::compile();
-    erlang::run(&format!("tests/icfa_examples/id.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/id.erl.json"));
+    erlang::run(&format!("tests/soundness/id.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
@@ -145,13 +200,14 @@ fn test_standard_id() {
 
     contains(P::Literal("a"), "X", &s.value, &ast_helper);
     contains(P::Literal("b"), "X", &s.value, &ast_helper);
+    ncontains(P::Literal("c"), "X", &s.value, &ast_helper);
 }
 
 #[test]
 fn test_standard_rec_id() {
     //erlang::compile();
-    erlang::run(&format!("tests/icfa_examples/rec_id.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/rec_id.erl.json"));
+    erlang::run(&format!("tests/soundness/rec_id.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/rec_id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);

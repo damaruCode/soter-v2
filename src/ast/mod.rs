@@ -188,6 +188,7 @@ impl From<Value> for TypedCore {
                 inner: string,
                 index: MaybeIndex::None,
             }),
+            //NOTE This loses information if it is a tuple for example
             Value::Array(vec) => TypedCore::AstList(AstList::from(vec)),
             Value::Object(map) => TypedCore::from(map),
         }
