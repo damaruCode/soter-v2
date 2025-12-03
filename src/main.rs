@@ -94,7 +94,6 @@ fn main() {
     let core_path = args.file.with_extension("erl.json");
     let core = erlang::get_core(&core_path.into_os_string().into_string().unwrap());
     let typed_core = ast::TypedCore::from(core);
-    dbg!(&typed_core);
 
     // Indexing the AST
     let mut ast_helper = util::AstHelper::new();

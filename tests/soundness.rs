@@ -155,23 +155,6 @@ fn test_standard_receive_lit() {
 }
 
 #[test]
-fn test_standard_receive_lit_broken() {
-    //erlang::compile();
-    erlang::run(&format!("tests/soundness/receive_lit_broken.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/receive_lit_broken.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, s) = analyzer.run();
-
-    contains(P::Literal("a"), "R", &s.value, &ast_helper);
-    ncontains(P::Literal("M"), "R", &s.value, &ast_helper);
-}
-
-#[test]
 fn test_standard_concurr() {
     //erlang::compile(); //TODO wierd bug when running from uncompiled erlang
     erlang::run(&format!("tests/soundness/concurr.erl"));

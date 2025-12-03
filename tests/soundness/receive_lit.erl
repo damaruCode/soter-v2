@@ -4,7 +4,10 @@
 
 main() ->
   P = spawn(fun() -> receive {X, M} -> X ! M end end),
-  P ! {self(), a},
+  P ! package(a),
   receive 
     X -> X
   end.
+
+package(M) -> 
+  {self(), M}.
