@@ -58,10 +58,7 @@ impl MatchHelper {
                     TypedCore::Tuple(tup) => {
                         Self::lmatch(clause, &tup.es, &clo.env, value_store, ast_helper)
                     }
-                    _ => {
-                        dbg!(ast_helper.get(clo.prog_loc));
-                        Vec::new()
-                    }
+                    _ => Vec::new(),
                 }
             }
             Value::Pid(_pid) => {

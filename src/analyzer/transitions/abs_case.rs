@@ -60,7 +60,6 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     }
 
     let mats = MatchHelper::vmatch(&clauses, v_addr, &store.value, ast_helper);
-    dbg!(&mats);
 
     for (_, matches) in mats {
         if matches.len() == 0 {
