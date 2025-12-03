@@ -47,6 +47,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
+    // Start fixpoint computation with WorkList-Algorithm
     pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
@@ -54,6 +55,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
 
         while let Some(item) = self.queue.pop_front() {
+            // Computes new ProcStates and asses which have to be revisited
             let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
                 &mut self.mailboxes,
@@ -66,27 +68,27 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
 
             for (new_proc_state, transition_name) in new_items {
                 // NOTE cloning here might become a memory issue
-                if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
-                    if seen_items.contains(&new_proc_state) {
-                        self.transition_graph.add_edge(
-                            item.clone(),
-                            new_proc_state.clone(),
-                            transition_name,
-                        );
-                        continue;
-                    }
-                }
                 self.transition_graph.add_edge(
                     item.clone(),
                     new_proc_state.clone(),
                     transition_name,
                 );
+
+                // Skip if already seen
+                if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
+                    if seen_items.contains(&new_proc_state) {
+                        continue;
+                    }
+                }
+
+                // Update seen and queue otherwise
                 self.seen
                     .push(new_proc_state.pid.clone(), new_proc_state.clone());
                 self.queue.push_back(new_proc_state);
             }
 
             for (revisit_state, transition_name) in revisit_items {
+                // Skip if already queued
                 if self.queue.contains(&revisit_state) {
                     continue;
                 }
@@ -96,6 +98,8 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                     revisit_state.clone(),
                     format!("{} - revisit", transition_name),
                 );
+
+                // Update queue otherwise
                 self.queue.push_back(revisit_state);
             }
         }
@@ -126,6 +130,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V> {
+    // Decides which transition might be applicable
     fn process(
         &self,
         ast_helper: &AstHelper,
