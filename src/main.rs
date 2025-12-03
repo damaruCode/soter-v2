@@ -11,12 +11,7 @@ use std::{
     time::Instant,
 };
 
-use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, p4f_v1cfa::P4FV1CFAAbstraction,
-    standard::StandardAbstraction, standard_stripped::StrippedStandardAbstraction,
-    standard_stripped_v1cfa::StrippedStandardV1CFAAbstraction,
-    standard_v1cfa::StandardV1CFAAbstraction, Abstraction, AbstractionKind,
-};
+use abstraction::{standard::StandardAbstraction, Abstraction, AbstractionKind};
 use analyzer::Analyzer;
 use chrono::Utc;
 use clap::Parser;
@@ -107,36 +102,6 @@ fn main() {
             ast_helper,
             args,
         ),
-        AbstractionKind::StandardV1CFA => run_analysis_with(
-            Box::new(StandardV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::StandardStripped => run_analysis_with(
-            Box::new(StrippedStandardAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::StandardStrippedV1CFA => run_analysis_with(
-            Box::new(StrippedStandardV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::P4F => run_analysis_with(
-            Box::new(P4FAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::P4FV1CFA => run_analysis_with(
-            Box::new(P4FV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::ICFA => run_analysis_with(
-            Box::new(ICFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
     }
 }
 
@@ -182,12 +147,6 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     "{}.{}.erl.dot",
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
-                        AbstractionKind::StandardV1CFA => "standard-v1cfa",
-                        AbstractionKind::StandardStripped => "standard-stripped",
-                        AbstractionKind::StandardStrippedV1CFA => "standard-stripped-v1cfa",
-                        AbstractionKind::P4F => "p4f",
-                        AbstractionKind::P4FV1CFA => "p4f-v1cfa",
-                        AbstractionKind::ICFA => "icfa",
                     },
                     args.time_depth
                 ))

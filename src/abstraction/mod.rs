@@ -1,10 +1,4 @@
-pub mod icfa;
-pub mod p4f;
-pub mod p4f_v1cfa;
 pub mod standard;
-pub mod standard_stripped;
-pub mod standard_stripped_v1cfa;
-pub mod standard_v1cfa;
 
 use serde::Serialize;
 
@@ -17,25 +11,6 @@ pub enum AbstractionKind {
     /// Standard choice for KAddr and VAddr
     #[default]
     Standard,
-
-    /// Standard choice with 1-CFA VAddr
-    StandardV1CFA,
-
-    /// Standard choice without Env
-    StandardStripped,
-
-    /// Standard choice without Env but with 1-CFA VAddr
-    StandardStrippedV1CFA,
-
-    /// Adapted choice of KAddr according to P4F (Gilray et al.) in ICFA thesis
-    P4F,
-
-    /// P4F choice with 1-CFA VAddr
-    P4FV1CFA,
-
-    /// Adapted choices of KAddr and VAddr according to the ICFA thesis including the P4F
-    /// allocation strategy
-    ICFA,
 }
 
 pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
