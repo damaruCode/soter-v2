@@ -79,6 +79,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                     v_addr,
                 ),
             );
+            continue;
         }
         // only consider first match
         let (index, substs) = &matches[0];

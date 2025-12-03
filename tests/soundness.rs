@@ -56,7 +56,7 @@ fn test_standard_concurr() {
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s) = analyzer.run();
+    let (_ps, m, s, _f) = analyzer.run();
 
     check_store(&s, ast_helper.clone(), "P", vec![]);
 
@@ -73,7 +73,7 @@ fn test_standard_id() {
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s) = analyzer.run();
+    let (_ps, m, s, _f) = analyzer.run();
 
     check_store(&s, ast_helper.clone(), "Y", vec!["a"]);
     check_store(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
@@ -92,7 +92,7 @@ fn test_standard_rec_id() {
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s) = analyzer.run();
+    let (_ps, m, s, _f) = analyzer.run();
 
     check_store(&s, ast_helper.clone(), "Y", vec!["a"]);
     check_store(&s, ast_helper.clone(), "Z", vec!["a", "b"]);

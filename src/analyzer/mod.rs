@@ -44,7 +44,14 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
-    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
+    pub fn run(
+        &mut self,
+    ) -> (
+        SetMap<Pid, ProcState<K, V>>,
+        Mailboxes<V>,
+        Store<K, V>,
+        Vec<FailureContext<K, V>>,
+    ) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
             self.transition_graph.add_node(node);
@@ -101,6 +108,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             self.seen.clone(),
             self.mailboxes.clone(),
             self.store.clone(),
+            self.failures.clone(),
         );
     }
 
@@ -156,6 +164,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     store,
                     abstraction,
                     ast_helper,
+                    failures,
                 ),
                 TypedCore::Call(c) => abs_call(
                     c,

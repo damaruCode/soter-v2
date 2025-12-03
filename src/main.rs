@@ -151,10 +151,11 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     let seen;
     let mailboxes;
     let store;
+    let failures;
     if args.stop_time {
         let instance = Instant::now();
         // Run
-        (seen, mailboxes, store) = analyzer.run();
+        (seen, mailboxes, store, failures) = analyzer.run();
 
         let execution_time = instance.elapsed().as_nanos();
         let mut sum_states = 0;
@@ -163,7 +164,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         }
         println!("Time: {}, States: {}", execution_time, sum_states);
     } else {
-        (seen, mailboxes, store) = analyzer.run();
+        (seen, mailboxes, store, failures) = analyzer.run();
     }
 
     // Printing Graph and logging output
@@ -258,4 +259,8 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     }
     log::debug!("KontStore:\n{}", store.kont);
     log::debug!("ValueStore:\n{}", store.value);
+
+    for failure in failures {
+        log::debug!("Failure:\n{:#?}", failure);
+    }
 }
