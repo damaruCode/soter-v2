@@ -45,6 +45,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
 
                             new_item.env = clo.env.clone();
                             new_item.env.merge_with(module_env);
+
                             for i in 0..fn_var_names.len() {
                                 // check the type of the arg
                                 match &apply.args.inner[i] {
@@ -94,7 +95,6 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                     _ => panic!(),
                                 }
                             }
-
                             v_new.push((new_item, "abs_apply".to_string()));
                         }
                         _ => panic!(),

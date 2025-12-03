@@ -77,7 +77,14 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                 }
                 _ => panic!(),
             },
-            _ => panic!(),
+            _ =>
+            // NOTE this should probably also be a failstate not a panic
+            {
+                panic!(
+                    "Expected a closure, got Pid: {:?}\nFor variable: {:?}",
+                    value, var_name
+                )
+            }
         }
     }
     log::debug!("ABS_SPAWN - {:?} New - {:?} Revisit", v_new.len(), 0);
