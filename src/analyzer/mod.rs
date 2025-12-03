@@ -8,16 +8,13 @@ use crate::util::SetMap;
 use std::collections::VecDeque;
 
 mod dependency_checker;
+mod failure;
 mod match_helper;
 mod transitions;
 
+use failure::*;
 pub use match_helper::*;
 use transitions::*;
-
-pub enum TransitionError {
-    ErroneousTransition,
-    NoValidTransition,
-}
 
 pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     ast_helper: AstHelper<'analyzer>,
@@ -27,6 +24,7 @@ pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     store: Store<K, V>,
     queue: VecDeque<ProcState<K, V>>,
     seen: SetMap<Pid, ProcState<K, V>>,
+    failures: Vec<FailureContext<K, V>>,
     transition_graph: Graph<ProcState<K, V>, String>,
 }
 
@@ -41,6 +39,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             store: Store::init(stop_k_addr.clone()),
             queue: VecDeque::from(vec![ProcState::init(stop_k_addr)]),
             seen: SetMap::new(),
+            failures: Vec::new(),
             transition_graph: Graph::new(),
         }
     }
@@ -59,6 +58,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.abstraction,
                 &mut self.module_env,
                 &self.seen,
+                &mut self.failures,
             );
 
             for (new_proc_state, transition_name) in new_items {
@@ -118,6 +118,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
+        failures: &mut Vec<FailureContext<K, V>>,
     ) -> (Vec<(Self, String)>, Vec<(Self, String)>);
 }
 
@@ -130,6 +131,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
+        failures: &mut Vec<FailureContext<K, V>>,
     ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
@@ -166,7 +168,9 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     abstraction,
                 ),
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                TypedCore::Case(c) => abs_case(c, self, store, seen, abstraction, ast_helper),
+                TypedCore::Case(c) => {
+                    abs_case(c, self, store, seen, abstraction, ast_helper, failures)
+                }
                 TypedCore::Receive(r) => {
                     abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }

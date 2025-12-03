@@ -1,6 +1,9 @@
 use crate::{
     abstraction::Abstraction,
-    analyzer::{dependency_checker::push_to_value_store, match_helper::MatchHelper},
+    analyzer::{
+        dependency_checker::push_to_value_store, failure::FailureContext,
+        match_helper::MatchHelper, transitions::abs_fail,
+    },
     ast::{Case, Clause, Index, TypedCore},
     state_space::{
         KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress, VarName,
@@ -17,6 +20,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
+    failures: &mut Vec<FailureContext<K, V>>,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
@@ -59,17 +63,21 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 
     for (_, matches) in mats {
         if matches.len() == 0 {
-            panic!(
-                "No matches for {} with VAddr {}",
-                match store.value.get(v_addr) {
-                    Some(v) => v
-                        .iter()
-                        .map(|e| format!("{}", e))
-                        .collect::<Vec<_>>()
-                        .join(", "),
-                    _ => "NONE".to_string(),
-                },
-                v_addr,
+            abs_fail(
+                failures,
+                proc_state,
+                format!(
+                    "No matches for {} with VAddr {}",
+                    match store.value.get(v_addr) {
+                        Some(v) => v
+                            .iter()
+                            .map(|e| format!("{}", e))
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                        _ => "NONE".to_string(),
+                    },
+                    v_addr,
+                ),
             );
         }
         // only consider first match

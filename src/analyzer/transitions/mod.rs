@@ -7,6 +7,7 @@ pub type TransitionResult<K, V> = (
 mod abs_apply;
 mod abs_call;
 mod abs_case;
+mod abs_fail;
 mod abs_module;
 mod abs_pid;
 mod abs_pop_let_closure;
@@ -23,6 +24,7 @@ mod abs_var;
 pub use abs_apply::*;
 pub use abs_call::*;
 pub use abs_case::*;
+pub use abs_fail::*;
 pub use abs_module::*;
 pub use abs_pid::*;
 pub use abs_pop_let_closure::*;
