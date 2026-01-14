@@ -21,7 +21,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
-use state_space::{KontinuationAddress, ProgLocOrPid, ValueAddress};
+use state_space::{FailureType, KontinuationAddress, ProgLocOrPid, ValueAddress};
 use std::io::Write;
 use util::{peek_print, AstHelper, EdgeAttributes, NodeAttributes};
 
@@ -176,6 +176,13 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                 //     proc_state.k_addr,
                 //     proc_state.time,
                 // );
+
+                node_attr.fill_color = match &proc_state.failure_type {
+                    FailureType::None => "white".to_string(),
+                    FailureType::NotImplemented => "yellow".to_string(),
+                    FailureType::General => "red".to_string(),
+                };
+
                 node_attr.group = format!("{}", proc_state.pid);
 
                 node_attr

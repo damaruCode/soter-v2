@@ -1,6 +1,14 @@
 use super::{Env, KontinuationAddress, Pid, ProgLoc, Time, ValueAddress};
 use std::fmt::Display;
 
+// FailureType
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+pub enum FailureType {
+    None,
+    General,
+    NotImplemented,
+}
+
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum ProgLocOrPid {
@@ -24,6 +32,7 @@ pub struct ProcState<K: KontinuationAddress, V: ValueAddress> {
     pub env: Env<V>,
     pub k_addr: K,
     pub time: Time,
+    pub failure_type: FailureType,
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
@@ -40,6 +49,7 @@ impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
             env,
             k_addr,
             time,
+            failure_type: FailureType::None,
         }
     }
 
@@ -50,6 +60,13 @@ impl<K: KontinuationAddress, V: ValueAddress> ProcState<K, V> {
             env: Env::init(),
             k_addr: init_k_addr,
             time: Time::init(),
+            failure_type: FailureType::None,
         }
+    }
+
+    pub fn fail(&self, failure_type: FailureType) -> Self {
+        let mut failure_state = self.clone();
+        failure_state.failure_type = failure_type;
+        failure_state
     }
 }

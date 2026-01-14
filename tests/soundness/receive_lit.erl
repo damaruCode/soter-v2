@@ -9,5 +9,5 @@ main() ->
     X -> X
   end.
 
-package(M) -> 
+package(M) ->
   {self(), M}.
