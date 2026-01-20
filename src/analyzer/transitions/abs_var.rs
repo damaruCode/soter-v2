@@ -12,7 +12,7 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &Store<K, V>,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
+    let mut result = TransitionResult::new();
 
     match proc_state.env.inner.get(&VarName::from(&*var.name)) {
         Some(v) => match store.value.get(&v) {
@@ -28,7 +28,7 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
                             new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone());
                         }
                     }
-                    v_new.push((new_item, "abs_var".to_string()));
+                    result.new.push((new_item, "abs_var".to_string()));
                 }
             }
             None => panic!("VAddr does not exist within value store"),
@@ -36,6 +36,5 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
         None => panic!("No VAddr exists for given Var"),
     };
 
-    log::debug!("ABS_VAR - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, Vec::new())
+    result
 }

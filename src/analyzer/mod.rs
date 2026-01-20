@@ -51,7 +51,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
 
         while let Some(item) = self.queue.pop_front() {
             // Computes new ProcStates and asses which have to be revisited
-            let (new_items, revisit_items) = item.process(
+            let result = item.process(
                 &self.ast_helper,
                 &mut self.mailboxes,
                 &mut self.store,
@@ -60,7 +60,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.seen,
             );
 
-            for (new_proc_state, transition_name) in new_items {
+            for (new_proc_state, transition_name) in result.new {
                 // NOTE cloning here might become a memory issue
                 self.transition_graph.add_edge(
                     item.clone(),
@@ -81,7 +81,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 self.queue.push_back(new_proc_state);
             }
 
-            for (revisit_state, transition_name) in revisit_items {
+            for (revisit_state, transition_name) in result.revisit {
                 // Skip if already queued
                 if self.queue.contains(&revisit_state) {
                     continue;
@@ -119,7 +119,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<(Self, String)>, Vec<(Self, String)>);
+    ) -> TransitionResult<K, V>;
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V> {
@@ -132,7 +132,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-    ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
+    ) -> TransitionResult<K, V> {
         //logging
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
@@ -142,7 +142,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         }
 
         if self.failure_type != FailureType::None {
-            return (Vec::new(), Vec::new());
+            return TransitionResult::new();
         }
 
         match &self.prog_loc_or_pid {
@@ -186,8 +186,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 // We need to look at the continuation for the next computation
                 _ => match store.kont.get(&self.k_addr) {
                     Some(konts) => {
-                        let mut v_new = Vec::new();
-                        let mut v_revisit = Vec::new();
+                        let mut result = TransitionResult::new();
 
                         let konts = konts.clone();
                         // consider each possible continuation
@@ -225,14 +224,13 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                 }
                                 Kont::Stop => {
                                     // NOTE (successful)
-                                    res = (Vec::new(), Vec::new());
+                                    res = TransitionResult::new();
                                 }
                             }
-                            v_new.append(&mut res.0);
-                            v_revisit.append(&mut res.1);
+                            result.append(&mut res);
                         }
 
-                        (v_new, v_revisit)
+                        result
                     }
                     None => {
                         panic!()

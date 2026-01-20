@@ -5,9 +5,11 @@ use super::TransitionResult;
 pub fn abs_self<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
 ) -> TransitionResult<K, V> {
+    let mut result = TransitionResult::new();
+
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::Pid(proc_state.pid.clone());
 
-    log::debug!("ABS_SELF - {:?} New - {:?} Revisit", 1, 0);
-    (Vec::from([(new_item, "abs_self".to_string())]), Vec::new())
+    result.new.push((new_item, "abs_self".to_string()));
+    result
 }

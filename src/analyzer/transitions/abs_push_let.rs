@@ -16,8 +16,7 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*r#let.arg).get_index().unwrap());
@@ -42,15 +41,10 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
         new_item.k_addr.clone(),
         kont,
     ) {
-        v_revisit.push((state, "abs_push_let".to_string()));
+        result.revisit.push((state, "abs_push_let".to_string()));
     }
 
-    v_new.push((new_item, "abs_push_let".to_string()));
+    result.new.push((new_item, "abs_push_let".to_string()));
 
-    log::debug!(
-        "ABS_PUSH_LET - {:?} New - {:?} Revisit",
-        v_new.len(),
-        v_revisit.len()
-    );
-    (v_new, v_revisit)
+    result
 }

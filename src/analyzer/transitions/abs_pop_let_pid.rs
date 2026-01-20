@@ -22,8 +22,7 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     if kont_var_list.len() != 1 {
         panic!()
@@ -53,15 +52,10 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
         new_v_addr,
         Value::Pid(pid.clone()),
     ) {
-        v_revisit.push((state, "abs_pop_let_pid".to_string()));
+        result.revisit.push((state, "abs_pop_let_pid".to_string()));
     }
 
-    v_new.push((new_item, "abs_pop_let_pid".to_string()));
+    result.new.push((new_item, "abs_pop_let_pid".to_string()));
 
-    log::debug!(
-        "ABS_POP_LET_PID - {:?} New - {:?} Revisit",
-        v_new.len(),
-        v_revisit.len()
-    );
-    (v_new, v_revisit)
+    result
 }

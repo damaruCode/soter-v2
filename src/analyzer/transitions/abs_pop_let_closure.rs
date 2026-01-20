@@ -26,8 +26,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
         panic!("Expected VarList of length 1");
     }
 
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(kont_body_prog_loc);
@@ -56,15 +55,13 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
             env: proc_state.env.clone(),
         }),
     ) {
-        v_revisit.push((state, "abs_pop_let_closure".to_string()));
+        result
+            .revisit
+            .push((state, "abs_pop_let_closure".to_string()));
     }
-    v_new.push((new_item, "abs_pop_let_closure".to_string()));
+    result
+        .new
+        .push((new_item, "abs_pop_let_closure".to_string()));
 
-    log::debug!(
-        "ABS_POP_LET_CLOSURE - {:?} New - {:?} Revisit",
-        v_new.len(),
-        v_revisit.len()
-    );
-
-    (v_new, v_revisit)
+    result
 }

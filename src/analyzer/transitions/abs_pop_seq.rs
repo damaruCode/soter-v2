@@ -10,14 +10,14 @@ pub fn abs_pop_seq<K: KontinuationAddress, V: ValueAddress>(
     kont_env: &Env<V>,
     kont_k_addr: &K,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(kont_prog_loc.clone());
     new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
-    v_new.push((new_item, "abs_pop_seq".to_string()));
+    result.new.push((new_item, "abs_pop_seq".to_string()));
 
-    (v_new, Vec::new())
+    result
 }

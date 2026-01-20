@@ -16,8 +16,7 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*seq.arg).get_index().unwrap());
@@ -36,16 +35,11 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
     );
     new_item.k_addr = new_k_addr.clone();
 
-    v_new.push((new_item, "abs_push_seq".to_string()));
+    result.new.push((new_item, "abs_push_seq".to_string()));
 
     for state in push_to_kont_store(ast_helper, seen_proc_states, store, new_k_addr, new_kont) {
-        v_revisit.push((state, "abs_push_seq".to_string()));
+        result.revisit.push((state, "abs_push_seq".to_string()));
     }
 
-    log::debug!(
-        "ABS_PUSH_SEQ - {:?} New - {:?} Revisit",
-        v_new.len(),
-        v_revisit.len()
-    );
-    (v_new, v_revisit)
+    result
 }

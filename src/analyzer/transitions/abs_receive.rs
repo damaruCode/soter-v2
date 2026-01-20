@@ -19,8 +19,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mailbox = mailboxes.inner.get(&proc_state.pid).unwrap();
     let clauses = &Vec::from(&receive.clauses);
@@ -40,7 +39,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                 // NOTE because we use Data_0, the preliminary step of resolving the data d_i is
                 // irrelevant --- it would only have been of interest for the VAddr
 
-                // generate new v_addr
+                // generate newresult.addr
                 let new_v_addr = abstraction.new_vaddr(
                     proc_state,
                     var_name,
@@ -57,14 +56,14 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                     new_v_addr,
                     value.clone(),
                 ) {
-                    v_revisit.push((state, "abs_receive".to_string()));
+                    result.revisit.push((state, "abs_receive".to_string()));
                 }
             }
         }
         new_item.env = new_env;
 
-        v_new.push((new_item, "abs_receive".to_string()));
+        result.new.push((new_item, "abs_receive".to_string()));
     }
-    log::debug!("ABS_RECEIVE - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, v_revisit)
+
+    result
 }

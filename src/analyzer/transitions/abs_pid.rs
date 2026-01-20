@@ -39,5 +39,5 @@ pub fn abs_pid<K: KontinuationAddress, V: ValueAddress>(
         };
     }
 
-    return (Vec::new(), Vec::new());
+    return TransitionResult::new();
 }

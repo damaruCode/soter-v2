@@ -57,7 +57,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     ast_helper,
                 ),
                 "self" => abs_self(proc_state),
-                "error" => (Vec::new(), Vec::new()), // NOTE no-op for now
+                "error" => TransitionResult::new(), // NOTE no-op for now
                 _ => panic!("{:#?}", s),
             },
             _ => panic!(),

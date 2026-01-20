@@ -19,7 +19,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     ast_helper: &AstHelper,
     abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
+    let mut result = TransitionResult::new();
 
     let values = store
         .value
@@ -47,7 +47,9 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     let mut new_proc_state_one = proc_state.clone();
                     new_proc_state_one.prog_loc_or_pid = ProgLocOrPid::Pid(new_pid.clone());
 
-                    v_new.push((new_proc_state_one, "abs_spawn".to_string()));
+                    result
+                        .new
+                        .push((new_proc_state_one, "abs_spawn".to_string()));
 
                     match &*f.body {
                         TypedCore::Case(c) => match &c.clauses.inner[0] {
@@ -66,7 +68,9 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                         .insert(var_name.clone(), v_addr.clone());
                                 }
 
-                                v_new.push((new_proc_state_two, "abs_spawn".to_string()));
+                                result
+                                    .new
+                                    .push((new_proc_state_two, "abs_spawn".to_string()));
 
                                 mailboxes.inner.insert(new_pid, Mailbox::init());
                             }
@@ -87,6 +91,6 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
             }
         }
     }
-    log::debug!("ABS_SPAWN - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, Vec::new())
+
+    result
 }

@@ -19,8 +19,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
     let v_addr;
@@ -36,9 +35,9 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                         new_item.prog_loc_or_pid =
                             ProgLocOrPid::ProgLoc((*clause.body).get_index().unwrap());
 
-                        v_new.push((new_item, "abs_case".to_string()));
+                        result.new.push((new_item, "abs_case".to_string()));
 
-                        return (v_new, Vec::new());
+                        return result;
                     }
                 }
             }
@@ -61,7 +60,8 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     for (_, matches) in mats {
         if matches.len() == 0 {
             let fail_state = proc_state.fail(FailureType::General);
-            return (vec![(fail_state, "abs_case".to_string())], Vec::new());
+            result.new.push((fail_state, "abs_case".to_string()));
+            continue;
         }
         // only consider first match
         let (index, substs) = &matches[0];
@@ -91,15 +91,13 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                     new_v_addr,
                     value.clone(),
                 ) {
-                    v_revisit.push((state, "abs_case".to_string()));
+                    result.revisit.push((state, "abs_case".to_string()));
                 }
             }
         }
 
-        v_new.push((new_item, "abs_case".to_string()));
+        result.new.push((new_item, "abs_case".to_string()));
     }
 
-    log::debug!("ABS_CASE - {:?} New - {:?} Revisit", v_new.len(), 0);
-
-    (v_new, Vec::new())
+    result
 }

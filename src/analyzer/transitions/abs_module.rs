@@ -18,7 +18,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
+    let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
     // For every definition in the module...
@@ -95,8 +95,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     // ... also update the module_env
     module_env.merge_with(&new_item.env);
 
-    v_new.push((new_item, "abs_module".to_string()));
+    result.new.push((new_item, "abs_module".to_string()));
 
-    log::debug!("ABS_PUSH_MODULE - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, Vec::new())
+    result
 }

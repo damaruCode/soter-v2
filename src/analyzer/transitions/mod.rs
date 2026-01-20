@@ -1,8 +1,23 @@
 /// K: KontinuationAddress, V: ValueAddress
-pub type TransitionResult<K, V> = (
-    Vec<(ProcState<K, V>, String)>,
-    Vec<(ProcState<K, V>, String)>,
-);
+pub type TransitionPair<K, V> = (ProcState<K, V>, String);
+
+pub struct TransitionResult<K: KontinuationAddress, V: ValueAddress> {
+    pub new: Vec<TransitionPair<K, V>>,
+    pub revisit: Vec<TransitionPair<K, V>>,
+}
+impl<K: KontinuationAddress, V: ValueAddress> TransitionResult<K, V> {
+    pub fn new() -> Self {
+        Self {
+            new: Vec::new(),
+            revisit: Vec::new(),
+        }
+    }
+
+    pub fn append(&mut self, other: &mut Self) {
+        self.new.append(&mut other.new);
+        self.revisit.append(&mut other.revisit);
+    }
+}
 
 mod abs_apply;
 mod abs_call;
@@ -36,4 +51,4 @@ pub use abs_send::*;
 pub use abs_spawn::*;
 pub use abs_var::*;
 
-use crate::state_space::ProcState;
+use crate::state_space::{KontinuationAddress, ProcState, ValueAddress};

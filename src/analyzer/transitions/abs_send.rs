@@ -45,8 +45,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     let pids = match typed_core_to {
         TypedCore::Var(v) => {
@@ -97,7 +96,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 }
             }
 
-            v_new.push((new_item, "abs_send".to_string()));
+            result.new.push((new_item, "abs_send".to_string()));
 
             for state in push_to_mailboxes(
                 ast_helper,
@@ -106,14 +105,10 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 pid.clone(),
                 value.clone(),
             ) {
-                v_revisit.push((state, "abs_send".to_string()));
+                result.revisit.push((state, "abs_send".to_string()));
             }
         }
     }
-    log::debug!(
-        "ABS_SEND - {:?} New - {:?} Revisit",
-        v_new.len(),
-        v_revisit.len()
-    );
-    (v_new, v_revisit)
+
+    result
 }

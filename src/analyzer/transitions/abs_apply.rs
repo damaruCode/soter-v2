@@ -21,8 +21,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
-    let mut v_new = Vec::new();
-    let mut v_revisit = Vec::new();
+    let mut result = TransitionResult::new();
 
     match &*apply.op.clone() {
         TypedCore::Var(v) => {
@@ -48,7 +47,8 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
 
                             if fn_var_names.len() != apply.args.inner.len() {
                                 let fail_state = proc_state.fail(FailureType::General);
-                                return (vec![(fail_state, "abs_apply".to_string())], Vec::new());
+                                result.new.push((fail_state, "abs_apply".to_string()));
+                                continue;
                             }
 
                             if fn_var_names.len() > 0 {
@@ -95,14 +95,14 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                                     env: proc_state.env.clone(),
                                                 }),
                                             ) {
-                                                v_revisit.push((state, "abs_apply".to_string()));
+                                                result.revisit.push((state, "abs_apply".to_string()));
                                             }
                                         }
                                         _ => panic!(),
                                     }
                                 }
                             }
-                            v_new.push((new_item, "abs_apply".to_string()));
+                            result.new.push((new_item, "abs_apply".to_string()));
                         }
                         _ => panic!(),
                     },
@@ -113,6 +113,5 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
         _ => panic!(),
     }
 
-    log::debug!("ABS_APPLY - {:?} New - {:?} Revisit", v_new.len(), 0);
-    (v_new, v_revisit)
+    return result;
 }
