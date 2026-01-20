@@ -1,7 +1,8 @@
 use crate::{
     ast::Var,
     state_space::{
-        KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress, VarName,
+        FailureType, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
+        VarName,
     },
 };
 
@@ -31,9 +32,13 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
                     result.new.push((new_item, "abs_var".to_string()));
                 }
             }
-            None => panic!("VAddr does not exist within value store"),
+            None => result
+                .new
+                .push((proc_state.fail(FailureType::General), "abs_var".to_string())),
         },
-        None => panic!("No VAddr exists for given Var"),
+        None => result
+            .new
+            .push((proc_state.fail(FailureType::General), "abs_var".to_string())),
     };
 
     result

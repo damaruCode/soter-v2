@@ -28,7 +28,8 @@ impl From<&TypedCore> for VarName {
                 };
                 VarName::FnAtom(s, n)
             }
-            _ => panic!("{:#?}", tc),
+            _ => panic!("{:#?}", tc), // TODO adapt from into try_from and return an erronous
+                                      // result
         }
     }
 }

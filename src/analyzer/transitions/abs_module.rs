@@ -2,8 +2,8 @@ use crate::{
     abstraction::Abstraction,
     ast::{Index, Module, TypedCore},
     state_space::{
-        Closure, Env, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
-        VarName,
+        Closure, Env, FailureType, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value,
+        ValueAddress, VarName,
     },
     util::AstHelper,
 };
@@ -54,10 +54,22 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                             }),
                         );
                     }
-                    _ => panic!(),
+                    _ => {
+                        result.new.push((
+                            proc_state.fail(FailureType::General),
+                            "abs_module".to_string(),
+                        ));
+                        continue;
+                    }
                 };
             }
-            _ => panic!(),
+            _ => {
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_module".to_string(),
+                ));
+                continue;
+            }
         }
     }
 
@@ -77,19 +89,49 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                                         new_item.prog_loc_or_pid =
                                             ProgLocOrPid::ProgLoc((*c.body).get_index().unwrap());
                                     }
-                                    _ => panic!(),
+                                    _ => {
+                                        result.new.push((
+                                            proc_state.fail(FailureType::General),
+                                            "abs_module".to_string(),
+                                        ));
+                                    }
                                 },
-                                _ => panic!(),
+                                _ => {
+                                    result.new.push((
+                                        proc_state.fail(FailureType::General),
+                                        "abs_module".to_string(),
+                                    ));
+                                }
                             },
-                            _ => panic!(),
+                            _ => {
+                                result.new.push((
+                                    proc_state.fail(FailureType::General),
+                                    "abs_module".to_string(),
+                                ));
+                            }
                         },
-                        _ => panic!(),
+                        _ => {
+                            result.new.push((
+                                proc_state.fail(FailureType::General),
+                                "abs_module".to_string(),
+                            ));
+                        }
                     }
                 }
             }
-            _ => panic!(),
+            _ => {
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_module".to_string(),
+                ));
+            }
         },
-        _ => panic!(),
+        _ => {
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_module".to_string(),
+            ));
+        }
     }
 
     // ... also update the module_env

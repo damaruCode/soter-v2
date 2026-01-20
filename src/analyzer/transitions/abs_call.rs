@@ -1,10 +1,9 @@
-use core::panic;
-
 use crate::{
     abstraction::Abstraction,
     ast::{Call, TypedCore},
     state_space::{
-        Env, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress, VarName,
+        Env, FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress,
+        VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -22,23 +21,36 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     abstraction: &Box<dyn Abstraction<K, V>>,
 ) -> TransitionResult<K, V> {
     // check module name
+    let mut result = TransitionResult::new();
+
     match &*call.module {
         TypedCore::Literal(l_mod) => match &*l_mod.val {
             TypedCore::String(s_mod) => {
                 if s_mod.inner != "erlang" {
                     // TODO implement other modules as well
-                    let mut result = TransitionResult::new();
                     result.new.push((
-                        proc_state.fail(crate::state_space::FailureType::NotImplemented),
+                        proc_state.fail(FailureType::NotImplemented),
                         "abs_call".to_string(),
                     ));
 
                     return result;
                 }
             }
-            _ => panic!(),
+            _ => {
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_call".to_string(),
+                ));
+                return result;
+            }
         },
-        _ => panic!(),
+        _ => {
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_call".to_string(),
+            ));
+            return result;
+        }
     };
 
     // NOTE only operations from the erlang module
@@ -65,10 +77,28 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                 ),
                 "self" => abs_self(proc_state),
                 "error" => TransitionResult::new(), // NOTE no-op for now
-                _ => panic!("{:#?}", s),
+                _ => {
+                    result.new.push((
+                        proc_state.fail(FailureType::General),
+                        "abs_call".to_string(),
+                    ));
+                    return result;
+                }
             },
-            _ => panic!(),
+            _ => {
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_call".to_string(),
+                ));
+                return result;
+            }
         },
-        _ => panic!(),
+        _ => {
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_call".to_string(),
+            ));
+            return result;
+        }
     }
 }

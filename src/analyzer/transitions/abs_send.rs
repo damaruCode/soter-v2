@@ -2,8 +2,8 @@ use crate::{
     analyzer::dependency_checker::push_to_mailboxes,
     ast::{Index, TypedCore},
     state_space::{
-        Closure, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
-        ValueAddress, VarName,
+        Closure, FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
+        Value, ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -29,7 +29,7 @@ fn resolve_pid<K: KontinuationAddress, V: ValueAddress>(
                     pids.append(&mut resolve_pid(&value, store, ast_helper));
                 }
             }
-            _ => panic!(),
+            _ => panic!(), // TODO adapt to return an erronous result
         },
     };
 
@@ -60,7 +60,13 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
             }
             pids
         }
-        _ => panic!(),
+        _ => {
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_send".to_string(),
+            ));
+            return result;
+        }
     };
 
     fn determine_values<K: KontinuationAddress, V: ValueAddress>(
@@ -80,7 +86,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                     env: proc_state.env.clone(),
                 })])
             }
-            tc => panic!("{:#?}", tc),
+            tc => panic!("{:#?}", tc), // TODO adapt to return erronous result
         }
     }
 

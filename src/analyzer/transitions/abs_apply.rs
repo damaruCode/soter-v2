@@ -98,19 +98,39 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                                 result.revisit.push((state, "abs_apply".to_string()));
                                             }
                                         }
-                                        _ => panic!(),
+                                        _ => {
+                                            result.new.push((proc_state.fail(FailureType::General), "abs_apply".to_string()));
+                                            continue;
+                                        },
                                     }
                                 }
                             }
                             result.new.push((new_item, "abs_apply".to_string()));
                         }
-                        _ => panic!(),
+                        _ => {
+                            result.new.push((
+                                proc_state.fail(FailureType::General),
+                                "abs_apply".to_string(),
+                            ));
+                            continue;
+                        }
                     },
-                    _ => panic!(),
+                    _ => {
+                        result.new.push((
+                            proc_state.fail(FailureType::General),
+                            "abs_apply".to_string(),
+                        ));
+                        continue;
+                    }
                 }
             }
         }
-        _ => panic!(),
+        _ => {
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_apply".to_string(),
+            ));
+        }
     }
 
     return result;

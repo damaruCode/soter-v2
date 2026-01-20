@@ -2,8 +2,8 @@ use crate::{
     abstraction::Abstraction,
     ast::{Index, TypedCore},
     state_space::{
-        Env, KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Time,
-        Value, ValueAddress, VarName,
+        Env, FailureType, KontinuationAddress, Mailbox, Mailboxes, Pid, ProcState, ProgLocOrPid,
+        Store, Time, Value, ValueAddress, VarName,
     },
     util::AstHelper,
 };
@@ -31,7 +31,11 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
             Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                 TypedCore::Fun(f) => {
                     if f.vars.inner.len() != 0 {
-                        panic!();
+                        result.new.push((
+                            proc_state.fail(FailureType::General),
+                            "abs_spawn".to_string(),
+                        ));
+                        continue;
                     }
                     let mut new_time =
                         abstraction.tick(&proc_state.pid.time, proc_state.pid.prog_loc);
@@ -39,7 +43,13 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     let new_pid = Pid {
                         prog_loc: match proc_state.prog_loc_or_pid {
                             ProgLocOrPid::ProgLoc(pl) => pl,
-                            ProgLocOrPid::Pid(_) => panic!("Expected a ProgLoc not Pid"),
+                            _ => {
+                                result.new.push((
+                                    proc_state.fail(FailureType::General),
+                                    "abs_spawn".to_string(),
+                                ));
+                                return result;
+                            }
                         },
                         time: new_time,
                     };
@@ -74,20 +84,39 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
 
                                 mailboxes.inner.insert(new_pid, Mailbox::init());
                             }
-                            _ => panic!(),
+                            _ => {
+                                result.new.push((
+                                    proc_state.fail(FailureType::General),
+                                    "abs_call".to_string(),
+                                ));
+                            }
                         },
-                        _ => panic!(),
+                        _ => {
+                            result.new.push((
+                                proc_state.fail(FailureType::General),
+                                "abs_call".to_string(),
+                            ));
+                        }
                     }
                 }
-                _ => panic!(),
+                _ => {
+                    result.new.push((
+                        proc_state.fail(FailureType::General),
+                        "abs_call".to_string(),
+                    ));
+                }
             },
             _ =>
             // NOTE this should probably also be a failstate not a panic
             {
-                panic!(
-                    "Expected a closure, got Pid: {:?}\nFor variable: {:?}",
-                    value, var_name
-                )
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_spawn".to_string(),
+                ));
+                // panic!(
+                //     "Expected a closure, got Pid: {:?}\nFor variable: {:?}",
+                //     value, var_name
+                // )
             }
         }
     }

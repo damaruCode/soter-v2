@@ -49,21 +49,43 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             return result;
         }
         TypedCore::Literal(l) => match *l.val.clone() {
-            TypedCore::AstList(al) => todo!("{:#?}", al),
-            TypedCore::String(_) => {
+            TypedCore::AstList(_) | TypedCore::String(_) => {
                 // TODO implement
-                let mut result = TransitionResult::new();
                 result.new.push((
-                    proc_state.fail(crate::state_space::FailureType::NotImplemented),
+                    proc_state.fail(FailureType::NotImplemented),
                     "abs_case".to_string(),
                 ));
 
                 return result;
             }
-            _ => panic!(),
+            _ => {
+                // TODO implement
+                result.new.push((
+                    proc_state.fail(FailureType::General),
+                    "abs_case".to_string(),
+                ));
+
+                return result;
+            }
         },
-        TypedCore::AstTuple(t) => todo!("{:#?}", t),
-        tc => panic!("{:#?}", tc),
+        TypedCore::AstTuple(_) => {
+            // TODO implement
+            result.new.push((
+                proc_state.fail(FailureType::NotImplemented),
+                "abs_case".to_string(),
+            ));
+
+            return result;
+        }
+        _ => {
+            // TODO possibly add more context, i.e. the choice of case that lead to this failure
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_case".to_string(),
+            ));
+
+            return result;
+        }
     }
 
     let mats = MatchHelper::vmatch(&clauses, v_addr, &store.value, ast_helper);
