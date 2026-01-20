@@ -3,7 +3,7 @@ use crate::{
     analyzer::dependency_checker::push_to_value_store,
     ast::{Apply, Index, TypedCore},
     state_space::{
-        Closure, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
+        Closure, Env, FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
         ValueAddress, VarName,
     },
     util::{AstHelper, SetMap},
@@ -46,9 +46,10 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                             new_item.env = clo.env.clone();
                             new_item.env.merge_with(module_env);
 
-                            // if fn_var_names.len() != apply.args.inner.len() {
-                            //     return abs_fail(failures, proc_state, format!("Argument mismatch. Expected {:?} arguments but got {:?} instead.", fn_var_names.len(), &apply.args.inner.len()));
-                            // }
+                            if fn_var_names.len() != apply.args.inner.len() {
+                                let fail_state = proc_state.fail(FailureType::General);
+                                return (vec![(fail_state, "abs_apply".to_string())], Vec::new());
+                            }
 
                             if fn_var_names.len() > 0 {
                                 for i in 0..fn_var_names.len() {
