@@ -26,7 +26,14 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
         TypedCore::Literal(l_mod) => match &*l_mod.val {
             TypedCore::String(s_mod) => {
                 if s_mod.inner != "erlang" {
-                    todo!("Can't handle modules other than 'erlang'")
+                    // TODO implement other modules as well
+                    let mut result = TransitionResult::new();
+                    result.new.push((
+                        proc_state.fail(crate::state_space::FailureType::NotImplemented),
+                        "abs_call".to_string(),
+                    ));
+
+                    return result;
                 }
             }
             _ => panic!(),

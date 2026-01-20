@@ -42,12 +42,23 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                 }
             }
 
-            todo!("{:#?}", v);
+            result.new.push((
+                proc_state.fail(FailureType::NotImplemented),
+                "abs_case".to_string(),
+            ));
+            return result;
         }
         TypedCore::Literal(l) => match *l.val.clone() {
             TypedCore::AstList(al) => todo!("{:#?}", al),
-            TypedCore::String(s) => {
-                todo!("{:#?}", s);
+            TypedCore::String(_) => {
+                // TODO implement
+                let mut result = TransitionResult::new();
+                result.new.push((
+                    proc_state.fail(crate::state_space::FailureType::NotImplemented),
+                    "abs_case".to_string(),
+                ));
+
+                return result;
             }
             _ => panic!(),
         },
@@ -59,8 +70,10 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 
     for (_, matches) in mats {
         if matches.len() == 0 {
-            let fail_state = proc_state.fail(FailureType::General);
-            result.new.push((fail_state, "abs_case".to_string()));
+            result.new.push((
+                proc_state.fail(FailureType::General),
+                "abs_case".to_string(),
+            ));
             continue;
         }
         // only consider first match
