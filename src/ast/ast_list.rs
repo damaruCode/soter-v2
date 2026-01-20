@@ -64,6 +64,19 @@ impl From<Vec<Value>> for AstList<AstTuple<TypedCore>> {
     }
 }
 
+impl From<Vec<TypedCore>> for AstList<TypedCore> {
+    fn from(vec: Vec<TypedCore>) -> AstList<TypedCore> {
+        let mut list = Vec::new();
+        for val in vec {
+            list.push(TypedCore::from(val));
+        }
+        AstList {
+            inner: list,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<&AstList<TypedCore>> for Vec<usize> {
     fn from(al: &AstList<TypedCore>) -> Self {
         let mut vec = Vec::new();

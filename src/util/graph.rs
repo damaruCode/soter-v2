@@ -15,6 +15,7 @@ struct Node<N: NodeData, E: EdgeData> {
 
 pub struct NodeAttributes {
     pub label: String,
+    pub fill_color: String,
     pub tooltip: String,
     pub group: String,
 }
@@ -22,6 +23,7 @@ impl NodeAttributes {
     pub fn new() -> Self {
         Self {
             label: String::new(),
+            fill_color: String::new(),
             tooltip: String::new(),
             group: String::new(),
         }
@@ -115,12 +117,13 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
         G: Fn(&E) -> EdgeAttributes,
     {
         let mut dot_code = String::from("digraph {");
+        dot_code.push_str("node [style=\"filled\"]");
         for (_, node) in &self.map {
             let node_attr = format_node(&node.data);
             dot_code.push_str(
                 format!(
-                    "\t{}[label=\"{}\" shape=\"box\" tooltip=\"{}\", group=\"{}\"]\n",
-                    node.handle, node_attr.label, node_attr.tooltip, node_attr.group
+                    "\t{}[label=\"{}\" shape=\"box\" tooltip=\"{}\", group=\"{}\", fillcolor=\"{}\"]\n",
+                    node.handle, node_attr.label, node_attr.tooltip, node_attr.group, node_attr.fill_color,
                 )
                 .as_str(),
             );

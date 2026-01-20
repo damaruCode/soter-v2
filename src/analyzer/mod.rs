@@ -8,11 +8,9 @@ use crate::util::SetMap;
 use std::collections::VecDeque;
 
 mod dependency_checker;
-mod failure;
 mod match_helper;
 mod transitions;
 
-use failure::*;
 pub use match_helper::*;
 use transitions::*;
 
@@ -22,9 +20,10 @@ pub struct Analyzer<'analyzer, K: KontinuationAddress, V: ValueAddress> {
     module_env: Env<V>,
     mailboxes: Mailboxes<V>,
     store: Store<K, V>,
+
     queue: VecDeque<ProcState<K, V>>,
     seen: SetMap<Pid, ProcState<K, V>>,
-    failures: Vec<FailureContext<K, V>>,
+
     transition_graph: Graph<ProcState<K, V>, String>,
 }
 
@@ -39,25 +38,19 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             store: Store::init(stop_k_addr.clone()),
             queue: VecDeque::from(vec![ProcState::init(stop_k_addr)]),
             seen: SetMap::new(),
-            failures: Vec::new(),
             transition_graph: Graph::new(),
         }
     }
 
-    pub fn run(
-        &mut self,
-    ) -> (
-        SetMap<Pid, ProcState<K, V>>,
-        Mailboxes<V>,
-        Store<K, V>,
-        Vec<FailureContext<K, V>>,
-    ) {
+    // Start fixpoint computation with WorkList-Algorithm
+    pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
             self.transition_graph.add_node(node);
         }
 
         while let Some(item) = self.queue.pop_front() {
+            // Computes new ProcStates and asses which have to be revisited
             let (new_items, revisit_items) = item.process(
                 &self.ast_helper,
                 &mut self.mailboxes,
@@ -65,32 +58,31 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.abstraction,
                 &mut self.module_env,
                 &self.seen,
-                &mut self.failures,
             );
 
             for (new_proc_state, transition_name) in new_items {
                 // NOTE cloning here might become a memory issue
-                if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
-                    if seen_items.contains(&new_proc_state) {
-                        self.transition_graph.add_edge(
-                            item.clone(),
-                            new_proc_state.clone(),
-                            transition_name,
-                        );
-                        continue;
-                    }
-                }
                 self.transition_graph.add_edge(
                     item.clone(),
                     new_proc_state.clone(),
                     transition_name,
                 );
+
+                // Skip if already seen
+                if let Some(seen_items) = self.seen.get_mut(&new_proc_state.pid) {
+                    if seen_items.contains(&new_proc_state) {
+                        continue;
+                    }
+                }
+
+                // Update seen and queue otherwise
                 self.seen
                     .push(new_proc_state.pid.clone(), new_proc_state.clone());
                 self.queue.push_back(new_proc_state);
             }
 
             for (revisit_state, transition_name) in revisit_items {
+                // Skip if already queued
                 if self.queue.contains(&revisit_state) {
                     continue;
                 }
@@ -100,6 +92,8 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                     revisit_state.clone(),
                     format!("{} - revisit", transition_name),
                 );
+
+                // Update queue otherwise
                 self.queue.push_back(revisit_state);
             }
         }
@@ -108,7 +102,6 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             self.seen.clone(),
             self.mailboxes.clone(),
             self.store.clone(),
-            self.failures.clone(),
         );
     }
 
@@ -126,11 +119,11 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-        failures: &mut Vec<FailureContext<K, V>>,
     ) -> (Vec<(Self, String)>, Vec<(Self, String)>);
 }
 
 impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V> {
+    // Decides which transition might be applicable
     fn process(
         &self,
         ast_helper: &AstHelper,
@@ -139,13 +132,17 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         abstraction: &Box<dyn Abstraction<K, V>>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
-        failures: &mut Vec<FailureContext<K, V>>,
     ) -> (Vec<(Self, String)>, Vec<(Self, String)>) {
+        //logging
         match self.prog_loc_or_pid {
             ProgLocOrPid::ProgLoc(pl) => {
                 log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))
             }
             ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
+        }
+
+        if self.failure_type != FailureType::None {
+            return (Vec::new(), Vec::new());
         }
 
         match &self.prog_loc_or_pid {
@@ -164,7 +161,6 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     store,
                     abstraction,
                     ast_helper,
-                    failures,
                 ),
                 TypedCore::Call(c) => abs_call(
                     c,
@@ -177,9 +173,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                     abstraction,
                 ),
                 TypedCore::LetRec(_let_rec) => todo!("ABS_LETREC"),
-                TypedCore::Case(c) => {
-                    abs_case(c, self, store, seen, abstraction, ast_helper, failures)
-                }
+                TypedCore::Case(c) => abs_case(c, self, store, seen, abstraction, ast_helper),
                 TypedCore::Receive(r) => {
                     abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }

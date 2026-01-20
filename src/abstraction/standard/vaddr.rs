@@ -9,6 +9,7 @@ pub struct VAddr {
     pub var_name: VarName,
     pub time: Time,
 }
+
 impl ValueAddress for VAddr {}
 
 impl Display for VAddr {

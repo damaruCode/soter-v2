@@ -80,6 +80,7 @@ impl MatchHelper {
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> Vec<MatchSubstitution<V>> {
+        //TODO dont flatten the structure
         let patterns = if clause.pats.inner.len() == 1 {
             if let TypedCore::Tuple(tup) = &clause.pats.inner[0] {
                 &tup.es

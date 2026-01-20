@@ -1,8 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    analyzer::{
-        dependency_checker::push_to_value_store, failure::FailureContext, transitions::abs_fail,
-    },
+    analyzer::dependency_checker::push_to_value_store,
     ast::{Apply, Index, TypedCore},
     state_space::{
         Closure, Env, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
@@ -22,7 +20,6 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     store: &mut Store<K, V>,
     abstraction: &Box<dyn Abstraction<K, V>>,
     ast_helper: &AstHelper,
-    failures: &mut Vec<FailureContext<K, V>>,
 ) -> TransitionResult<K, V> {
     let mut v_new = Vec::new();
     let mut v_revisit = Vec::new();
@@ -49,9 +46,9 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                             new_item.env = clo.env.clone();
                             new_item.env.merge_with(module_env);
 
-                            if fn_var_names.len() != apply.args.inner.len() {
-                                return abs_fail(failures, proc_state, format!("Argument mismatch. Expected {:?} arguments but got {:?} instead.", fn_var_names.len(), &apply.args.inner.len()));
-                            }
+                            // if fn_var_names.len() != apply.args.inner.len() {
+                            //     return abs_fail(failures, proc_state, format!("Argument mismatch. Expected {:?} arguments but got {:?} instead.", fn_var_names.len(), &apply.args.inner.len()));
+                            // }
 
                             if fn_var_names.len() > 0 {
                                 for i in 0..fn_var_names.len() {

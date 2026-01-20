@@ -11,12 +11,7 @@ use std::{
     time::Instant,
 };
 
-use abstraction::{
-    icfa::ICFAAbstraction, p4f::P4FAbstraction, p4f_v1cfa::P4FV1CFAAbstraction,
-    standard::StandardAbstraction, standard_stripped::StrippedStandardAbstraction,
-    standard_stripped_v1cfa::StrippedStandardV1CFAAbstraction,
-    standard_v1cfa::StandardV1CFAAbstraction, Abstraction, AbstractionKind,
-};
+use abstraction::{standard::StandardAbstraction, Abstraction, AbstractionKind};
 use analyzer::Analyzer;
 use chrono::Utc;
 use clap::Parser;
@@ -26,7 +21,7 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
-use state_space::{KontinuationAddress, ProgLocOrPid, ValueAddress};
+use state_space::{FailureType, KontinuationAddress, ProgLocOrPid, ValueAddress};
 use std::io::Write;
 use util::{peek_print, AstHelper, EdgeAttributes, NodeAttributes};
 
@@ -107,36 +102,6 @@ fn main() {
             ast_helper,
             args,
         ),
-        AbstractionKind::StandardV1CFA => run_analysis_with(
-            Box::new(StandardV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::StandardStripped => run_analysis_with(
-            Box::new(StrippedStandardAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::StandardStrippedV1CFA => run_analysis_with(
-            Box::new(StrippedStandardV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::P4F => run_analysis_with(
-            Box::new(P4FAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::P4FV1CFA => run_analysis_with(
-            Box::new(P4FV1CFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
-        AbstractionKind::ICFA => run_analysis_with(
-            Box::new(ICFAAbstraction::new(args.time_depth)),
-            ast_helper,
-            args,
-        ),
     }
 }
 
@@ -151,11 +116,10 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     let seen;
     let mailboxes;
     let store;
-    let failures;
     if args.stop_time {
         let instance = Instant::now();
         // Run
-        (seen, mailboxes, store, failures) = analyzer.run();
+        (seen, mailboxes, store) = analyzer.run();
 
         let execution_time = instance.elapsed().as_nanos();
         let mut sum_states = 0;
@@ -164,7 +128,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         }
         println!("Time: {}, States: {}", execution_time, sum_states);
     } else {
-        (seen, mailboxes, store, failures) = analyzer.run();
+        (seen, mailboxes, store) = analyzer.run();
     }
 
     // Printing Graph and logging output
@@ -183,12 +147,6 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                     "{}.{}.erl.dot",
                     match args.abstraction {
                         AbstractionKind::Standard => "standard",
-                        AbstractionKind::StandardV1CFA => "standard-v1cfa",
-                        AbstractionKind::StandardStripped => "standard-stripped",
-                        AbstractionKind::StandardStrippedV1CFA => "standard-stripped-v1cfa",
-                        AbstractionKind::P4F => "p4f",
-                        AbstractionKind::P4FV1CFA => "p4f-v1cfa",
-                        AbstractionKind::ICFA => "icfa",
                     },
                     args.time_depth
                 ))
@@ -218,6 +176,13 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                 //     proc_state.k_addr,
                 //     proc_state.time,
                 // );
+
+                node_attr.fill_color = match &proc_state.failure_type {
+                    FailureType::None => "white".to_string(),
+                    FailureType::NotImplemented => "yellow".to_string(),
+                    FailureType::General => "red".to_string(),
+                };
+
                 node_attr.group = format!("{}", proc_state.pid);
 
                 node_attr
@@ -259,8 +224,4 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
     }
     log::debug!("KontStore:\n{}", store.kont);
     log::debug!("ValueStore:\n{}", store.value);
-
-    for failure in failures {
-        log::debug!("Failure:\n{:#?}", failure);
-    }
 }

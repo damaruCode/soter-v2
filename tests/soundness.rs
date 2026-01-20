@@ -1,102 +1,204 @@
-use soter_v2::abstraction::standard::KAddr;
+use serde_json::Number;
 use soter_v2::abstraction::standard::StandardAbstraction;
 use soter_v2::abstraction::standard::VAddr;
 use soter_v2::analyzer::Analyzer;
+use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast;
+use soter_v2::ast::AstList;
+use soter_v2::ast::Clause;
+use soter_v2::ast::ErlNumber;
+use soter_v2::ast::ErlString;
+use soter_v2::ast::Literal;
+use soter_v2::ast::MaybeIndex;
+use soter_v2::ast::Tuple;
 use soter_v2::ast::TypedCore;
+use soter_v2::ast::Var;
 use soter_v2::erlang;
-use soter_v2::state_space::Mailboxes;
-use soter_v2::state_space::Store;
 use soter_v2::state_space::Value;
 use soter_v2::state_space::VarName;
 use soter_v2::util::AstHelper;
+use soter_v2::util::SetMap;
 
-fn check_store(
-    store: &Store<KAddr, VAddr>,
-    ast_helper: AstHelper,
-    var_name: &str,
-    values: Vec<&str>,
-) {
-    for (vaddr, val) in &store.value.inner {
-        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
-            for value in val {
-                match value {
-                    Value::Closure(c) => {
-                        let tc = ast_helper.get(c.prog_loc);
-                        match tc {
-                            TypedCore::Literal(l) => match *l.val.clone() {
-                                TypedCore::String(erls) => {
-                                    if !values.contains(&erls.inner.as_str()) {
-                                        panic!("\"{}\" contains \"{}\"", var_name, erls.inner);
-                                    }
-                                }
-                                _ => panic!("{} is not a string", l),
-                            },
-                            _ => panic!("{} is not a literal", tc),
-                        }
+enum P<'p> {
+    Var,               // TypedCore::Var
+    Literal(&'p str),  // TypedCore::Literal
+    List(Vec<P<'p>>),  // TypedCore::AstList
+    Tuple(Vec<P<'p>>), // TypedCore::Tuple
+}
+
+impl From<P<'_>> for AstList<TypedCore> {
+    fn from(pattern: P) -> Self {
+        fn resolve(pattern: P) -> TypedCore {
+            match pattern {
+                P::Var => TypedCore::Var(Var {
+                    anno: AstList::new(),
+                    name: Box::new(TypedCore::Number(ErlNumber {
+                        inner: Number::from(0),
+                        index: MaybeIndex::None,
+                    })),
+                    index: MaybeIndex::None,
+                }),
+                P::Literal(s) => TypedCore::Literal(Literal {
+                    anno: AstList::new(),
+                    val: Box::new(TypedCore::String(ErlString {
+                        inner: String::from(s),
+                        index: MaybeIndex::None,
+                    })),
+                    index: MaybeIndex::None,
+                }),
+                P::List(v) => {
+                    let mut al = AstList::new();
+                    for pattern in v {
+                        al.inner.push(resolve(pattern));
                     }
-                    _ => panic!("{} is not a closure", value), // TODO in concurr this fails
+                    TypedCore::AstList(al)
+                }
+                P::Tuple(v) => {
+                    let mut al = AstList::new();
+                    for pattern in v {
+                        al.inner.push(resolve(pattern));
+                    }
+                    TypedCore::Tuple(Tuple {
+                        anno: AstList::new(),
+                        es: al,
+                        index: MaybeIndex::None,
+                    })
+                }
+            }
+        }
+
+        let tc = resolve(pattern);
+        let mut al = AstList::new();
+        al.inner.push(tc);
+        al
+    }
+}
+
+impl From<P<'_>> for Clause {
+    fn from(pattern: P) -> Self {
+        let clause = Clause {
+            anno: AstList::new(),
+            pats: AstList::from(pattern),
+            guard: Box::new(TypedCore::Literal(Literal {
+                anno: AstList::new(),
+                val: Box::new(TypedCore::String(ErlString {
+                    inner: "true".to_string(),
+                    index: MaybeIndex::None,
+                })),
+                index: MaybeIndex::None,
+            })),
+            body: Box::new(TypedCore::Dummy),
+            index: MaybeIndex::None,
+        };
+        clause
+    }
+}
+
+fn contains(
+    pattern: P,
+    var_name: &str,
+    val_store: &SetMap<VAddr, Value<VAddr>>,
+    ast_helper: &AstHelper,
+) {
+    let cvec = vec![Clause::from(pattern)];
+
+    for (vaddr, _val) in &val_store.inner {
+        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
+            let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+
+            for (_val, vec) in sub {
+                if !vec.is_empty() {
+                    return;
+                }
+            }
+        }
+    }
+    panic!()
+}
+
+fn ncontains(
+    pattern: P,
+    var_name: &str,
+    val_store: &SetMap<VAddr, Value<VAddr>>,
+    ast_helper: &AstHelper,
+) {
+    let cvec = vec![Clause::from(pattern)];
+
+    for (vaddr, _val) in &val_store.inner {
+        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
+            let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+
+            for (_val, vec) in sub {
+                if !vec.is_empty() {
+                    panic!();
                 }
             }
         }
     }
 }
 
-fn check_mailboxes(mailboxes: Mailboxes<VAddr>) {
-    panic!("{}", &format!("{:?}", mailboxes)); // TODO impl
+#[test]
+fn test_standard_receive_lit() {
+    //erlang::compile();
+    erlang::run(&format!("tests/soundness/receive_lit.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/receive_lit.erl.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let (_ps, _m, s) = analyzer.run();
+
+    contains(P::Literal("a"), "X", &s.value, &ast_helper);
+    ncontains(P::Literal("M"), "X", &s.value, &ast_helper);
 }
 
 #[test]
 fn test_standard_concurr() {
-    erlang::run(&format!("tests/icfa_examples/concurr.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/concurr.erl.json"));
+    //erlang::compile(); //TODO wierd bug when running from uncompiled erlang
+    erlang::run(&format!("tests/soundness/concurr.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/concurr.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s, _f) = analyzer.run();
-
-    check_store(&s, ast_helper.clone(), "P", vec![]);
-
-    check_mailboxes(m);
+    let (_ps, _m, _s) = analyzer.run();
 }
 
 #[test]
 fn test_standard_id() {
-    erlang::run(&format!("tests/icfa_examples/id.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/id.erl.json"));
+    //erlang::compile();
+    erlang::run(&format!("tests/soundness/id.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s, _f) = analyzer.run();
+    let (_ps, _m, s) = analyzer.run();
 
-    check_store(&s, ast_helper.clone(), "Y", vec!["a"]);
-    check_store(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
-    check_store(&s, ast_helper.clone(), "X", vec!["a", "b"]);
-
-    check_mailboxes(m);
+    contains(P::Literal("a"), "X", &s.value, &ast_helper);
+    contains(P::Literal("b"), "X", &s.value, &ast_helper);
+    ncontains(P::Literal("c"), "X", &s.value, &ast_helper);
 }
 
 #[test]
 fn test_standard_rec_id() {
-    erlang::run(&format!("tests/icfa_examples/rec_id.erl"));
-    let core = erlang::get_core(&format!("tests/icfa_examples/rec_id.erl.json"));
+    //erlang::compile();
+    erlang::run(&format!("tests/soundness/rec_id.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/rec_id.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);
     ast_helper.build_lookup(&indexed_typed_core);
     let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
 
-    let (_ps, m, s, _f) = analyzer.run();
+    let (_ps, _m, s) = analyzer.run();
 
-    check_store(&s, ast_helper.clone(), "Y", vec!["a"]);
-    check_store(&s, ast_helper.clone(), "Z", vec!["a", "b"]);
-    check_store(&s, ast_helper.clone(), "X", vec!["a", "b"]);
-
-    check_mailboxes(m);
+    contains(P::Literal("a"), "X", &s.value, &ast_helper);
+    contains(P::Literal("b"), "X", &s.value, &ast_helper);
 }

@@ -1,0 +1,51 @@
+   Compiling soter-v2 v0.1.0 (/home/damaru/Projects/soter-v2)
+error[E0433]: failed to resolve: use of undeclared type `FailureType`
+   --> src/main.rs:181:21
+    |
+181 |                     FailureType::None => "white",
+    |                     ^^^^^^^^^^^ use of undeclared type `FailureType`
+    |
+help: consider importing one of these enums
+    |
+8   + use crate::state_space::FailureType;
+    |
+8   + use soter_v2::state_space::FailureType;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `FailureType`
+   --> src/main.rs:182:21
+    |
+182 |                     FailureType::NotImplemented => "yellow",
+    |                     ^^^^^^^^^^^ use of undeclared type `FailureType`
+    |
+help: consider importing one of these enums
+    |
+8   + use crate::state_space::FailureType;
+    |
+8   + use soter_v2::state_space::FailureType;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `FailureType`
+   --> src/main.rs:183:21
+    |
+183 |                     FailureType::General => "red",
+    |                     ^^^^^^^^^^^ use of undeclared type `FailureType`
+    |
+help: consider importing one of these enums
+    |
+8   + use crate::state_space::FailureType;
+    |
+8   + use soter_v2::state_space::FailureType;
+    |
+
+error[E0308]: mismatched types
+   --> src/main.rs:181:42
+    |
+181 |                     FailureType::None => "white",
+    |                                          ^^^^^^^- help: try using a conversion method: `.to_string()`
+    |                                          |
+    |                                          expected `String`, found `&str`
+
+Some errors have detailed explanations: E0308, E0433.
+For more information about an error, try `rustc --explain E0308`.
+error: could not compile `soter-v2` (bin "soter-v2") due to 4 previous errors
