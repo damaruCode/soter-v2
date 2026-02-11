@@ -168,6 +168,12 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
                         peek_print::print(tc)
                     }
                 };
+                node_attr.tooltip = match &proc_state.failure_type {
+                    FailureType::None => "".to_string(),
+                    FailureType::Erlang(msg)
+                    | FailureType::Unexpected(msg)
+                    | FailureType::NotImplemented(msg) => msg.escape_default().to_string(),
+                };
                 // node_attr.tooltip = format!(
                 //     "{}, {}, {}, {}, {}",
                 //     proc_state.pid,
@@ -179,8 +185,8 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
 
                 node_attr.fill_color = match &proc_state.failure_type {
                     FailureType::None => "white".to_string(),
-                    FailureType::NotImplemented => "yellow".to_string(),
-                    FailureType::General => "red".to_string(),
+                    FailureType::NotImplemented(_) => "yellow".to_string(),
+                    _ => "red".to_string(),
                 };
 
                 node_attr.group = format!("{}", proc_state.pid);

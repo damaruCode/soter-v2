@@ -1,4 +1,4 @@
-use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarName};
+use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarIdent, VarName};
 
 use super::Abstraction;
 
@@ -51,7 +51,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<KAddr, VAddr>,
-        var_name: &VarName,
+        var_name: VarIdent,
         _next_prog_loc_or_pid: &ProgLocOrPid,
         _partial_next_env: &Env<VAddr>,
         _next_time: &Time,

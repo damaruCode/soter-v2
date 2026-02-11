@@ -36,6 +36,7 @@ impl From<P<'_>> for AstList<TypedCore> {
                         inner: Number::from(0),
                         index: MaybeIndex::None,
                     })),
+                    var_id: MaybeIndex::None,
                     index: MaybeIndex::None,
                 }),
                 P::Literal(s) => TypedCore::Literal(Literal {

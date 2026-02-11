@@ -32,7 +32,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                 TypedCore::Fun(f) => {
                     if f.vars.inner.len() != 0 {
                         result.new.push((
-                            proc_state.fail(FailureType::General),
+                            proc_state.fail(FailureType::Unexpected(format!("Expected a function without formal parameters, found {} parameters.", f.vars.inner.len()))),
                             "abs_spawn".to_string(),
                         ));
                         continue;
@@ -41,11 +41,14 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                         abstraction.tick(&proc_state.pid.time, proc_state.pid.prog_loc);
                     new_time.append(proc_state.time.inner.clone());
                     let new_pid = Pid {
-                        prog_loc: match proc_state.prog_loc_or_pid {
-                            ProgLocOrPid::ProgLoc(pl) => pl,
-                            _ => {
+                        prog_loc: match &proc_state.prog_loc_or_pid {
+                            ProgLocOrPid::ProgLoc(pl) => *pl,
+                            ProgLocOrPid::Pid(pid) => {
                                 result.new.push((
-                                    proc_state.fail(FailureType::General),
+                                    proc_state.fail(FailureType::Unexpected(format!(
+                                        "Expected a program location, found pid {}",
+                                        pid
+                                    ))),
                                     "abs_spawn".to_string(),
                                 ));
                                 return result;
@@ -84,33 +87,45 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
 
                                 mailboxes.inner.insert(new_pid, Mailbox::init());
                             }
-                            _ => {
+                            tc => {
                                 result.new.push((
-                                    proc_state.fail(FailureType::General),
+                                    proc_state.fail(FailureType::Unexpected(format!(
+                                        "Expected a clause, found {}",
+                                        tc
+                                    ))),
                                     "abs_call".to_string(),
                                 ));
                             }
                         },
-                        _ => {
+                        tc => {
                             result.new.push((
-                                proc_state.fail(FailureType::General),
+                                proc_state.fail(FailureType::Unexpected(format!(
+                                    "Expected a case statement, found {}",
+                                    tc
+                                ))),
                                 "abs_call".to_string(),
                             ));
                         }
                     }
                 }
-                _ => {
+                tc => {
                     result.new.push((
-                        proc_state.fail(FailureType::General),
+                        proc_state.fail(FailureType::Unexpected(format!(
+                            "Expected a function, found {}",
+                            tc
+                        ))),
                         "abs_call".to_string(),
                     ));
                 }
             },
-            _ =>
+            Value::Pid(pid) =>
             // NOTE this should probably also be a failstate not a panic
             {
                 result.new.push((
-                    proc_state.fail(FailureType::General),
+                    proc_state.fail(FailureType::Erlang(format!(
+                        "Expected a closure, found pid {}",
+                        pid
+                    ))),
                     "abs_spawn".to_string(),
                 ));
                 // panic!(

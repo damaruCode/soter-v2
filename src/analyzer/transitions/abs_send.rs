@@ -60,9 +60,12 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
             }
             pids
         }
-        _ => {
+        tc => {
             result.new.push((
-                proc_state.fail(FailureType::General),
+                proc_state.fail(FailureType::Unexpected(format!(
+                    "Expected a variable, found {}",
+                    tc
+                ))),
                 "abs_send".to_string(),
             ));
             return result;

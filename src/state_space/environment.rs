@@ -1,8 +1,7 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
-use super::ValueAddress;
-use super::VarName;
+use super::{ValueAddress, VarName};
 
 // Env := Var -> VAddr
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]

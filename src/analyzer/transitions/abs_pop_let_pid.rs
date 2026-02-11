@@ -26,7 +26,10 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
 
     if kont_var_list.len() != 1 {
         result.new.push((
-            proc_state.fail(FailureType::General),
+            proc_state.fail(FailureType::Unexpected(format!(
+                "Expected contiuation var list of length 1, found length {}",
+                kont_var_list.len()
+            ))),
             "abs_pop_let_pid".to_string(),
         ));
         return result;
@@ -39,27 +42,40 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
     new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
-    let new_v_addr = abstraction.new_vaddr(
-        proc_state,
-        &var_name,
-        &new_item.prog_loc_or_pid,
-        &new_item.env,
-        &new_item.time,
-    );
+    match ast_helper.get_var(&var_name) {
+        Some(var_id) => {
+            let new_v_addr = abstraction.new_vaddr(
+                proc_state,
+                var_id,
+                &new_item.prog_loc_or_pid,
+                &new_item.env,
+                &new_item.time,
+            );
 
-    new_item.env.inner.insert(var_name, new_v_addr.clone());
+            new_item.env.inner.insert(var_name, new_v_addr.clone());
 
-    for state in push_to_value_store(
-        ast_helper,
-        seen_proc_states,
-        store,
-        new_v_addr,
-        Value::Pid(pid.clone()),
-    ) {
-        result.revisit.push((state, "abs_pop_let_pid".to_string()));
+            for state in push_to_value_store(
+                ast_helper,
+                seen_proc_states,
+                store,
+                new_v_addr,
+                Value::Pid(pid.clone()),
+            ) {
+                result.revisit.push((state, "abs_pop_let_pid".to_string()));
+            }
+
+            result.new.push((new_item, "abs_pop_let_pid".to_string()));
+        }
+        None => {
+            result.new.push((
+                proc_state.fail(FailureType::Unexpected(format!(
+                    "Could not find \"{}\" in AST.",
+                    var_name
+                ))),
+                "abs_pop_let_pid".to_string(),
+            ));
+        }
     }
-
-    result.new.push((new_item, "abs_pop_let_pid".to_string()));
 
     result
 }

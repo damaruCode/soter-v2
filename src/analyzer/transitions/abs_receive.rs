@@ -3,7 +3,8 @@ use crate::{
     analyzer::dependency_checker::push_to_value_store,
     ast::{Index, Receive},
     state_space::{
-        KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
+        FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
+        ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -40,23 +41,37 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                 // irrelevant --- it would only have been of interest for the VAddr
 
                 // generate newresult.addr
-                let new_v_addr = abstraction.new_vaddr(
-                    proc_state,
-                    var_name,
-                    &new_item.prog_loc_or_pid,
-                    &new_item.env,
-                    &new_item.time,
-                );
-                new_env.inner.insert(var_name.clone(), new_v_addr.clone());
+                match ast_helper.get_var(var_name) {
+                    Some(var_id) => {
+                        let new_v_addr = abstraction.new_vaddr(
+                            proc_state,
+                            var_id,
+                            &new_item.prog_loc_or_pid,
+                            &new_item.env,
+                            &new_item.time,
+                        );
+                        new_env.inner.insert(var_name.clone(), new_v_addr.clone());
 
-                for state in push_to_value_store(
-                    ast_helper,
-                    seen_proc_states,
-                    store,
-                    new_v_addr,
-                    value.clone(),
-                ) {
-                    result.revisit.push((state, "abs_receive".to_string()));
+                        for state in push_to_value_store(
+                            ast_helper,
+                            seen_proc_states,
+                            store,
+                            new_v_addr,
+                            value.clone(),
+                        ) {
+                            result.revisit.push((state, "abs_receive".to_string()));
+                        }
+                    }
+                    None => {
+                        result.revisit.push((
+                            proc_state.fail(FailureType::Unexpected(format!(
+                                "Could not find \"{}\" in AST.",
+                                var_name
+                            ))),
+                            "abs_receive".to_string(),
+                        ));
+                        continue;
+                    }
                 }
             }
         }

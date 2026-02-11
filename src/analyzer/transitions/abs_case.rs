@@ -43,44 +43,42 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             }
 
             result.new.push((
-                proc_state.fail(FailureType::NotImplemented),
+                proc_state.fail(FailureType::NotImplemented(
+                    "Can not handle values of length higher than 0.".to_string(),
+                )),
                 "abs_case".to_string(),
             ));
             return result;
         }
-        TypedCore::Literal(l) => match *l.val.clone() {
-            TypedCore::AstList(_) | TypedCore::String(_) => {
-                // TODO implement
-                result.new.push((
-                    proc_state.fail(FailureType::NotImplemented),
-                    "abs_case".to_string(),
-                ));
+        TypedCore::Literal(_) => {
+            // TODO implement
+            result.new.push((
+                proc_state.fail(FailureType::NotImplemented(
+                    "Can not handle literals as case arguments.".to_string(),
+                )),
+                "abs_case".to_string(),
+            ));
 
-                return result;
-            }
-            _ => {
-                // TODO implement
-                result.new.push((
-                    proc_state.fail(FailureType::General),
-                    "abs_case".to_string(),
-                ));
-
-                return result;
-            }
-        },
+            return result;
+        }
         TypedCore::AstTuple(_) => {
             // TODO implement
             result.new.push((
-                proc_state.fail(FailureType::NotImplemented),
+                proc_state.fail(FailureType::NotImplemented(
+                    "Can not handle tuples as case arguments.".to_string(),
+                )),
                 "abs_case".to_string(),
             ));
 
             return result;
         }
-        _ => {
+        tc => {
             // TODO possibly add more context, i.e. the choice of case that lead to this failure
             result.new.push((
-                proc_state.fail(FailureType::General),
+                proc_state.fail(FailureType::Erlang(format!(
+                    "Invalid case argument: {}",
+                    tc
+                ))),
                 "abs_case".to_string(),
             ));
 
@@ -93,7 +91,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     for (_, matches) in mats {
         if matches.len() == 0 {
             result.new.push((
-                proc_state.fail(FailureType::General),
+                proc_state.fail(FailureType::Erlang("No matches.".to_string())),
                 "abs_case".to_string(),
             ));
             continue;
@@ -107,26 +105,40 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 
         for i in 0..substs.len() {
             for (var_name, value) in &substs[i].inner {
-                let new_v_addr = abstraction.new_vaddr(
-                    proc_state,
-                    var_name,
-                    &new_item.prog_loc_or_pid,
-                    &new_item.env,
-                    &new_item.time,
-                );
-                new_item
-                    .env
-                    .inner
-                    .insert(var_name.clone(), new_v_addr.clone());
+                match ast_helper.get_var(var_name) {
+                    Some(var_id) => {
+                        let new_v_addr = abstraction.new_vaddr(
+                            proc_state,
+                            var_id,
+                            &new_item.prog_loc_or_pid,
+                            &new_item.env,
+                            &new_item.time,
+                        );
+                        new_item
+                            .env
+                            .inner
+                            .insert(var_name.clone(), new_v_addr.clone());
 
-                for state in push_to_value_store(
-                    ast_helper,
-                    seen_proc_states,
-                    store,
-                    new_v_addr,
-                    value.clone(),
-                ) {
-                    result.revisit.push((state, "abs_case".to_string()));
+                        for state in push_to_value_store(
+                            ast_helper,
+                            seen_proc_states,
+                            store,
+                            new_v_addr,
+                            value.clone(),
+                        ) {
+                            result.revisit.push((state, "abs_case".to_string()));
+                        }
+                    }
+                    None => {
+                        result.new.push((
+                            proc_state.fail(FailureType::Unexpected(format!(
+                                "Could not find \"{}\" in AST.",
+                                var_name
+                            ))),
+                            "abs_case".to_string(),
+                        ));
+                        continue;
+                    }
                 }
             }
         }

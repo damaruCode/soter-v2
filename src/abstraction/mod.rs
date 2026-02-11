@@ -30,7 +30,7 @@ pub trait Abstraction<K: KontinuationAddress, V: ValueAddress> {
     fn new_vaddr(
         &self,
         curr_proc_state: &ProcState<K, V>,
-        var_name: &VarName,
+        var_id: usize,
         next_prog_loc_or_pid: &ProgLocOrPid,
         partial_next_env: &Env<V>,
         next_time: &Time,

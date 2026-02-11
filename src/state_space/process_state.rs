@@ -5,8 +5,9 @@ use std::fmt::Display;
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub enum FailureType {
     None,
-    General,
-    NotImplemented,
+    Erlang(String), // Failure within the Erlang Program as identified by the analysis
+    Unexpected(String), // Failure based entirely in some error within the soter code
+    NotImplemented(String), // Known blindspot of the analysis
 }
 
 // ProcState := (ProgLoc U+ Pid) x Env x KAddr x Time

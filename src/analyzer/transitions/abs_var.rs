@@ -14,8 +14,9 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
+    let var_name = VarName::from(&*var.name);
 
-    match proc_state.env.inner.get(&VarName::from(&*var.name)) {
+    match proc_state.env.inner.get(&var_name) {
         Some(v) => match store.value.get(&v) {
             Some(values) => {
                 for value in values {
@@ -32,13 +33,21 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
                     result.new.push((new_item, "abs_var".to_string()));
                 }
             }
-            None => result
-                .new
-                .push((proc_state.fail(FailureType::General), "abs_var".to_string())),
+            None => result.new.push((
+                proc_state.fail(FailureType::Unexpected(format!(
+                    "Expected value for {} in value store, found nothing.",
+                    var_name
+                ))),
+                "abs_var".to_string(),
+            )),
         },
-        None => result
-            .new
-            .push((proc_state.fail(FailureType::General), "abs_var".to_string())),
+        None => result.new.push((
+            proc_state.fail(FailureType::Unexpected(format!(
+                "Expected v_addr for {} in environment, found nothing",
+                var_name
+            ))),
+            "abs_var".to_string(),
+        )),
     };
 
     result

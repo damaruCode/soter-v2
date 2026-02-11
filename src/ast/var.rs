@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Var {
     pub anno: AstList<TypedCore>,
     pub name: Box<TypedCore>,
+    pub var_id: MaybeIndex,
     pub index: MaybeIndex,
 }
 
@@ -14,6 +15,7 @@ impl From<Map<String, Value>> for Var {
         Var {
             anno: AstList::from(map.get("anno").unwrap().as_array().unwrap().clone()),
             name: Box::new(TypedCore::from(map.get("name").unwrap().clone())),
+            var_id: MaybeIndex::None,
             index: MaybeIndex::None,
         }
     }
