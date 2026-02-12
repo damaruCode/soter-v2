@@ -115,7 +115,7 @@ pub trait Index {
     fn get_index(&self) -> Option<usize>;
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum MaybeIndex {
     Some(usize),
     None,

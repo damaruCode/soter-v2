@@ -1,9 +1,10 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
+    ast::{MaybeIndex, TypedCore},
     state_space::{
         Env, FailureType, KontinuationAddress, Pid, ProcState, ProgLoc, ProgLocOrPid, Store, Value,
-        ValueAddress, VarName,
+        ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -35,46 +36,51 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
         return result;
     }
 
-    let var_name = VarName::from(ast_helper.get(kont_var_list[0]));
-
     let mut new_item = proc_state.clone();
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(kont_body);
     new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
-    match ast_helper.get_var(&var_name) {
-        Some(var_id) => {
-            let new_v_addr = abstraction.new_vaddr(
-                proc_state,
-                var_id,
-                &new_item.prog_loc_or_pid,
-                &new_item.env,
-                &new_item.time,
-            );
+    match ast_helper.get(kont_var_list[0]) {
+        TypedCore::Var(v) => match &v.var_id {
+            MaybeIndex::Some(var_id) => {
+                let new_v_addr = abstraction.new_vaddr(
+                    proc_state,
+                    *var_id,
+                    &new_item.prog_loc_or_pid,
+                    &new_item.env,
+                    &new_item.time,
+                );
 
-            new_item.env.inner.insert(var_name, new_v_addr.clone());
+                new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
-            for state in push_to_value_store(
-                ast_helper,
-                seen_proc_states,
-                store,
-                new_v_addr,
-                Value::Pid(pid.clone()),
-            ) {
-                result.revisit.push((state, "abs_pop_let_pid".to_string()));
+                for state in push_to_value_store(
+                    ast_helper,
+                    seen_proc_states,
+                    store,
+                    new_v_addr,
+                    Value::Pid(pid.clone()),
+                ) {
+                    result.revisit.push((state, "abs_pop_let_pid".to_string()));
+                }
+
+                result.new.push((new_item, "abs_pop_let_pid".to_string()));
             }
-
-            result.new.push((new_item, "abs_pop_let_pid".to_string()));
-        }
-        None => {
-            result.new.push((
+            MaybeIndex::None => result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Could not find \"{}\" in AST.",
-                    var_name
+                    "Found variable without var id: {}",
+                    v
                 ))),
                 "abs_pop_let_pid".to_string(),
-            ));
-        }
+            )),
+        },
+        tc => result.new.push((
+            proc_state.fail(FailureType::Unexpected(format!(
+                "Expected a variable, found {}",
+                tc
+            ))),
+            "abs_pop_let_pid".to_string(),
+        )),
     }
 
     result

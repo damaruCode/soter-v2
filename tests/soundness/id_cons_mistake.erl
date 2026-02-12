@@ -3,9 +3,9 @@
 -compile(export_all).
 
 main() ->
-  Y = id(a),
+  Y = id([1,2,3,a]),
   Z = id(b),
   {Y, Z}.
 
 id(X) ->
-  X.
+  [1|X].

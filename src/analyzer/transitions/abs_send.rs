@@ -1,9 +1,9 @@
 use crate::{
     analyzer::dependency_checker::push_to_mailboxes,
-    ast::{Index, TypedCore},
+    ast::{Index, MaybeIndex, TypedCore},
     state_space::{
         Closure, FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
-        Value, ValueAddress, VarName,
+        Value, ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -19,16 +19,16 @@ fn resolve_pid<K: KontinuationAddress, V: ValueAddress>(
     match value {
         Value::Pid(pid) => pids.push(pid.clone()),
         Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
-            TypedCore::Var(v) => {
-                let values = store
-                    .value
-                    .get(clo.env.inner.get(&VarName::from(v)).unwrap())
-                    .unwrap();
+            TypedCore::Var(v) => match &v.var_id {
+                MaybeIndex::Some(var_id) => {
+                    let values = store.value.get(clo.env.inner.get(var_id).unwrap()).unwrap();
 
-                for value in values {
-                    pids.append(&mut resolve_pid(&value, store, ast_helper));
+                    for value in values {
+                        pids.append(&mut resolve_pid(&value, store, ast_helper));
+                    }
                 }
-            }
+                MaybeIndex::None => {}
+            },
             _ => panic!(), // TODO adapt to return an erronous result
         },
     };
@@ -48,18 +48,30 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     let mut result = TransitionResult::new();
 
     let pids = match typed_core_to {
-        TypedCore::Var(v) => {
-            let maybe_pids = store
-                .value
-                .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
-                .unwrap();
+        TypedCore::Var(v) => match &v.var_id {
+            MaybeIndex::Some(var_id) => {
+                let maybe_pids = store
+                    .value
+                    .get(proc_state.env.inner.get(var_id).unwrap())
+                    .unwrap();
 
-            let mut pids = Vec::new();
-            for maybe_pid in maybe_pids {
-                pids.append(&mut resolve_pid(maybe_pid, store, ast_helper));
+                let mut pids = Vec::new();
+                for maybe_pid in maybe_pids {
+                    pids.append(&mut resolve_pid(maybe_pid, store, ast_helper));
+                }
+                pids
             }
-            pids
-        }
+            MaybeIndex::None => {
+                result.new.push((
+                    proc_state.fail(FailureType::Unexpected(format!(
+                        "Found variable without var id: {}",
+                        v
+                    ))),
+                    "abs_send".to_string(),
+                ));
+                return result;
+            }
+        },
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
@@ -78,11 +90,14 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
         store: &Store<K, V>,
     ) -> Vec<Value<V>> {
         match typed_core_msg {
-            TypedCore::Var(v) => store
-                .value
-                .get(proc_state.env.inner.get(&VarName::from(v)).unwrap())
-                .unwrap()
-                .clone(),
+            TypedCore::Var(v) => match &v.var_id {
+                MaybeIndex::Some(var_id) => store
+                    .value
+                    .get(proc_state.env.inner.get(var_id).unwrap())
+                    .unwrap()
+                    .clone(),
+                MaybeIndex::None => panic!(), // TODO adapt to return erronous result
+            },
             TypedCore::Literal(_) | TypedCore::AstList(_) | TypedCore::Tuple(_) => {
                 Vec::from([Value::Closure(Closure {
                     prog_loc: typed_core_msg.get_index().unwrap(),
@@ -102,6 +117,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                 Value::Pid(pid) => new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone()),
                 Value::Closure(clo) => {
                     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
+                    new_item.env = clo.env.clone();
                 }
             }
 

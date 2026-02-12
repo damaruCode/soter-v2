@@ -1,6 +1,7 @@
 use crate::ast::Index;
 use crate::ast::MaybeIndex;
 use crate::ast::TypedCore;
+use crate::ast::Var;
 use crate::state_space::VarName;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
@@ -68,6 +69,31 @@ impl<'helper> AstHelper<'helper> {
     }
 
     pub fn build_indecies(&mut self, mut root: TypedCore) -> TypedCore {
+        fn declare_var<'a>(var: &mut Var, ctx: &mut AstHelper<'a>) {
+            let var_name = VarName::from(&*var.name);
+            let index = match var.index {
+                MaybeIndex::Some(id) => id,
+                MaybeIndex::None => panic!(),
+            };
+            var.var_id = MaybeIndex::Some(index);
+            ctx.symbol_table.insert(var_name, index);
+        }
+        fn declare_var_in_pat<'a>(pat: &mut TypedCore, ctx: &mut AstHelper<'a>) {
+            match pat {
+                TypedCore::Var(v) => declare_var(v, ctx),
+                TypedCore::AstList(al) => {
+                    for tc in &mut al.inner {
+                        declare_var_in_pat(tc, ctx);
+                    }
+                }
+                TypedCore::Tuple(t) => {
+                    for tc in &mut t.es.inner {
+                        declare_var_in_pat(tc, ctx);
+                    }
+                }
+                _ => {} // NOTE ignore (not relevant for declarable vars)
+            }
+        }
         fn visit<'a>(node: &mut TypedCore, ctx: &mut AstHelper<'a>) {
             let id = ctx.next_id;
             ctx.next_id += 1;
@@ -126,16 +152,18 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Catch(c) => {
                     c.index = MaybeIndex::Some(id);
+                    ctx.symbol_table.begin_scope();
                     visit(&mut *c.body, ctx);
+                    ctx.symbol_table.end_scope();
                 }
                 TypedCore::Clause(c) => {
                     c.index = MaybeIndex::Some(id);
+                    ctx.symbol_table.begin_scope();
                     for x in &mut *c.pats.inner {
                         visit(x, ctx);
+                        declare_var_in_pat(x, ctx);
                     }
                     visit(&mut *c.guard, ctx);
-
-                    ctx.symbol_table.begin_scope();
                     visit(&mut *c.body, ctx);
                     ctx.symbol_table.end_scope();
                 }
@@ -146,41 +174,52 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Fun(f) => {
                     f.index = MaybeIndex::Some(id);
-                    for x in &mut *f.vars.inner {
-                        let var_name = VarName::from(&*x);
-                        visit(x, ctx);
-                        ctx.symbol_table.insert(var_name, x.get_index().unwrap());
-                    }
 
                     ctx.symbol_table.begin_scope();
+                    for x in &mut *f.vars.inner {
+                        visit(x, ctx);
+
+                        match x {
+                            TypedCore::Var(v) => declare_var(v, ctx),
+                            tc => panic!("Expected variable, found {}", tc),
+                        }
+                    }
                     visit(&mut *f.body, ctx);
                     ctx.symbol_table.end_scope();
                 }
                 TypedCore::Let(l) => {
                     l.index = MaybeIndex::Some(id);
+                    ctx.symbol_table.begin_scope();
                     for x in &mut *l.vars.inner {
-                        let var_name = VarName::from(&*x);
                         visit(x, ctx);
-                        ctx.symbol_table.insert(var_name, x.get_index().unwrap());
-                    }
-                    ctx.symbol_table.begin_scope();
-                    visit(&mut *l.arg, ctx);
-                    ctx.symbol_table.end_scope();
 
-                    ctx.symbol_table.begin_scope();
+                        match x {
+                            TypedCore::Var(v) => declare_var(v, ctx),
+                            tc => panic!("Expected variable, found {}", tc),
+                        }
+                    }
+                    visit(&mut *l.arg, ctx);
                     visit(&mut *l.body, ctx);
                     ctx.symbol_table.end_scope();
                 }
                 TypedCore::LetRec(lr) => {
                     lr.index = MaybeIndex::Some(id);
-                    // TODO symbol table insert
-                    todo!("LETREC NEEDS ATTENTION");
+                    ctx.symbol_table.begin_scope();
+
+                    // one pass for declaration
                     for tuple in &mut *lr.defs.inner {
                         visit(&mut *tuple.frst, ctx);
+
+                        match &mut *tuple.frst {
+                            TypedCore::Var(v) => declare_var(v, ctx),
+                            tc => panic!("Expected variable, found {}", tc),
+                        }
+                    }
+                    // another for assignment
+                    for tuple in &mut *lr.defs.inner {
                         visit(&mut *tuple.scnd, ctx);
                     }
 
-                    ctx.symbol_table.begin_scope();
                     visit(&mut *lr.body, ctx);
                     ctx.symbol_table.end_scope();
                 }
@@ -216,8 +255,20 @@ impl<'helper> AstHelper<'helper> {
                         visit(&mut *tuple.frst, ctx);
                         visit(&mut *tuple.scnd, ctx);
                     }
+
+                    // Function declarations
+                    // ===========================
+                    // one pass for var declaration...
                     for tuple in &mut *m.defs.inner {
                         visit(&mut *tuple.frst, ctx);
+
+                        match &mut *tuple.frst {
+                            TypedCore::Var(v) => declare_var(v, ctx),
+                            _ => panic!(),
+                        }
+                    }
+                    // ... and another for "assignment" to function
+                    for tuple in &mut *m.defs.inner {
                         visit(&mut *tuple.scnd, ctx);
                     }
                     ctx.symbol_table.end_scope();
@@ -249,6 +300,8 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Try(t) => {
                     t.index = MaybeIndex::Some(id);
+
+                    ctx.symbol_table.begin_scope();
                     visit(&mut *t.arg, ctx);
                     for x in &mut *t.vars.inner {
                         visit(x, ctx);
@@ -258,6 +311,7 @@ impl<'helper> AstHelper<'helper> {
                         visit(x, ctx);
                     }
                     visit(&mut *t.handler, ctx);
+                    ctx.symbol_table.end_scope();
                 }
                 TypedCore::Tuple(t) => {
                     t.index = MaybeIndex::Some(id);
@@ -273,15 +327,10 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Var(v) => {
                     v.index = MaybeIndex::Some(id);
-
-                    let var_name = VarName::from(&*v.name);
-                    match ctx.symbol_table.lookup(&var_name) {
-                        Some(var_id) => v.var_id = MaybeIndex::Some(var_id),
-                        None => {
-                            ctx.symbol_table.insert(var_name, id);
-                            v.var_id = MaybeIndex::Some(id);
-                        }
-                    }
+                    v.var_id = match ctx.get_var(&VarName::from(&*v.name)) {
+                        Some(var_id) => MaybeIndex::Some(var_id),
+                        None => MaybeIndex::None,
+                    };
 
                     visit(&mut *v.name, ctx);
                 }

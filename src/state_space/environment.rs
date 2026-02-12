@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 
-use super::{ValueAddress, VarName};
+use super::ValueAddress;
 
 // Env := Var -> VAddr
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Env<V: ValueAddress> {
-    pub inner: BTreeMap<VarName, V>,
+    pub inner: BTreeMap<usize, V>,
 }
 
 impl<V: ValueAddress> Env<V> {
@@ -17,8 +17,8 @@ impl<V: ValueAddress> Env<V> {
     }
 
     pub fn merge_with(&mut self, other: &Self) {
-        for (var_name, v_addr) in &other.inner {
-            self.inner.insert(var_name.clone(), v_addr.clone());
+        for (var_id, v_addr) in &other.inner {
+            self.inner.insert(*var_id, v_addr.clone());
         }
     }
 }
@@ -28,11 +28,7 @@ impl<V: ValueAddress> Display for Env<V> {
         let output = self
             .inner
             .iter()
-            .filter(|(var_name, _)| match var_name {
-                VarName::FnAtom(name, _) => name != "module_info",
-                _ => true,
-            })
-            .map(|(var_name, v_addr)| format!("{} |-> {}", var_name, v_addr))
+            .map(|(var_id, v_addr)| format!("{} |-> {}", var_id, v_addr))
             .collect::<Vec<String>>()
             .join(", ");
 

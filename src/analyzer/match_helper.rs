@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    ast::{AstList, Clause, Index, Literal, TypedCore},
-    state_space::{Closure, Env, Value, ValueAddress, VarName},
+    ast::{AstList, Clause, Index, Literal, MaybeIndex, TypedCore},
+    state_space::{Closure, Env, Value, ValueAddress},
     util::{AstHelper, SetMap},
 };
 
@@ -133,7 +133,7 @@ impl MatchHelper {
         match pattern {
             TypedCore::Var(v) => {
                 let mut new_subst = MatchSubstitution::new();
-                new_subst.inner.insert(VarName::from(v), value.clone());
+                new_subst.inner.insert(v.var_id.clone(), value.clone());
                 Vec::from([new_subst])
             }
             TypedCore::Literal(pattern_l) => match value {
@@ -151,22 +151,24 @@ impl MatchHelper {
             },
             _ => match value {
                 Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
-                    TypedCore::Var(v) => {
-                        let values = value_store
-                            .get(clo.env.inner.get(&VarName::from(v)).unwrap())
-                            .unwrap();
+                    TypedCore::Var(v) => match &v.var_id {
+                        MaybeIndex::Some(var_id) => {
+                            let values =
+                                value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
 
-                        let mut new_substs = Vec::new();
-                        for value in values {
-                            new_substs.append(&mut Self::amatch(
-                                &pattern,
-                                value,
-                                value_store,
-                                ast_helper,
-                            ));
+                            let mut new_substs = Vec::new();
+                            for value in values {
+                                new_substs.append(&mut Self::amatch(
+                                    &pattern,
+                                    value,
+                                    value_store,
+                                    ast_helper,
+                                ));
+                            }
+                            new_substs
                         }
-                        new_substs
-                    }
+                        MaybeIndex::None => Vec::new(),
+                    },
                     TypedCore::Literal(val_l) => match &pattern {
                         TypedCore::Literal(pattern_l) => {
                             if let TypedCore::String(val_s) = &*val_l.val {
@@ -228,7 +230,7 @@ impl MatchHelper {
 
 #[derive(Debug)]
 pub struct MatchSubstitution<V: ValueAddress> {
-    pub inner: BTreeMap<VarName, Value<V>>,
+    pub inner: BTreeMap<MaybeIndex, Value<V>>,
 }
 impl<V: ValueAddress> MatchSubstitution<V> {
     pub fn new() -> Self {

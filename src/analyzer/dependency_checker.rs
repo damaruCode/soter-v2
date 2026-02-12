@@ -1,8 +1,8 @@
 use crate::{
-    ast::TypedCore,
+    ast::{MaybeIndex, TypedCore},
     state_space::{
         Kont, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, Value,
-        ValueAddress, VarName,
+        ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -56,17 +56,20 @@ pub fn push_to_value_store<K: KontinuationAddress, V: ValueAddress>(
         for state in states {
             match state.prog_loc_or_pid {
                 ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-                    TypedCore::Var(pl_var) => {
-                        match state.env.inner.get(&VarName::from(&*pl_var.name)) {
-                            Some(pl_vaddr) => {
-                                if pl_vaddr == &v_addr {
-                                    // NOTE cloning here might become a memory issue
-                                    dependencies.push(state.clone());
+                    TypedCore::Var(pl_var) => match &pl_var.var_id {
+                        MaybeIndex::Some(var_id) => {
+                            match state.env.inner.get(var_id) {
+                                Some(pl_vaddr) => {
+                                    if pl_vaddr == &v_addr {
+                                        // NOTE cloning here might become a memory issue
+                                        dependencies.push(state.clone());
+                                    }
                                 }
+                                _ => {}
                             }
-                            _ => {}
                         }
-                    }
+                        MaybeIndex::None => {}
+                    },
                     _ => {}
                 },
                 _ => {}

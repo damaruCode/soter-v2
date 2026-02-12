@@ -1,8 +1,7 @@
 use crate::{
-    ast::Var,
+    ast::{MaybeIndex, Var},
     state_space::{
         FailureType, KontinuationAddress, ProcState, ProgLocOrPid, Store, Value, ValueAddress,
-        VarName,
     },
 };
 
@@ -14,37 +13,45 @@ pub fn abs_name<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
-    let var_name = VarName::from(&*var.name);
 
-    match proc_state.env.inner.get(&var_name) {
-        Some(v) => match store.value.get(&v) {
-            Some(values) => {
-                for value in values {
-                    let mut new_item = proc_state.clone();
-                    match value {
-                        Value::Closure(clo) => {
-                            new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
-                            new_item.env = clo.env.clone();
+    match &var.var_id {
+        MaybeIndex::Some(var_id) => match proc_state.env.inner.get(var_id) {
+            Some(v) => match store.value.get(&v) {
+                Some(values) => {
+                    for value in values {
+                        let mut new_item = proc_state.clone();
+                        match value {
+                            Value::Closure(clo) => {
+                                new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(clo.prog_loc);
+                                new_item.env = clo.env.clone();
+                            }
+                            Value::Pid(pid) => {
+                                new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone());
+                            }
                         }
-                        Value::Pid(pid) => {
-                            new_item.prog_loc_or_pid = ProgLocOrPid::Pid(pid.clone());
-                        }
+                        result.new.push((new_item, "abs_var".to_string()));
                     }
-                    result.new.push((new_item, "abs_var".to_string()));
                 }
-            }
+                None => result.new.push((
+                    proc_state.fail(FailureType::Unexpected(format!(
+                        "Expected value for {} in value store, found nothing.",
+                        var_id
+                    ))),
+                    "abs_var".to_string(),
+                )),
+            },
             None => result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected value for {} in value store, found nothing.",
-                    var_name
+                    "Expected v_addr for {} in environment, found nothing",
+                    var_id
                 ))),
                 "abs_var".to_string(),
             )),
         },
-        None => result.new.push((
+        MaybeIndex::None => result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
-                "Expected v_addr for {} in environment, found nothing",
-                var_name
+                "Found variable without var id: {}",
+                var
             ))),
             "abs_var".to_string(),
         )),

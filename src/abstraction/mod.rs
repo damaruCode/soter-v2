@@ -3,7 +3,7 @@ pub mod standard;
 use serde::Serialize;
 
 use crate::state_space::{
-    Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress, VarName,
+    Env, KontinuationAddress, ProcState, ProgLoc, ProgLocOrPid, Time, ValueAddress,
 };
 
 #[derive(clap::ValueEnum, Clone, Default, Debug, Serialize)]

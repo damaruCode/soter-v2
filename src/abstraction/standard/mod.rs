@@ -1,4 +1,4 @@
-use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarIdent, VarName};
+use crate::state_space::{Env, Pid, ProcState, ProgLoc, ProgLocOrPid, Time, VarIdent};
 
 use super::Abstraction;
 

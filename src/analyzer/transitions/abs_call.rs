@@ -3,7 +3,6 @@ use crate::{
     ast::{Call, TypedCore},
     state_space::{
         Env, FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, Store, ValueAddress,
-        VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -67,7 +66,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
         TypedCore::Literal(l) => match &*l.val {
             TypedCore::String(s) => match s.inner.as_str() {
                 "spawn" => abs_spawn(
-                    &VarName::from(&call.args.inner[0]),
+                    &call.args.inner[0],
                     proc_state,
                     mailboxes,
                     store,

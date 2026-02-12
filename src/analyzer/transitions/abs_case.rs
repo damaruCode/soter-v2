@@ -1,10 +1,9 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::{dependency_checker::push_to_value_store, match_helper::MatchHelper},
-    ast::{Case, Clause, Index, TypedCore},
+    ast::{Case, Clause, Index, MaybeIndex, TypedCore},
     state_space::{
         FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
-        VarName,
     },
     util::{AstHelper, SetMap},
 };
@@ -24,7 +23,20 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
     let v_addr;
     match &*case.arg {
-        TypedCore::Var(v) => v_addr = proc_state.env.inner.get(&VarName::from(v)).unwrap(),
+        TypedCore::Var(v) => match &v.var_id {
+            MaybeIndex::Some(var_id) => v_addr = proc_state.env.inner.get(var_id).unwrap(),
+            MaybeIndex::None => {
+                result.new.push((
+                    proc_state.fail(FailureType::Unexpected(format!(
+                        "Found variable without var id: {}",
+                        v
+                    ))),
+                    "abs_case".to_string(),
+                ));
+
+                return result;
+            }
+        },
         TypedCore::Values(v) => {
             if v.es.inner.len() == 0 {
                 // empty case
@@ -104,20 +116,17 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             ProgLocOrPid::ProgLoc((*(clauses[*index].body)).get_index().unwrap());
 
         for i in 0..substs.len() {
-            for (var_name, value) in &substs[i].inner {
-                match ast_helper.get_var(var_name) {
-                    Some(var_id) => {
+            for (maybe_var_id, value) in &substs[i].inner {
+                match maybe_var_id {
+                    MaybeIndex::Some(var_id) => {
                         let new_v_addr = abstraction.new_vaddr(
                             proc_state,
-                            var_id,
+                            *var_id,
                             &new_item.prog_loc_or_pid,
                             &new_item.env,
                             &new_item.time,
                         );
-                        new_item
-                            .env
-                            .inner
-                            .insert(var_name.clone(), new_v_addr.clone());
+                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
                         for state in push_to_value_store(
                             ast_helper,
@@ -129,11 +138,10 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
                             result.revisit.push((state, "abs_case".to_string()));
                         }
                     }
-                    None => {
+                    MaybeIndex::None => {
                         result.new.push((
                             proc_state.fail(FailureType::Unexpected(format!(
-                                "Could not find \"{}\" in AST.",
-                                var_name
+                                "Substitution has var without proper var id.",
                             ))),
                             "abs_case".to_string(),
                         ));

@@ -1,7 +1,7 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    ast::{Index, Receive},
+    ast::{Index, MaybeIndex, Receive},
     state_space::{
         FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
         ValueAddress,
@@ -34,23 +34,22 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
             ProgLocOrPid::ProgLoc((*clauses[index].body).get_index().unwrap());
 
         // introduce substitution into environment
-        let mut new_env = proc_state.env.clone();
         for i in 0..substs.len() {
-            for (var_name, value) in &substs[i].inner {
+            for (maybe_var_id, value) in &substs[i].inner {
                 // NOTE because we use Data_0, the preliminary step of resolving the data d_i is
                 // irrelevant --- it would only have been of interest for the VAddr
 
-                // generate newresult.addr
-                match ast_helper.get_var(var_name) {
-                    Some(var_id) => {
+                // generate new result.addr
+                match maybe_var_id {
+                    MaybeIndex::Some(var_id) => {
                         let new_v_addr = abstraction.new_vaddr(
                             proc_state,
-                            var_id,
+                            *var_id,
                             &new_item.prog_loc_or_pid,
                             &new_item.env,
                             &new_item.time,
                         );
-                        new_env.inner.insert(var_name.clone(), new_v_addr.clone());
+                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
                         for state in push_to_value_store(
                             ast_helper,
@@ -62,21 +61,19 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                             result.revisit.push((state, "abs_receive".to_string()));
                         }
                     }
-                    None => {
-                        result.revisit.push((
-                            proc_state.fail(FailureType::Unexpected(format!(
-                                "Could not find \"{}\" in AST.",
-                                var_name
-                            ))),
+                    MaybeIndex::None => {
+                        // TODO revisit; maybe change substitutions to include both the var and its
+                        // id?
+                        result.new.push((
+                            proc_state.fail(FailureType::Unexpected(
+                                "Found variable without var id".to_string(),
+                            )),
                             "abs_receive".to_string(),
                         ));
-                        continue;
                     }
                 }
             }
         }
-        new_item.env = new_env;
-
         result.new.push((new_item, "abs_receive".to_string()));
     }
 

@@ -23,6 +23,15 @@ impl From<Map<String, Value>> for Var {
 
 impl Display for Var {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}var {}", self.index, *self.name)
+        write!(
+            f,
+            "{}var {}{}",
+            self.index,
+            *self.name,
+            match self.var_id {
+                MaybeIndex::Some(var_id) => format!(".{}", var_id),
+                MaybeIndex::None => "".to_string(),
+            }
+        )
     }
 }
