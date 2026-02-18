@@ -90,7 +90,6 @@ impl MatchHelper {
         } else {
             &clause.pats
         };
-        println!("VAL: {}\nPAT: {}", value, patterns);
 
         if value.inner.len() != patterns.inner.len() {
             return Vec::new();
@@ -98,11 +97,6 @@ impl MatchHelper {
 
         let mut overall_substs = Vec::new();
         for i in 0..value.inner.len() {
-            println!(
-                "PATi: {}\nVALi: {}",
-                patterns.inner[i],
-                value.inner[i].get_index().unwrap()
-            );
             let substs_i = &Self::amatch(
                 &patterns.inner[i],
                 &Value::Closure(Closure {

@@ -64,7 +64,7 @@ impl<'helper> AstHelper<'helper> {
         self.lookup_core[&index]
     }
 
-    pub fn get_var(&self, var_name: &VarName) -> Option<usize> {
+    fn get_var(&self, var_name: &VarName) -> Option<usize> {
         self.symbol_table.lookup(var_name)
     }
 
