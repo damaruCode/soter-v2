@@ -19,6 +19,7 @@ use soter_v2::state_space::VarName;
 use soter_v2::util::AstHelper;
 use soter_v2::util::SetMap;
 
+#[derive(Debug, Clone)]
 enum P<'p> {
     Var,               // TypedCore::Var
     Literal(&'p str),  // TypedCore::Literal
@@ -101,20 +102,27 @@ fn contains(
     val_store: &SetMap<VAddr, Value<VAddr>>,
     ast_helper: &AstHelper,
 ) {
-    let cvec = vec![Clause::from(pattern)];
+    let cvec = vec![Clause::from(pattern.clone())];
 
     for (vaddr, _val) in &val_store.inner {
-        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
-            let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+        match ast_helper.get(vaddr.var_name) {
+            TypedCore::Var(v) => {
+                if VarName::from(v) == VarName::Atom(var_name.to_string()) {
+                    println!("vaddr {} matches varname {}", vaddr, var_name);
+                    let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
 
-            for (_val, vec) in sub {
-                if !vec.is_empty() {
-                    return;
+                    for (_val, vec) in sub {
+                        println!("subst val {} and vec {:#?}", _val, vec);
+                        if !vec.is_empty() {
+                            return;
+                        }
+                    }
                 }
             }
+            tc => panic!("VarId expected to point to AST Var, found {}", tc),
         }
     }
-    panic!()
+    panic!("No entry {} matching {:#?} found.", var_name, pattern)
 }
 
 fn ncontains(
@@ -126,14 +134,19 @@ fn ncontains(
     let cvec = vec![Clause::from(pattern)];
 
     for (vaddr, _val) in &val_store.inner {
-        if vaddr.var_name == VarName::Atom(var_name.to_string()) {
-            let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+        match ast_helper.get(vaddr.var_name) {
+            TypedCore::Var(v) => {
+                if VarName::from(v) == VarName::Atom(var_name.to_string()) {
+                    let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
 
-            for (_val, vec) in sub {
-                if !vec.is_empty() {
-                    panic!();
+                    for (_val, vec) in sub {
+                        if !vec.is_empty() {
+                            panic!();
+                        }
+                    }
                 }
             }
+            tc => panic!("VarId expected to point to AST Var, found {}", tc),
         }
     }
 }
