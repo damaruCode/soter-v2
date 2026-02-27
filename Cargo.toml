@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.41"
+chumsky = "0.12.0"
 clap = { version = "4.5.45", features = ["derive"] }
 criterion = "0.7.0"
 glob = "0.3.2"
