@@ -29,7 +29,6 @@ impl MatchHelper {
     /// ## Errors
     /// If a certain value does not match any clause, it will not be in the returned BTreeMap
     pub fn cmatch_values<V: ValueAddress>(
-        // former vmatch
         clauses: &Vec<Clause>,
         v_addr: &V,
         value_store: &SetMap<V, Value<V>>,
@@ -75,7 +74,6 @@ impl MatchHelper {
     /// representing no matches.
     ///
     pub fn cmatch_value<V: ValueAddress>(
-        // former cmatch
         clause: &Clause,
         value: &Value<V>,
         value_store: &SetMap<V, Value<V>>,
@@ -136,7 +134,6 @@ impl MatchHelper {
     /// representing no matches.
     ///
     fn cmatch_list<V: ValueAddress>(
-        // former lmatch
         clause: &Clause,
         value: &AstList<TypedCore>,
         env: &Env<V>,
@@ -202,7 +199,6 @@ impl MatchHelper {
     /// representing no matches.
     ///
     fn pmatch_value<V: ValueAddress>(
-        // former pmatch_value
         pattern: &TypedCore,
         value: &Value<V>,
         value_store: &SetMap<V, Value<V>>,
@@ -302,7 +298,6 @@ impl MatchHelper {
     /// None
     ///
     pub fn match_guard<V: ValueAddress>(
-        // former gmatch
         typed_core: &TypedCore,
         _value_store: &SetMap<V, Value<V>>,
         _ast_helper: &AstHelper,
