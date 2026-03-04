@@ -216,3 +216,19 @@ fn test_standard_rec_id() {
     contains(P::Literal("a"), "X", &s.value, &ast_helper);
     contains(P::Literal("b"), "X", &s.value, &ast_helper);
 }
+
+#[test]
+fn test_pm_var_in_value() {
+    erlang::run(&format!("tests/soundness/pm_var_in_value.erl"));
+    let core = erlang::get_core(&format!("tests/soundness/pm_var_in_value.erl.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
+
+    let (_ps, _m, s) = analyzer.run();
+
+    contains(P::Literal("b"), "R", &s.value, &ast_helper);
+    ncontains(P::Literal("a"), "R", &s.value, &ast_helper);
+}
