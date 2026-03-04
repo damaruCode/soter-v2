@@ -98,7 +98,7 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
         }
     }
 
-    let mats = MatchHelper::vmatch(&clauses, v_addr, &store.value, ast_helper);
+    let mats = MatchHelper::cmatch_values(&clauses, v_addr, &store.value, ast_helper);
 
     for (_, matches) in mats {
         if matches.len() == 0 {

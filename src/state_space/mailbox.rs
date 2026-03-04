@@ -29,7 +29,7 @@ impl<V: ValueAddress> Mailbox<V> {
 
         for msg in &self.inner {
             for i in 0..clauses.len() {
-                let substs = MatchHelper::cmatch(&clauses[i], msg, value_store, ast_helper);
+                let substs = MatchHelper::cmatch_value(&clauses[i], msg, value_store, ast_helper);
                 if substs.len() > 0 {
                     matched_msgs.push((i, substs));
                 }

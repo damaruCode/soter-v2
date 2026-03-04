@@ -109,7 +109,7 @@ fn contains(
             TypedCore::Var(v) => {
                 if VarName::from(v) == VarName::Atom(var_name.to_string()) {
                     println!("vaddr {} matches varname {}", vaddr, var_name);
-                    let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+                    let sub = MatchHelper::cmatch_values(&cvec, vaddr, val_store, ast_helper);
 
                     for (_val, vec) in sub {
                         println!("subst val {} and vec {:#?}", _val, vec);
@@ -137,7 +137,7 @@ fn ncontains(
         match ast_helper.get(vaddr.var_name) {
             TypedCore::Var(v) => {
                 if VarName::from(v) == VarName::Atom(var_name.to_string()) {
-                    let sub = MatchHelper::vmatch(&cvec, vaddr, val_store, ast_helper);
+                    let sub = MatchHelper::cmatch_values(&cvec, vaddr, val_store, ast_helper);
 
                     for (_val, vec) in sub {
                         if !vec.is_empty() {
