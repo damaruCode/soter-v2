@@ -19,6 +19,7 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
+    // TODO check tht r#let.arg is singular value
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*r#let.arg).get_index().unwrap());
     new_item.k_addr = abstraction.new_kaddr(
         &proc_state,

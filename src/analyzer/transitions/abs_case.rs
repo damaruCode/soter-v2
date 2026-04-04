@@ -85,7 +85,6 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             return result;
         }
         tc => {
-            // TODO possibly add more context, i.e. the choice of case that lead to this failure
             result.new.push((
                 proc_state.fail(FailureType::Erlang(format!(
                     "Invalid case argument: {}",
