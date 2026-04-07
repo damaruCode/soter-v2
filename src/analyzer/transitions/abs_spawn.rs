@@ -24,12 +24,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     match tc_var {
         TypedCore::Var(v) => match &v.var_id {
             MaybeIndex::Some(var_id) => {
-                let values = store
-                    .value
-                    .get(proc_state.env.inner.get(var_id).unwrap())
-                    .unwrap();
-
-                for value in values {
+                for value in store.unpack(&proc_state.env, var_id) {
                     match value {
                         Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                             TypedCore::Fun(f) => {

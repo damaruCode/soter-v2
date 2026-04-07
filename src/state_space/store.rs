@@ -1,6 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use super::{Kont, KontinuationAddress, Value, ValueAddress};
+use crate::state_space::Env;
 use crate::util::SetMap;
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,10 @@ impl<K: KontinuationAddress, V: ValueAddress> Store<K, V> {
             kont,
             value: SetMap::new(),
         }
+    }
+
+    pub fn unpack(&self, env: &Env<V>, var_id: &usize) -> &Vec<Value<V>> {
+        self.value.get(env.inner.get(var_id).unwrap()).unwrap()
     }
 }
 
