@@ -204,72 +204,71 @@ impl MatchHelper {
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> Vec<MatchSubstitution<V>> {
-        match value {
-            Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
-                TypedCore::Var(v) => match &v.var_id {
-                    MaybeIndex::Some(var_id) => {
-                        let values = value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
-
-                        let mut new_substs = Vec::new();
-                        for value in values {
-                            new_substs.append(&mut Self::pmatch_value(
-                                &pattern,
-                                value,
-                                value_store,
-                                ast_helper,
-                            ));
-                        }
-                        new_substs
-                    }
-                    MaybeIndex::None => Vec::new(),
-                },
-                TypedCore::Literal(val_l) => match &pattern {
-                    TypedCore::Literal(pattern_l) => {
-                        if let TypedCore::String(val_s) = &*val_l.val {
-                            if let TypedCore::String(pattern_s) = &*pattern_l.val {
-                                if val_s.inner == pattern_s.inner {
-                                    Vec::from([MatchSubstitution::new()])
-                                } else {
-                                    Vec::new()
-                                }
-                            } else {
-                                return Vec::new();
-                            }
-                        } else {
-                            return Vec::new();
-                        }
-                    }
-                    _ => Vec::new(),
-                },
-                // NOTE should be TypedCore::Cons in a future version
-                TypedCore::AstList(al_value) => match pattern {
-                    TypedCore::AstList(al_pattern) => {
-                        if al_value.inner.len() != al_pattern.inner.len() {
-                            return Vec::new();
-                        }
-
-                        // pattern match elements
-                        let new_substs;
-                        for i in 0..al_value.inner.len() {
-                            // TODO CURRENT FRONTIER
-                            // Should think about rewriting pmatch_value to work with value:
-                            // TypedCore instead of value: Value
-                            new_substs.join_with(Self::pmatch_value(
-                                &al_pattern.inner[i],
-                                &al_value.inner[i],
-                                value_store,
-                                ast_helper,
-                            ));
-                        }
-
-                        new_substs
-                    }
-                    _ => Vec::new(),
-                },
-                TypedCore::Tuple(al) => Vec::new(),
-            },
-            Value::Pid(_) => Vec::new(), // unmatchable if the pattern is not a var
-        }
+        // match value {
+        //     Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
+        //         TypedCore::Var(v) => {
+        //             let values = value_store
+        //                 .get(clo.env.inner.get(v.var_id.unwrap()).unwrap())
+        //                 .unwrap();
+        //
+        //             let mut new_substs = Vec::new();
+        //             for value in values {
+        //                 new_substs.append(&mut Self::pmatch_value(
+        //                     &pattern,
+        //                     value,
+        //                     value_store,
+        //                     ast_helper,
+        //                 ));
+        //             }
+        //             new_substs
+        //         }
+        //         TypedCore::Literal(val_l) => match &pattern {
+        //             TypedCore::Literal(pattern_l) => {
+        //                 if let TypedCore::String(val_s) = &*val_l.val {
+        //                     if let TypedCore::String(pattern_s) = &*pattern_l.val {
+        //                         if val_s.inner == pattern_s.inner {
+        //                             Vec::from([MatchSubstitution::new()])
+        //                         } else {
+        //                             Vec::new()
+        //                         }
+        //                     } else {
+        //                         return Vec::new();
+        //                     }
+        //                 } else {
+        //                     return Vec::new();
+        //                 }
+        //             }
+        //             _ => Vec::new(),
+        //         },
+        //         // NOTE should be TypedCore::Cons in a future version
+        //         TypedCore::AstList(al_value) => match pattern {
+        //             TypedCore::AstList(al_pattern) => {
+        //                 if al_value.inner.len() != al_pattern.inner.len() {
+        //                     return Vec::new();
+        //                 }
+        //
+        //                 // pattern match elements
+        //                 let new_substs;
+        //                 for i in 0..al_value.inner.len() {
+        //                     // TODO CURRENT FRONTIER
+        //                     // Should think about rewriting pmatch_value to work with value:
+        //                     // TypedCore instead of value: Value
+        //                     new_substs.join_with(Self::pmatch_value(
+        //                         &al_pattern.inner[i],
+        //                         &al_value.inner[i],
+        //                         value_store,
+        //                         ast_helper,
+        //                     ));
+        //                 }
+        //
+        //                 new_substs
+        //             }
+        //             _ => Vec::new(),
+        //         },
+        //         TypedCore::Tuple(al) => Vec::new(),
+        //     },
+        //     Value::Pid(_) => Vec::new(), // unmatchable if the pattern is not a var
+        // }
 
         // OLD
         // ================================
@@ -299,24 +298,21 @@ impl MatchHelper {
             _ => match value {
                 // construct pattern -> descend
                 Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
-                    TypedCore::Var(v) => match &v.var_id {
-                        MaybeIndex::Some(var_id) => {
-                            let values =
-                                value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
+                    TypedCore::Var(v) => {
+                        let var_id = v.var_id.unwrap();
+                        let values = value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
 
-                            let mut new_substs = Vec::new();
-                            for value in values {
-                                new_substs.append(&mut Self::pmatch_value(
-                                    &pattern,
-                                    value,
-                                    value_store,
-                                    ast_helper,
-                                ));
-                            }
-                            new_substs
+                        let mut new_substs = Vec::new();
+                        for value in values {
+                            new_substs.append(&mut Self::pmatch_value(
+                                &pattern,
+                                value,
+                                value_store,
+                                ast_helper,
+                            ));
                         }
-                        MaybeIndex::None => Vec::new(),
-                    },
+                        new_substs
+                    }
                     TypedCore::Literal(val_l) => match &pattern {
                         TypedCore::Literal(pattern_l) => {
                             if let TypedCore::String(val_s) = &*val_l.val {

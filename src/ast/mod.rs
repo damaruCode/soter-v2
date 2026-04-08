@@ -121,6 +121,17 @@ pub enum MaybeIndex {
     None,
 }
 
+impl MaybeIndex {
+    pub fn unwrap(&self) -> &usize {
+        match self {
+            MaybeIndex::Some(u) => {
+                return u;
+            }
+            _ => panic!(),
+        }
+    }
+}
+
 impl From<MaybeIndex> for Option<usize> {
     fn from(value: MaybeIndex) -> Self {
         match value {

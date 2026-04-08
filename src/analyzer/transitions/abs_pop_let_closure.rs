@@ -1,7 +1,7 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    ast::{MaybeIndex, TypedCore},
+    ast::TypedCore,
     state_space::{
         Closure, Env, FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
         ValueAddress,
@@ -43,43 +43,35 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     new_item.k_addr = kont_k_addr.clone();
 
     match ast_helper.get(kont_var_list[0]) {
-        TypedCore::Var(v) => match &v.var_id {
-            MaybeIndex::Some(var_id) => {
-                let new_v_addr = abstraction.new_vaddr(
-                    &proc_state,
-                    *var_id,
-                    &new_item.prog_loc_or_pid,
-                    &new_item.env,
-                    &new_item.time,
-                );
-                new_item.env.inner.insert(*var_id, new_v_addr.clone());
+        TypedCore::Var(v) => {
+            let var_id = v.var_id.unwrap();
+            let new_v_addr = abstraction.new_vaddr(
+                &proc_state,
+                *var_id,
+                &new_item.prog_loc_or_pid,
+                &new_item.env,
+                &new_item.time,
+            );
+            new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
-                for state in push_to_value_store(
-                    &ast_helper,
-                    seen_proc_states,
-                    store,
-                    new_v_addr,
-                    Value::Closure(Closure {
-                        prog_loc: proc_state_prog_loc,
-                        env: proc_state.env.clone(),
-                    }),
-                ) {
-                    result
-                        .revisit
-                        .push((state, "abs_pop_let_closure".to_string()));
-                }
+            for state in push_to_value_store(
+                &ast_helper,
+                seen_proc_states,
+                store,
+                new_v_addr,
+                Value::Closure(Closure {
+                    prog_loc: proc_state_prog_loc,
+                    env: proc_state.env.clone(),
+                }),
+            ) {
                 result
-                    .new
-                    .push((new_item, "abs_pop_let_closure".to_string()));
+                    .revisit
+                    .push((state, "abs_pop_let_closure".to_string()));
             }
-            MaybeIndex::None => result.new.push((
-                proc_state.fail(FailureType::Unexpected(format!(
-                    "Found variable without var id: {}",
-                    v
-                ))),
-                "abs_pop_let_closure".to_string(),
-            )),
-        },
+            result
+                .new
+                .push((new_item, "abs_pop_let_closure".to_string()));
+        }
         tc => result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
                 "Expected a variable, found {}",

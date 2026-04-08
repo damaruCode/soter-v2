@@ -1,6 +1,6 @@
 use crate::{
     analyzer::dependency_checker::push_to_mailboxes,
-    ast::{Index, MaybeIndex, TypedCore},
+    ast::{Index, TypedCore},
     state_space::{
         Closure, FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
         Value, ValueAddress,
@@ -19,16 +19,12 @@ fn resolve_pid<K: KontinuationAddress, V: ValueAddress>(
     match value {
         Value::Pid(pid) => pids.push(pid.clone()),
         Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
-            TypedCore::Var(v) => match &v.var_id {
-                MaybeIndex::Some(var_id) => {
-                    let values = store.value.get(clo.env.inner.get(var_id).unwrap()).unwrap();
-
-                    for value in values {
-                        pids.append(&mut resolve_pid(&value, store, ast_helper));
-                    }
+            TypedCore::Var(v) => {
+                let var_id = v.var_id.unwrap();
+                for value in store.unpack(&clo.env, var_id) {
+                    pids.append(&mut resolve_pid(&value, store, ast_helper));
                 }
-                MaybeIndex::None => {}
-            },
+            }
             _ => panic!(), // TODO adapt to return an erronous result
         },
     };
@@ -48,30 +44,15 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     let mut result = TransitionResult::new();
 
     let pids = match typed_core_to {
-        TypedCore::Var(v) => match &v.var_id {
-            MaybeIndex::Some(var_id) => {
-                let maybe_pids = store
-                    .value
-                    .get(proc_state.env.inner.get(var_id).unwrap())
-                    .unwrap();
+        TypedCore::Var(v) => {
+            let var_id = v.var_id.unwrap();
 
-                let mut pids = Vec::new();
-                for maybe_pid in maybe_pids {
-                    pids.append(&mut resolve_pid(maybe_pid, store, ast_helper));
-                }
-                pids
+            let mut pids = Vec::new();
+            for maybe_pid in store.unpack(&proc_state.env, var_id) {
+                pids.append(&mut resolve_pid(maybe_pid, store, ast_helper));
             }
-            MaybeIndex::None => {
-                result.new.push((
-                    proc_state.fail(FailureType::Unexpected(format!(
-                        "Found variable without var id: {}",
-                        v
-                    ))),
-                    "abs_send".to_string(),
-                ));
-                return result;
-            }
-        },
+            pids
+        }
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
@@ -90,14 +71,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
         store: &Store<K, V>,
     ) -> Vec<Value<V>> {
         match typed_core_msg {
-            TypedCore::Var(v) => match &v.var_id {
-                MaybeIndex::Some(var_id) => store
-                    .value
-                    .get(proc_state.env.inner.get(var_id).unwrap())
-                    .unwrap()
-                    .clone(),
-                MaybeIndex::None => panic!(), // TODO adapt to return erronous result
-            },
+            TypedCore::Var(v) => store.unpack(&proc_state.env, v.var_id.unwrap()).clone(),
             TypedCore::Literal(_) | TypedCore::AstList(_) | TypedCore::Tuple(_) => {
                 Vec::from([Value::Closure(Closure {
                     prog_loc: typed_core_msg.get_index().unwrap(),
