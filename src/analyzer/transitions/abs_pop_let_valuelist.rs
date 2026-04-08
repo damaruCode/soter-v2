@@ -1,6 +1,6 @@
 use crate::{
     abstraction::Abstraction,
-    analyzer::dependency_checker::push_to_value_store,
+    analyzer::{dependency_checker::push_to_value_store, transitions::abs_pop_let_closure},
     ast::{MaybeIndex, TypedCore},
     state_space::{
         Closure, Env, FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
@@ -23,11 +23,10 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
-    if kont_var_list.len() == 1 {
+    if kont_var_list.len() == 0 {
         result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
-                "Expected contiuation var list of atleast 1, found length {}",
-                kont_var_list.len()
+                "Expected var list of atleast 1, found length 0"
             ))),
             "abs_pop_let_value_list".to_string(),
         ));
@@ -77,6 +76,22 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
 
     // check list length
     if kont_var_list.len() != value_list.len() {
+        if kont_var_list.len() == 1 {
+            // should instead do the abs_pop_let_closure transition
+            return abs_pop_let_closure(
+                proc_state,
+                *value_list_pl,
+                kont_var_list,
+                kont_body_prog_loc,
+                kont_env,
+                kont_k_addr,
+                store,
+                seen_proc_states,
+                abstraction,
+                ast_helper,
+            );
+        }
+
         result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
                 "Expected a value list of length {} but found a value list with length {}.",
