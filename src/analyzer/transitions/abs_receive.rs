@@ -1,10 +1,9 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    ast::{Index, MaybeIndex, Receive},
+    ast::{Index, Receive},
     state_space::{
-        FailureType, KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store,
-        ValueAddress,
+        KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -40,37 +39,24 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
                 // irrelevant --- it would only have been of interest for the VAddr
 
                 // generate new result.addr
-                match maybe_var_id {
-                    MaybeIndex::Some(var_id) => {
-                        let new_v_addr = abstraction.new_vaddr(
-                            proc_state,
-                            *var_id,
-                            &new_item.prog_loc_or_pid,
-                            &new_item.env,
-                            &new_item.time,
-                        );
-                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
+                let var_id = maybe_var_id.unwrap();
+                let new_v_addr = abstraction.new_vaddr(
+                    proc_state,
+                    *var_id,
+                    &new_item.prog_loc_or_pid,
+                    &new_item.env,
+                    &new_item.time,
+                );
+                new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
-                        for state in push_to_value_store(
-                            ast_helper,
-                            seen_proc_states,
-                            store,
-                            new_v_addr,
-                            value.clone(),
-                        ) {
-                            result.revisit.push((state, "abs_receive".to_string()));
-                        }
-                    }
-                    MaybeIndex::None => {
-                        // TODO revisit; maybe change substitutions to include both the var and its
-                        // id?
-                        result.new.push((
-                            proc_state.fail(FailureType::Unexpected(
-                                "Found variable without var id".to_string(),
-                            )),
-                            "abs_receive".to_string(),
-                        ));
-                    }
+                for state in push_to_value_store(
+                    ast_helper,
+                    seen_proc_states,
+                    store,
+                    new_v_addr,
+                    value.clone(),
+                ) {
+                    result.revisit.push((state, "abs_receive".to_string()));
                 }
             }
         }

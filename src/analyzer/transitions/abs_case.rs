@@ -1,7 +1,7 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::{dependency_checker::push_to_value_store, match_helper::MatchHelper},
-    ast::{Case, Clause, Index, MaybeIndex, TypedCore},
+    ast::{Case, Clause, Index, TypedCore},
     state_space::{
         FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
     },
@@ -23,20 +23,9 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
     let v_addr;
     match &*case.arg {
-        TypedCore::Var(v) => match &v.var_id {
-            MaybeIndex::Some(var_id) => v_addr = proc_state.env.inner.get(var_id).unwrap(),
-            MaybeIndex::None => {
-                result.new.push((
-                    proc_state.fail(FailureType::Unexpected(format!(
-                        "Found variable without var id: {}",
-                        v
-                    ))),
-                    "abs_case".to_string(),
-                ));
-
-                return result;
-            }
-        },
+        TypedCore::Var(v) => {
+            v_addr = proc_state.env.inner.get(v.var_id.unwrap()).unwrap();
+        }
         TypedCore::Values(v) => {
             if v.es.inner.len() == 0 {
                 // empty case
@@ -117,36 +106,25 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
 
         for i in 0..substs.len() {
             for (maybe_var_id, value) in &substs[i].inner {
-                match maybe_var_id {
-                    MaybeIndex::Some(var_id) => {
-                        let new_v_addr = abstraction.new_vaddr(
-                            proc_state,
-                            *var_id,
-                            &new_item.prog_loc_or_pid,
-                            &new_item.env,
-                            &new_item.time,
-                        );
-                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
+                let var_id = maybe_var_id.unwrap();
 
-                        for state in push_to_value_store(
-                            ast_helper,
-                            seen_proc_states,
-                            store,
-                            new_v_addr,
-                            value.clone(),
-                        ) {
-                            result.revisit.push((state, "abs_case".to_string()));
-                        }
-                    }
-                    MaybeIndex::None => {
-                        result.new.push((
-                            proc_state.fail(FailureType::Unexpected(format!(
-                                "Substitution has var without proper var id.",
-                            ))),
-                            "abs_case".to_string(),
-                        ));
-                        continue;
-                    }
+                let new_v_addr = abstraction.new_vaddr(
+                    proc_state,
+                    *var_id,
+                    &new_item.prog_loc_or_pid,
+                    &new_item.env,
+                    &new_item.time,
+                );
+                new_item.env.inner.insert(*var_id, new_v_addr.clone());
+
+                for state in push_to_value_store(
+                    ast_helper,
+                    seen_proc_states,
+                    store,
+                    new_v_addr,
+                    value.clone(),
+                ) {
+                    result.revisit.push((state, "abs_case".to_string()));
                 }
             }
         }

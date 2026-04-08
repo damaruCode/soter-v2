@@ -145,24 +145,21 @@ impl MatchHelper {
             },
             _ => match value {
                 Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
-                    TypedCore::Var(v) => match &v.var_id {
-                        MaybeIndex::Some(var_id) => {
-                            let values =
-                                value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
+                    TypedCore::Var(v) => {
+                        let var_id = v.var_id.unwrap();
+                        let values = value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
 
-                            let mut new_substs = Vec::new();
-                            for value in values {
-                                new_substs.append(&mut Self::amatch(
-                                    &pattern,
-                                    value,
-                                    value_store,
-                                    ast_helper,
-                                ));
-                            }
-                            new_substs
+                        let mut new_substs = Vec::new();
+                        for value in values {
+                            new_substs.append(&mut Self::amatch(
+                                &pattern,
+                                value,
+                                value_store,
+                                ast_helper,
+                            ));
                         }
-                        MaybeIndex::None => Vec::new(),
-                    },
+                        new_substs
+                    }
                     TypedCore::Literal(val_l) => match &pattern {
                         TypedCore::Literal(pattern_l) => {
                             if let TypedCore::String(val_s) = &*val_l.val {
