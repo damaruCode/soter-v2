@@ -35,7 +35,9 @@ impl MatchHelper {
         ast_helper: &AstHelper,
     ) -> BTreeMap<Value<V>, Vec<(usize, Vec<MatchSubstitution<V>>)>> {
         let mut matched_map = BTreeMap::new();
+        // for every possible value behind VAddr...
         for value in value_store.get(v_addr).unwrap() {
+            // try to match
             let mut matches = Vec::new();
             for i in 0..clauses.len() {
                 let substs = Self::cmatch_value(&clauses[i], value, value_store, ast_helper);
@@ -291,49 +293,45 @@ impl MatchHelper {
                             Vec::new()
                         }
                     }
-                    _ => Vec::new(),
+                    _ => Vec::new(), // must be literal closure to match
                 },
-                _ => Vec::new(),
+                _ => Vec::new(), // must be literal closure to match
             },
-            _ => match value {
-                // construct pattern -> descend
+            TypedCore::Cons(c_pat) => match value {
+                // construct pattern -> descend per sub-pattern
                 Value::Closure(clo) => match &ast_helper.get(clo.prog_loc) {
-                    TypedCore::Var(v) => {
-                        let var_id = v.var_id.unwrap();
-                        let values = value_store.get(clo.env.inner.get(var_id).unwrap()).unwrap();
+                    TypedCore::Cons(c_val) => match &*c_pat.hd {
+                        // NOTE Probably should be something other than null
+                        TypedCore::Null(_) => match &*c_val.hd {
+                            TypedCore::Null(_) => Vec::from([MatchSubstitution::new()]), // matches
+                            _ => Vec::new(), // length mismatch
+                        },
+                        TypedCore::Var(_) => {
+                            // match head
+                            pmatch_value(
 
-                        let mut new_substs = Vec::new();
-                        for value in values {
-                            new_substs.append(&mut Self::pmatch_value(
-                                &pattern,
-                                value,
-                                value_store,
-                                ast_helper,
-                            ));
+                            // then match tail
+                            
                         }
-                        new_substs
-                    }
-                    TypedCore::Literal(val_l) => match &pattern {
-                        TypedCore::Literal(pattern_l) => {
-                            if let TypedCore::String(val_s) = &*val_l.val {
-                                if let TypedCore::String(pattern_s) = &*pattern_l.val {
-                                    if val_s.inner == pattern_s.inner {
-                                        Vec::from([MatchSubstitution::new()])
-                                    } else {
-                                        Vec::new()
-                                    }
-                                } else {
-                                    return Vec::new();
-                                }
-                            } else {
-                                return Vec::new();
-                            }
-                        }
-                        _ => Vec::new(),
                     },
-                    _ => Vec::new(),
+                    // match &*c_pat.tl {
+                    // // tail is either cons or nil
+                    // TypedCore::Cons(c_pat_tl) => {
+                    //
+                    // }
+                    // TypedCore::Null(_) => Vec::new(),
+                    // _ => panic!(),
+                    // },
+                    _ => Vec::new(), // must be cons closure to match
                 },
-                Value::Pid(_) => Vec::new(), // unmatchable if the pattern is not a var
+                _ => Vec::new(), // must be cons closure to match
+            },
+            TypedCore::Tuple(tup) => match value {
+                Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
+                    TypedCore::Tuple(tup) => {}
+                    _ => Vec::new(), // must be tuple closure to match
+                },
+                _ => Vec::new(), // must be tuple closure to match
             },
         }
     }
@@ -421,5 +419,24 @@ impl<V: ValueAddress> MatchSubstitution<V> {
             }
         }
         new_subst
+    }
+}
+
+// TODO move the below code to a suitable location
+pub enum PatternKind {
+    Var(ast::Var),
+    Literal(ast::Literal), // also includes the literal empty list
+    Cons(ast::Cons),
+    Tuple(ast::Tuple),
+}
+impl TypedCore {
+    pub fn as_pattern(&self) -> PatternKind {
+        match self {
+            TypedCore::Var(v) => PatternKind::Var(v),
+            TypedCore::Literal(l) => PatternKind::Literal(l),
+            TypedCore::Cons(c) => PatternKind::Cons(c),
+            TypedCore::Tuple(t) => PatternKind::Tuple(t),
+            _ => panic!("Invalid typed core for pattern. Should already have been handled by the erlang compiler.")
+        }
     }
 }
