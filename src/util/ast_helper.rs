@@ -80,14 +80,14 @@ impl<'helper> AstHelper<'helper> {
             ctx.symbol_table.insert(var_name, index);
         }
         fn declare_var_in_pat<'a>(pat: &mut TypedCore, ctx: &mut AstHelper<'a>) {
-            match &mut pat.as_pattern() {
-                PatternKind::Var(v) => declare_var(v, ctx),
-                PatternKind::Cons(c) => {
+            match pat {
+                TypedCore::Var(v) => declare_var(v, ctx),
+                TypedCore::Cons(c) => {
                     for elem in c.iter_mut_collect() {
                         declare_var_in_pat(elem, ctx);
                     }
                 }
-                PatternKind::Tuple(t) => {
+                TypedCore::Tuple(t) => {
                     for tc in &mut t.es.inner {
                         declare_var_in_pat(tc, ctx);
                     }

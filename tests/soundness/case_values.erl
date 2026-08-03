@@ -3,12 +3,12 @@
 -compile(exports_all).
 
 main() ->
-  A = id(2),
+  A = id(b),
   B = id(a),
   C = case [A, B] of
-    [M, 1] -> M;
-    [3, M] -> M;
-    X -> 14
+    [M, c] -> M;
+    [d, M] -> M;
+    X -> e
   end,
   C.
 

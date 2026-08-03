@@ -53,7 +53,6 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
             ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
 
         for i in 0..substs.len() {
-            println!("i: {}, substs: {:#?}", index, substs);
             for (var_id, addr_or_value) in &substs[i].inner {
                 match addr_or_value {
                     ValueAddressOrValue::Value(v) => {
