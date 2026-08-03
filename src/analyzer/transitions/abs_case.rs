@@ -1,9 +1,10 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::{dependency_checker::push_to_value_store, match_helper::MatchHelper},
-    ast::{Case, Clause, Index, TypedCore},
+    ast::{Case, Clause, Index, TypedCore, ValueAddressOrValue},
     state_space::{
-        FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
+        Closure, FailureType, KontinuationAddress, Pid, ProcState, ProgLocOrPid, Store, Value,
+        ValueAddress,
     },
     util::{AstHelper, SetMap},
 };
@@ -21,109 +22,66 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     let mut result = TransitionResult::new();
 
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
-    let v_addr;
+
+    let mats;
     match &*case.arg {
         TypedCore::Var(v) => {
-            v_addr = proc_state.env.inner.get(v.var_id.unwrap()).unwrap();
-        }
-        TypedCore::Values(v) => {
-            if v.es.inner.len() == 0 {
-                // empty case
-                for clause in clauses {
-                    // empty clause
-                    if clause.pats.inner.len() == 0 {
-                        let mut new_item = proc_state.clone();
-                        new_item.prog_loc_or_pid =
-                            ProgLocOrPid::ProgLoc((*clause.body).get_index().unwrap());
-
-                        result.new.push((new_item, "abs_case".to_string()));
-
-                        return result;
-                    }
-                }
-            }
-
-            result.new.push((
-                proc_state.fail(FailureType::NotImplemented(
-                    "Can not handle values of length higher than 0.".to_string(),
-                )),
-                "abs_case".to_string(),
-            ));
-            return result;
-        }
-        TypedCore::Literal(_) => {
-            // TODO implement
-            result.new.push((
-                proc_state.fail(FailureType::NotImplemented(
-                    "Can not handle literals as case arguments.".to_string(),
-                )),
-                "abs_case".to_string(),
-            ));
-
-            return result;
-        }
-        TypedCore::AstTuple(_) => {
-            // TODO implement
-            result.new.push((
-                proc_state.fail(FailureType::NotImplemented(
-                    "Can not handle tuples as case arguments.".to_string(),
-                )),
-                "abs_case".to_string(),
-            ));
-
-            return result;
+            let v_addr = proc_state.env.inner.get(v.var_id.unwrap()).unwrap();
+            mats = MatchHelper::cs_match_vaddr(&clauses, v_addr, &store.value, ast_helper);
         }
         tc => {
-            result.new.push((
-                proc_state.fail(FailureType::Erlang(format!(
-                    "Invalid case argument: {}",
-                    tc
-                ))),
-                "abs_case".to_string(),
-            ));
-
-            return result;
+            let value = Value::Closure(Closure {
+                prog_loc: tc.get_index().unwrap(),
+                env: proc_state.env.clone(),
+            });
+            mats = MatchHelper::cs_match_value(&clauses, &value, &store.value, ast_helper);
         }
     }
 
-    let mats = MatchHelper::cmatch_values(&clauses, v_addr, &store.value, ast_helper);
+    if mats.len() == 0 {
+        result.new.push((
+            proc_state.fail(FailureType::Erlang("No matches.".to_string())),
+            "abs_case".to_string(),
+        ));
+        return result;
+    }
 
-    for (_, matches) in mats {
-        if matches.len() == 0 {
-            result.new.push((
-                proc_state.fail(FailureType::Erlang("No matches.".to_string())),
-                "abs_case".to_string(),
-            ));
-            continue;
-        }
-        // only consider first match
-        let (index, substs) = &matches[0];
-
+    for (index, substs) in mats {
         let mut new_item = proc_state.clone();
+
         new_item.prog_loc_or_pid =
-            ProgLocOrPid::ProgLoc((*(clauses[*index].body)).get_index().unwrap());
+            ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
 
         for i in 0..substs.len() {
-            for (maybe_var_id, value) in &substs[i].inner {
-                let var_id = maybe_var_id.unwrap();
+            println!("i: {}, substs: {:#?}", index, substs);
+            for (var_id, addr_or_value) in &substs[i].inner {
+                match addr_or_value {
+                    ValueAddressOrValue::Value(v) => {
+                        // produce new v_addr, add to env and push into value store
+                        let new_v_addr = abstraction.new_vaddr(
+                            proc_state,
+                            *var_id,
+                            &new_item.prog_loc_or_pid,
+                            &new_item.env,
+                            &new_item.time,
+                        );
 
-                let new_v_addr = abstraction.new_vaddr(
-                    proc_state,
-                    *var_id,
-                    &new_item.prog_loc_or_pid,
-                    &new_item.env,
-                    &new_item.time,
-                );
-                new_item.env.inner.insert(*var_id, new_v_addr.clone());
+                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
-                for state in push_to_value_store(
-                    ast_helper,
-                    seen_proc_states,
-                    store,
-                    new_v_addr,
-                    value.clone(),
-                ) {
-                    result.revisit.push((state, "abs_case".to_string()));
+                        for state in push_to_value_store(
+                            ast_helper,
+                            seen_proc_states,
+                            store,
+                            new_v_addr,
+                            v.clone(),
+                        ) {
+                            result.revisit.push((state, "abs_case".to_string()));
+                        }
+                    }
+                    ValueAddressOrValue::ValueAddress(v) => {
+                        // just push into env, because v is already in the value store
+                        new_item.env.inner.insert(*var_id, v.clone());
+                    }
                 }
             }
         }

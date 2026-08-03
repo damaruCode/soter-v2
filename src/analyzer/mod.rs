@@ -177,9 +177,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                 TypedCore::Receive(r) => {
                     abs_receive(r, self, mailboxes, store, seen, abstraction, ast_helper)
                 }
-                TypedCore::PrimOp(_prim_op) => {
-                    todo!("ABS_PRIMOP, ABS_SELF, ABS_SPAWN, ABS_SEND, {:#?}", _prim_op)
-                }
+                TypedCore::PrimOp(prim_op) => abs_primop(prim_op, self),
                 TypedCore::Let(l) => abs_push_let(l, self, store, seen, abstraction, ast_helper),
                 TypedCore::Seq(s) => abs_push_seq(s, self, store, seen, abstraction, ast_helper),
                 // ProgLoc is irreducible via the previous transition rules; it's a Value

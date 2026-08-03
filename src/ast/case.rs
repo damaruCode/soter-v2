@@ -11,6 +11,7 @@ pub enum VarNamesOrValue<V: ValueAddress> {
     Value(Value<V>),
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum ValueAddressOrValue<V: ValueAddress> {
     ValueAddress(V),
     Value(Value<V>),

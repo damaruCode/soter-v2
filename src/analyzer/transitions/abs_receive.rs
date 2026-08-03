@@ -1,7 +1,7 @@
 use crate::{
     abstraction::Abstraction,
     analyzer::dependency_checker::push_to_value_store,
-    ast::{Index, Receive},
+    ast::{Index, Receive, ValueAddressOrValue},
     state_space::{
         KontinuationAddress, Mailboxes, Pid, ProcState, ProgLocOrPid, Store, ValueAddress,
     },
@@ -34,30 +34,34 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
 
         // introduce substitution into environment
         for i in 0..substs.len() {
-            for (maybe_var_id, value) in &substs[i].inner {
+            for (var_id, addr_or_value) in &substs[i].inner {
                 // NOTE because we use Data_0, the preliminary step of resolving the data d_i is
                 // irrelevant --- it would only have been of interest for the VAddr
+                match addr_or_value {
+                    ValueAddressOrValue::Value(v) => {
+                        let new_v_addr = abstraction.new_vaddr(
+                            proc_state,
+                            *var_id,
+                            &new_item.prog_loc_or_pid,
+                            &new_item.env,
+                            &new_item.time,
+                        );
+                        new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
-                // generate new result.addr
-                let var_id = maybe_var_id.unwrap();
-                let new_v_addr = abstraction.new_vaddr(
-                    proc_state,
-                    *var_id,
-                    &new_item.prog_loc_or_pid,
-                    &new_item.env,
-                    &new_item.time,
-                );
-                new_item.env.inner.insert(*var_id, new_v_addr.clone());
-
-                for state in push_to_value_store(
-                    ast_helper,
-                    seen_proc_states,
-                    store,
-                    new_v_addr,
-                    value.clone(),
-                ) {
-                    result.revisit.push((state, "abs_receive".to_string()));
-                }
+                        for state in push_to_value_store(
+                            ast_helper,
+                            seen_proc_states,
+                            store,
+                            new_v_addr,
+                            v.clone(),
+                        ) {
+                            result.revisit.push((state, "abs_receive".to_string()));
+                        }
+                    }
+                    ValueAddressOrValue::ValueAddress(v) => {
+                        new_item.env.inner.insert(*var_id, v.clone());
+                    }
+                };
             }
         }
         result.new.push((new_item, "abs_receive".to_string()));

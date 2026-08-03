@@ -24,17 +24,17 @@ impl<V: ValueAddress> Mailbox<V> {
         clauses: &Vec<Clause>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
-    ) -> Vec<(usize, Vec<MatchSubstitution<V>>)> {
-        let mut matched_msgs = Vec::new();
+    ) -> BTreeMap<usize, Vec<MatchSubstitution<V>>> {
+        let mut matched_msgs = BTreeMap::new();
 
-        for msg in &self.inner {
-            for i in 0..clauses.len() {
-                let substs = MatchHelper::cmatch_value(&clauses[i], msg, value_store, ast_helper);
-                if substs.len() > 0 {
-                    matched_msgs.push((i, substs));
-                }
-            }
-        }
+        // for msg in &self.inner {
+        //     // TODO Revisit -- Will probably need a more granular function for this in the
+        //     // match_helper
+        //     let substs = MatchHelper::cs_match_value(&clauses, msg, value_store, ast_helper);
+        //     if substs.len() > 0 {
+        //         matched_msgs.push((i, substs));
+        //     }
+        // }
 
         matched_msgs
     }

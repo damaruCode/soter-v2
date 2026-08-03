@@ -1,3 +1,4 @@
+use crate::analyzer::PatternKind;
 use crate::ast::Index;
 use crate::ast::MaybeIndex;
 use crate::ast::TypedCore;
@@ -79,14 +80,14 @@ impl<'helper> AstHelper<'helper> {
             ctx.symbol_table.insert(var_name, index);
         }
         fn declare_var_in_pat<'a>(pat: &mut TypedCore, ctx: &mut AstHelper<'a>) {
-            match pat {
-                TypedCore::Var(v) => declare_var(v, ctx),
-                TypedCore::AstList(al) => {
-                    for tc in &mut al.inner {
-                        declare_var_in_pat(tc, ctx);
+            match &mut pat.as_pattern() {
+                PatternKind::Var(v) => declare_var(v, ctx),
+                PatternKind::Cons(c) => {
+                    for elem in c.iter_mut_collect() {
+                        declare_var_in_pat(elem, ctx);
                     }
                 }
-                TypedCore::Tuple(t) => {
+                PatternKind::Tuple(t) => {
                     for tc in &mut t.es.inner {
                         declare_var_in_pat(tc, ctx);
                     }

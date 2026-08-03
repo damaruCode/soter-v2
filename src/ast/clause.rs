@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Clause {
     pub anno: AstList<TypedCore>,
-    pub pats: AstList<TypedCore>,
+    pub pats: AstList<TypedCore>, // [AP] when matching on a value list pats needs to be an ASTList of multiple patterns (one per value): "case <VALUE_1, VALUE_2> of <PATTERN_1, PATTERN_2> -> ... end"
     pub guard: Box<TypedCore>,
     pub body: Box<TypedCore>,
     pub index: MaybeIndex,
