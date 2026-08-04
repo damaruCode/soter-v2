@@ -24,7 +24,7 @@ use soter_v2::util::SetMap;
 enum P<'p> {
     Var,               // TypedCore::Var
     Literal(&'p str),  // TypedCore::Literal
-    List(Vec<P<'p>>),  // TypedCore::AstList
+    List(Vec<P<'p>>),  // TypedCore::Cons
     Tuple(Vec<P<'p>>), // TypedCore::Tuple
 }
 
