@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fmt::Display, iter::zip};
 
 use crate::{
     ast::{AstList, Clause, Cons, Index, Literal, Tuple, TypedCore, ValueAddressOrValue, Var},
-    state_space::{Closure, Value, ValueAddress},
+    state_space::{Closure, Env, Value, ValueAddress},
     util::{AstHelper, SetMap},
 };
 
@@ -98,6 +98,44 @@ impl MatchHelper {
         clause_matches
     }
 
+    /// Matches a pattern against a single element of a compound value (the head/tail of
+    /// a `Cons`, or an element of a `Tuple`/`Values`).
+    ///
+    /// When the element is itself a variable, it is resolved through its value address
+    /// via [`Self::p_match_vaddr`] rather than being wrapped in a `Closure` whose
+    /// `prog_loc` points at the `Var` node. Such variable-closures can become
+    /// self-referential under address reuse (e.g. 0-CFA), which would make later
+    /// resolution (e.g. `resolve_pid`) loop indefinitely. Resolving through the address
+    /// instead binds pattern variables directly to the existing address.
+    ///
+    /// ## Arguments
+    /// * `pattern` - the pattern to match this element against
+    /// * `value_elem` - the AST node of the compound value's element
+    /// * `env` - the environment captured by the compound value's closure
+    /// * `value_store` - the current Value Store
+    /// * `ast_helper` - the AstHelper to lookup relevant nodes in the abstract syntax tree
+    fn match_element<V: ValueAddress>(
+        pattern: PatternKind,
+        value_elem: &TypedCore,
+        env: &Env<V>,
+        value_store: &SetMap<V, Value<V>>,
+        ast_helper: &AstHelper,
+    ) -> Vec<MatchSubstitution<V>> {
+        match value_elem {
+            TypedCore::Var(v) => {
+                let v_addr = env.inner.get(v.var_id.unwrap()).unwrap();
+                Self::p_match_vaddr(pattern, v_addr, value_store, ast_helper)
+            }
+            _ => {
+                let value = Value::Closure(Closure {
+                    prog_loc: value_elem.get_index().unwrap(),
+                    env: env.clone(),
+                });
+                Self::p_match_value(&pattern, &value, value_store, ast_helper)
+            }
+        }
+    }
+
     /// Matches a pattern to all values behind a value address
     ///
     /// ## Arguments
@@ -164,11 +202,8 @@ impl MatchHelper {
 
                         let mut substs: Option<Vec<MatchSubstitution<V>>> = None;
                         for (p, v) in pairs {
-                            let value = Value::Closure(Closure {
-                                prog_loc: (*v).get_index().unwrap(),
-                                env: v_clo.env.clone(),
-                            });
-                            let res = Self::p_match_value(&p, &value, value_store, ast_helper);
+                            let res =
+                                Self::match_element(p, v, &v_clo.env, value_store, ast_helper);
 
                             if res.is_empty() {
                                 // no matching value => done
@@ -210,11 +245,8 @@ impl MatchHelper {
 
                         let mut substs: Option<Vec<MatchSubstitution<V>>> = None;
                         for (p, v) in pairs {
-                            let value = Value::Closure(Closure {
-                                prog_loc: (v).get_index().unwrap(),
-                                env: v_clo.env.clone(),
-                            });
-                            let res = Self::p_match_value(&p, &value, value_store, ast_helper);
+                            let res =
+                                Self::match_element(p, &v, &v_clo.env, value_store, ast_helper);
 
                             if res.is_empty() {
                                 // no matching value => done
@@ -256,11 +288,8 @@ impl MatchHelper {
 
                         let mut substs: Option<Vec<MatchSubstitution<V>>> = None;
                         for (p, v) in pairs {
-                            let value = Value::Closure(Closure {
-                                prog_loc: (v).get_index().unwrap(),
-                                env: v_clo.env.clone(),
-                            });
-                            let res = Self::p_match_value(&p, &value, value_store, ast_helper);
+                            let res =
+                                Self::match_element(p, &v, &v_clo.env, value_store, ast_helper);
 
                             if res.is_empty() {
                                 // no matching value => done
@@ -314,15 +343,25 @@ impl MatchHelper {
         }
     }
 
-    fn literal_cmp(value_lit: &Literal, pattern_lit: &Literal) -> bool {
-        if let TypedCore::String(s1) = &*pattern_lit.val {
-            if let TypedCore::String(s2) = &*value_lit.val {
-                return s1.inner == s2.inner;
+    fn literal_val_eq(a: &TypedCore, b: &TypedCore) -> bool {
+        match (a, b) {
+            (TypedCore::Null(_), TypedCore::Null(_)) => true,
+            (TypedCore::Bool(a), TypedCore::Bool(b)) => a.inner == b.inner,
+            (TypedCore::Number(a), TypedCore::Number(b)) => a.inner == b.inner,
+            (TypedCore::String(a), TypedCore::String(b)) => a.inner == b.inner,
+            (TypedCore::AstList(a), TypedCore::AstList(b)) => {
+                a.inner.len() == b.inner.len()
+                    && a.inner
+                        .iter()
+                        .zip(&b.inner)
+                        .all(|(x, y)| Self::literal_val_eq(x, y))
             }
+            _ => false,
         }
+    }
 
-        // TODO adapt to allow for all kinds of literals
-        todo!("literal_cmp does not work for literals other than strings");
+    fn literal_cmp(a: &Literal, b: &Literal) -> bool {
+        Self::literal_val_eq(&a.val, &b.val)
     }
 
     /// Checks a guard of a clause

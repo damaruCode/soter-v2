@@ -34,7 +34,7 @@ These follow from the supported language constructs.
 | [Binary](src/ast/binary.rs) | ❌ | |
 | [BitStr](src/ast/bit_str.rs) | ❌ | |
 | [Cons](src/ast/const.rs) | ✅ | |
-| [Literal](src/ast/literal.rs) | ✴️ | only literal strings `'a'`, `'ok'`, and such; full support planned |
+| [Literal](src/ast/literal.rs) | ✅ | |
 | [Opaque](src/ast/opaque.rs) | ❌ | is a compiler internal construct that is supposed to be for debugging so no support planed |
 | [Tuple](src/ast/tuple.rs) | ✅ | |
 | [Values (i.e. ValueList)](src/ast/values.rs) | ✅ | |
@@ -75,7 +75,7 @@ cargo test --test benchmarks
 ```
 
 ### Soundness
-Runs soter-v2 on the files in the `tests/soundness` directory and checks the output for expected values in variables and so on:
+Runs soter-v2 on the files in the [`tests/soundness`](tests/soundness) directory and checks the output for expected values in variables and so on:
 ```
 cargo test --test soundness
 ```
