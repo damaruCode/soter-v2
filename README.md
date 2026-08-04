@@ -28,6 +28,8 @@ Oriented on the rust-representation of the Erlang AST in `src/ast`.
 | Var | ✅ | |
 
 ### Types
+These follow from the supported language constructs.
+
 | Construct | Supported | Description | 
 | :- | :-: | :- |
 | Binary | ❌ | |
