@@ -24,26 +24,6 @@ impl From<Vec<Value>> for AstList<TypedCore> {
             list.push(TypedCore::from(val));
         }
 
-        // SPECIAL CASE: literal lists are to be handled as lists of literals
-        if list.len() == 1 {
-            match &list[0].clone() {
-                TypedCore::Literal(l) => match (*l.val).clone() {
-                    TypedCore::AstList(al) => {
-                        list.clear();
-                        for val in al.inner {
-                            list.push(TypedCore::Literal(Literal {
-                                anno: l.anno.clone(),
-                                val: Box::new(val),
-                                index: l.index.clone(),
-                            }));
-                        }
-                    }
-                    _ => {}
-                },
-                _ => {}
-            }
-        }
-
         AstList {
             inner: list,
             index: MaybeIndex::None,
