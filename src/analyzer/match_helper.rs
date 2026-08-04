@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, fmt::Display, iter::zip};
 
 use crate::{
-    ast::{Clause, Cons, Index, Literal, Tuple, TypedCore, ValueAddressOrValue, Var},
+    ast::{AstList, Clause, Cons, Index, Literal, Tuple, TypedCore, ValueAddressOrValue, Var},
     state_space::{Closure, Value, ValueAddress},
     util::{AstHelper, SetMap},
 };
@@ -33,19 +33,17 @@ impl MatchHelper {
         let mut clause_matches = BTreeMap::new();
 
         for i in 0..clauses.len() {
-            // TODO value lists and patterns for them are not supported yet
-            if clauses[i].pats.inner.len() != 1 {
-                panic!("cs_match_vaddr: Expected clauses[i].pats to be of length 1 (Everything is a singleton ASTLIST). Counter-example found: {}", clauses[i].pats)
-            }
-
             let substs = Self::p_match_vaddr(
-                (*clauses[i].pats.inner)[0].as_pattern(),
+                if clauses[i].pats.inner.len() == 1 {
+                    (*clauses[i].pats.inner)[0].as_pattern()
+                } else {
+                    clauses[i].pats.as_pattern()
+                },
                 v_addr,
                 value_store,
                 ast_helper,
             );
 
-            // TODO REVISIT
             if substs.len() > 0 {
                 if Self::match_guard(&*clauses[i].guard, value_store, ast_helper) {
                     clause_matches.insert(i, substs);
@@ -81,19 +79,15 @@ impl MatchHelper {
         let mut clause_matches = BTreeMap::new();
 
         for i in 0..clauses.len() {
-            // TODO value lists and patterns for them are not supported yet
-            if clauses[i].pats.inner.len() != 1 {
-                panic!("cs_match_value: Expected clauses[i].pats to be of length 1 (Everything is a singleton ASTLIST). Counter-example found: {}", clauses[i].pats)
-            }
+            let clause_pat = if clauses[i].pats.inner.len() == 1 {
+                // if pats is unary, handle it as a single expression
+                (*clauses[i].pats.inner)[0].as_pattern()
+            } else {
+                // otherwise handle it as a value list
+                clauses[i].pats.as_pattern()
+            };
+            let substs = Self::p_match_value(&clause_pat, value, value_store, ast_helper);
 
-            let substs = Self::p_match_value(
-                &(*clauses[i].pats.inner)[0].as_pattern(),
-                value,
-                value_store,
-                ast_helper,
-            );
-
-            // TODO REVISIT
             if substs.len() > 0 {
                 if Self::match_guard(&*clauses[i].guard, value_store, ast_helper) {
                     clause_matches.insert(i, substs);
@@ -248,6 +242,52 @@ impl MatchHelper {
                 },
                 Value::Pid(_) => Vec::new(), // can"t match tuple to pid
             },
+            PatternKind::Values(pal) => match value {
+                Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
+                    TypedCore::Values(vv) => {
+                        if pal.inner.len() != vv.es.inner.len() {
+                            return Vec::new();
+                        }
+
+                        let pairs = zip(
+                            pal.inner.iter().map(|tc| tc.as_pattern()),
+                            vv.es.inner.clone(),
+                        );
+
+                        let mut substs: Option<Vec<MatchSubstitution<V>>> = None;
+                        for (p, v) in pairs {
+                            let value = Value::Closure(Closure {
+                                prog_loc: (v).get_index().unwrap(),
+                                env: v_clo.env.clone(),
+                            });
+                            let res = Self::p_match_value(&p, &value, value_store, ast_helper);
+
+                            if res.is_empty() {
+                                // no matching value => done
+                                return Vec::new();
+                            }
+
+                            // product with all previous substs
+                            substs = if let Some(inner) = substs {
+                                // for any other iteration
+                                Some(
+                                    inner
+                                        .iter()
+                                        .flat_map(|subst| subst.mult_with(&res))
+                                        .collect(),
+                                )
+                            } else {
+                                // for first iteration
+                                Some(res)
+                            };
+                        }
+
+                        substs.unwrap_or(Vec::new())
+                    }
+                    _ => Vec::new(), // can't match values to anything other than values
+                },
+                Value::Pid(_) => Vec::new(), // can't match values to pid
+            },
             PatternKind::Literal(pl) => match value {
                 Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
                     TypedCore::Literal(v_lit) => {
@@ -323,7 +363,7 @@ impl MatchHelper {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct MatchSubstitution<V: ValueAddress> {
     pub inner: BTreeMap<usize, ValueAddressOrValue<V>>,
 }
@@ -377,6 +417,7 @@ pub enum PatternKind {
     Literal(Literal), // also includes the literal empty list
     Cons(Cons),
     Tuple(Tuple),
+    Values(AstList<TypedCore>),
 }
 impl Display for PatternKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -385,6 +426,7 @@ impl Display for PatternKind {
             PatternKind::Cons(c) => c.fmt(f),
             PatternKind::Literal(l) => l.fmt(f),
             PatternKind::Tuple(t) => t.fmt(f),
+            PatternKind::Values(al) => al.fmt(f),
         }
     }
 }
@@ -397,7 +439,14 @@ impl TypedCore {
             TypedCore::Literal(l) => PatternKind::Literal(l.clone()),
             TypedCore::Cons(c) => PatternKind::Cons(c.clone()),
             TypedCore::Tuple(t) => PatternKind::Tuple(t.clone()),
+            TypedCore::AstList(al) => PatternKind::Values(al.clone()),
             _ => panic!("Invalid typed core for pattern. Should already have been handled by the erlang compiler.")
         }
+    }
+}
+
+impl AstList<TypedCore> {
+    pub fn as_pattern(&self) -> PatternKind {
+        PatternKind::Values(self.clone())
     }
 }
