@@ -19,7 +19,7 @@ Oriented on the rust-representation of the Erlang AST in [`src/ast`](src/ast/mod
 | [Let](src/ast/let.rs) | ✅ | |
 | [LetRec](src/ast/let_rec.rs) | ❌ | |
 | [MapPair](src/ast/map_pair.rs) | ❌ | |
-| [Module](src/ast/module.rs) | ✴️ | |
+| [Module](src/ast/module.rs) | ✴️ | works for a singular module |
 | [PrimOp](src/ast/prim_op.rs) | ❌ | |
 | [Receive](src/ast/receive.rs) | ✅ | |
 | [Seq](src/ast/seq.rs) | ✅ | |
@@ -52,7 +52,7 @@ This will download the packages into the so called "nix store" and symlink them 
 created environment.
 
 ## Run soter-v2
-Cargo currently does the entire work. To run one of the examples from "tests/benchmarks" execute the following:
+Cargo currently does the entire work. To run one of the examples from [`tests/benchmarks`](tests/benchmarks) execute the following:
 ```
 cargo run --release tests/benchmarks/<FILE>.erl -a standard -t 0
 ```
@@ -69,7 +69,7 @@ which runs <FILE>.erl with a standard 0-CFA abstraction. The following commandli
 There are several kinds of tests
 
 ### Benchmarks
-Runs soter-v2 with a standard 0-CFA abstraction on each file in the `tests/benchmarks` directory only checking that the analysis runs through without crashing:
+Runs soter-v2 with a standard 0-CFA abstraction on each file in the [`tests/benchmarks`](tests/benchmarks) directory only checking that the analysis runs through without crashing:
 ```
 cargo test --test benchmarks
 ```
