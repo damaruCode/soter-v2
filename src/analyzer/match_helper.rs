@@ -363,7 +363,7 @@ impl MatchHelper {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct MatchSubstitution<V: ValueAddress> {
     pub inner: BTreeMap<usize, ValueAddressOrValue<V>>,
 }
