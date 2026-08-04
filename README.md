@@ -26,17 +26,17 @@ Oriented on the rust-representation of the Erlang AST in [`src/ast`](src/ast/mod
 | [Try](src/ast/try.rs)/[Catch](src/ast/catch.rs) | ❌ | |
 | [Var](src/ast/var.rs) | ✅ | |
 
-### Types
+### Types of Values
 These follow from the supported language constructs.
 
 | Construct | Supported | Description | 
 | :- | :-: | :- |
-| Binary | ❌ | |
-| BitStr | ❌ | |
-| Cons | ✅ | |
-| Literal | ✴️ | only literal strings `'a'`, `'ok'`, and such; full support planned |
-| Opaque | ❌ | is a compiler internal construct that is supposed to be for debugging so no support planed |
-| Tuple | ✅ | |
+| [Binary](src/ast/binary.rs) | ❌ | |
+| [BitStr](src/ast/bit_str.rs) | ❌ | |
+| [Cons](src/ast/const.rs) | ✅ | |
+| [Literal](src/ast/literal.rs) | ✴️ | only literal strings `'a'`, `'ok'`, and such; full support planned |
+| [Opaque](src/ast/opaque.rs) | ❌ | is a compiler internal construct that is supposed to be for debugging so no support planed |
+| [Tuple](src/ast/tuple.rs) | ✅ | |
 | [Values (i.e. ValueList)](src/ast/values.rs) | ✴️ | mostly unsupported and if supported only as malformed unary lists; full support planned |
 
 ## How to run it the nix way
