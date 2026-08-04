@@ -175,11 +175,9 @@ impl MatchHelper {
                                 env: v_clo.env.clone(),
                             });
                             let res = Self::p_match_value(&p, &value, value_store, ast_helper);
-                            println!("p_match_value({}, {}): {:#?}", p, value, res);
 
                             if res.is_empty() {
                                 // no matching value => done
-                                println!("return empty");
                                 return Vec::new();
                             }
 
@@ -206,8 +204,45 @@ impl MatchHelper {
             },
             PatternKind::Tuple(pt) => match value {
                 Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
-                    TypedCore::Tuple(v_tup) => {
-                        todo!("p_match_value: Tuple pattern not supported yet")
+                    TypedCore::Tuple(vt) => {
+                        if pt.es.inner.len() != vt.es.inner.len() {
+                            return Vec::new();
+                        }
+
+                        let pairs = zip(
+                            pt.es.inner.iter().map(|tc| tc.as_pattern()),
+                            vt.es.inner.clone(),
+                        );
+
+                        let mut substs: Option<Vec<MatchSubstitution<V>>> = None;
+                        for (p, v) in pairs {
+                            let value = Value::Closure(Closure {
+                                prog_loc: (v).get_index().unwrap(),
+                                env: v_clo.env.clone(),
+                            });
+                            let res = Self::p_match_value(&p, &value, value_store, ast_helper);
+
+                            if res.is_empty() {
+                                // no matching value => done
+                                return Vec::new();
+                            }
+
+                            // product with all previous substs
+                            substs = if let Some(inner) = substs {
+                                // for any other iteration
+                                Some(
+                                    inner
+                                        .iter()
+                                        .flat_map(|subst| subst.mult_with(&res))
+                                        .collect(),
+                                )
+                            } else {
+                                // for first iteration
+                                Some(res)
+                            };
+                        }
+
+                        substs.unwrap_or(Vec::new())
                     }
                     _ => Vec::new(), // can't match tuple to anything other than tuple
                 },
@@ -217,16 +252,8 @@ impl MatchHelper {
                 Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
                     TypedCore::Literal(v_lit) => {
                         if Self::literal_cmp(v_lit, pl) {
-                            println!(
-                                "p_match_value:Literal matched {} with {} successfully",
-                                v_lit, pl
-                            );
                             Vec::from([MatchSubstitution::new()])
                         } else {
-                            println!(
-                                "p_match_value:Literal matched {} with {} unsuccessfully",
-                                v_lit, pl
-                            );
                             Vec::new()
                         }
                     }
@@ -242,7 +269,6 @@ impl MatchHelper {
                     pv.var_id.unwrap().clone(),
                     ValueAddressOrValue::Value(value.clone()),
                 );
-                println!("p_match_value:Var {:#?}", subst);
                 Vec::from([subst])
             }
         }

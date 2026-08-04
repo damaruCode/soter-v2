@@ -1,4 +1,3 @@
-use crate::analyzer::PatternKind;
 use crate::ast::Index;
 use crate::ast::MaybeIndex;
 use crate::ast::TypedCore;
