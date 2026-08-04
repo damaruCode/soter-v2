@@ -1,7 +1,7 @@
 # soter-v2
 
 ## Supported Language Features
-Oriented on the rust-representation of the Erlang AST in `src/ast`.
+Oriented on the rust-representation of the Erlang AST in [`src/ast`](src/ast/mod.rs).
 
 ### Legend
 - ✅: full support
@@ -11,21 +11,20 @@ Oriented on the rust-representation of the Erlang AST in `src/ast`.
 ### Expressions
 | Construct | Supported | Description |
 | :- | :-: | :- |
-| Alias | ❌ | |
-| Apply | ✅ | |
-| Call | ✴️ | only for `erlang:self`, `erlang:spawn` and `erlang:send`; no general functionality because soter-v2 only works for one module |
-| Case/Clause | ✴️ | support for Values expression missing; full support planned |
-| Fun | ✅ | |
-| Let | ✅ | |
-| LetRec | ❌ | |
-| MapPair | ❌ | |
-| Module | ✴️ | |
-| PrimOp | ❌ | |
-| Receive | ✴️ | right now the `mmatch` function is not connected to the pattern matching logic, so effectively disfunctional; full support planned |
-| Seq | ✅ | |
-| Try/Catch | ❌ | |
-| Values (i.e. ValueList) | ✴️ | mostly unsupported and if supported only as malformed unary lists; full support planned |
-| Var | ✅ | |
+| [Alias](src/ast/alias.rs) | ❌ | |
+| [Apply](src/ast/apply.rs) | ✅ | |
+| [Call](src/ast/call.rs) | ✅/✴️ | only for `erlang:self`, `erlang:spawn` and `erlang:send`; no general functionality because soter-v2 only works for one module |
+| [Case](src/ast/case.rs)/[Clause](src/ast/clause.rs) | ✅ |  |
+| [Fun](src/ast/fun.rs) | ✅ | |
+| [Let](src/ast/let.rs) | ✅ | |
+| [LetRec](src/ast/let_rec.rs) | ❌ | |
+| [MapPair](src/ast/map_pair.rs) | ❌ | |
+| [Module](src/ast/module.rs) | ✴️ | |
+| [PrimOp](src/ast/prim_op.rs) | ❌ | |
+| [Receive](src/ast/receive.rs) | ✅ | |
+| [Seq](src/ast/seq.rs) | ✅ | |
+| [Try](src/ast/try.rs)/[Catch](src/ast/catch.rs) | ❌ | |
+| [Var](src/ast/var.rs) | ✅ | |
 
 ### Types
 These follow from the supported language constructs.
@@ -38,7 +37,7 @@ These follow from the supported language constructs.
 | Literal | ✴️ | only literal strings `'a'`, `'ok'`, and such; full support planned |
 | Opaque | ❌ | is a compiler internal construct that is supposed to be for debugging so no support planed |
 | Tuple | ✅ | |
-
+| [Values (i.e. ValueList)](src/ast/values.rs) | ✴️ | mostly unsupported and if supported only as malformed unary lists; full support planned |
 
 ## How to run it the nix way
 Installing the [nix](https://nixos.org/download/) package manager allows for easy dependency management and
