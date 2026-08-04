@@ -1,5 +1,5 @@
 use crate::{
-    analyzer::MatchSubstitution,
+    analyzer::{MatchHelper, MatchSubstitution},
     ast::Clause,
     util::{AstHelper, SetMap},
 };
@@ -21,23 +21,24 @@ impl<V: ValueAddress> Mailbox<V> {
 
     pub fn mmatch(
         &self,
-        __clauses: &Vec<Clause>,
-        _value_store: &SetMap<V, Value<V>>,
-        _ast_helper: &AstHelper,
+        clauses: &Vec<Clause>,
+        value_store: &SetMap<V, Value<V>>,
+        ast_helper: &AstHelper,
     ) -> BTreeMap<usize, Vec<MatchSubstitution<V>>> {
-        // let mut matched_msgs = BTreeMap::new();
+        let mut matched_msgs: BTreeMap<usize, Vec<MatchSubstitution<V>>> = BTreeMap::new();
 
-        // for msg in &self.inner {
-        //     // TODO Revisit -- Will probably need a more granular function for this in the
-        //     // match_helper
-        //     let substs = MatchHelper::cs_match_value(&clauses, msg, value_store, ast_helper);
-        //     if substs.len() > 0 {
-        //         matched_msgs.push((i, substs));
-        //     }
-        // }
+        for msg in &self.inner {
+            let clause_matches = MatchHelper::cs_match_value(clauses, msg, value_store, ast_helper);
 
-        // matched_msgs
-        todo!("mmatch is not implemented yet");
+            for (clause_idx, mut substs) in clause_matches {
+                matched_msgs
+                    .entry(clause_idx)
+                    .or_insert_with(Vec::new)
+                    .append(&mut substs);
+            }
+        }
+
+        matched_msgs
     }
 }
 
