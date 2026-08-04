@@ -72,7 +72,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
     ) -> Vec<Value<V>> {
         match typed_core_msg {
             TypedCore::Var(v) => store.unpack(&proc_state.env, v.var_id.unwrap()).clone(),
-            TypedCore::Literal(_) | TypedCore::AstList(_) | TypedCore::Tuple(_) => {
+            TypedCore::Literal(_) | TypedCore::Cons(_) | TypedCore::Tuple(_) => {
                 Vec::from([Value::Closure(Closure {
                     prog_loc: typed_core_msg.get_index().unwrap(),
                     env: proc_state.env.clone(),

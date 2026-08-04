@@ -196,7 +196,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
                                     // where needed we consider each possible resolution of VAddrs
                                     match &self.prog_loc_or_pid {
                                         ProgLocOrPid::ProgLoc(pl) => match ast_helper.get(*pl) {
-                                            TypedCore::Tuple(_) | TypedCore::AstList(_) => {
+                                            TypedCore::Tuple(_) | TypedCore::Cons(_) => {
                                                 res = abs_pop_let_value_list(
                                                     self,
                                                     &var_list,

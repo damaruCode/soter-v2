@@ -29,7 +29,7 @@ fn peek_name(tc: &TypedCore) -> String {
                     .collect::<Vec<String>>()
                     .join("\n")
             ),
-            TypedCore::Cons(_) => String::from("cons ..."),
+            TypedCore::Cons(_) => String::from("cons [...]"),
             TypedCore::Alias(_) => String::from("alias ..."),
             TypedCore::Catch(_) => String::from("catch ..."),
             TypedCore::Tuple(tup) => format!(
@@ -60,9 +60,9 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::Opaque(_) =>
                 String::from("If you see this, you are seeing ghosts --- congrats!"),
             TypedCore::PrimOp(_) => String::from("primop ..."),
-            TypedCore::Values(_) => String::from("values ..."),
+            TypedCore::Values(_) => String::from("values <...>"),
             TypedCore::AstList(al) => format!(
-                "[{}]",
+                "|{}|",
                 al.inner
                     .iter()
                     .map(|e| peek_name(e))

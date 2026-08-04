@@ -85,7 +85,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                         }
                                         TypedCore::Literal(_) // NOTE could handle this with a constant
                                                               // address
-                                        | TypedCore::AstList(_)
+                                        | TypedCore::Cons(_)
                                         | TypedCore::Tuple(_)
                                         | TypedCore::Fun(_) => {
                                             let new_v_addr = abstraction.new_vaddr(

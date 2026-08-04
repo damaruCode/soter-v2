@@ -321,6 +321,7 @@ impl MatchHelper {
             }
         }
 
+        // TODO adapt to allow for all kinds of literals
         todo!("literal_cmp does not work for literals other than strings");
     }
 

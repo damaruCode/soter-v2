@@ -37,7 +37,7 @@ These follow from the supported language constructs.
 | [Literal](src/ast/literal.rs) | ✴️ | only literal strings `'a'`, `'ok'`, and such; full support planned |
 | [Opaque](src/ast/opaque.rs) | ❌ | is a compiler internal construct that is supposed to be for debugging so no support planed |
 | [Tuple](src/ast/tuple.rs) | ✅ | |
-| [Values (i.e. ValueList)](src/ast/values.rs) | ✴️ | mostly unsupported and if supported only as malformed unary lists; full support planned |
+| [Values (i.e. ValueList)](src/ast/values.rs) | ✅ | |
 
 ## How to run it the nix way
 Installing the [nix](https://nixos.org/download/) package manager allows for easy dependency management and
