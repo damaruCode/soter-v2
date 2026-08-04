@@ -6,6 +6,7 @@ use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast;
 use soter_v2::ast::AstList;
 use soter_v2::ast::Clause;
+use soter_v2::ast::Cons;
 use soter_v2::ast::ErlNumber;
 use soter_v2::ast::ErlString;
 use soter_v2::ast::Literal;
@@ -49,11 +50,27 @@ impl From<P<'_>> for AstList<TypedCore> {
                     index: MaybeIndex::None,
                 }),
                 P::List(v) => {
-                    let mut al = AstList::new();
-                    for pattern in v {
-                        al.inner.push(resolve(pattern));
+                    // [p1, p2, ..., pn] desugars to cons(p1, cons(p2, ... cons(pn, nil) ...)),
+                    // matching how `TypedCore::Cons` actually represents Erlang lists.
+                    let mut tail = TypedCore::Literal(Literal {
+                        anno: AstList::new(),
+                        val: Box::new(TypedCore::AstList(AstList {
+                            inner: Vec::new(),
+                            index: MaybeIndex::None,
+                        })),
+                        index: MaybeIndex::None,
+                    });
+
+                    for pattern in v.into_iter().rev() {
+                        tail = TypedCore::Cons(Cons {
+                            anno: AstList::new(),
+                            hd: Box::new(resolve(pattern)),
+                            tl: Box::new(tail),
+                            index: MaybeIndex::None,
+                        });
                     }
-                    TypedCore::AstList(al)
+
+                    tail
                 }
                 P::Tuple(v) => {
                     let mut al = AstList::new();
@@ -109,7 +126,7 @@ fn contains(
             TypedCore::Var(v) => {
                 if VarName::from(v) == VarName::Atom(var_name.to_string()) {
                     println!("vaddr {} matches varname {}", vaddr, var_name);
-                    let sub = MatchHelper::cmatch_values(&cvec, vaddr, val_store, ast_helper);
+                    let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, val_store, ast_helper);
 
                     for (_val, vec) in sub {
                         println!("subst val {} and vec {:#?}", _val, vec);
@@ -137,7 +154,7 @@ fn ncontains(
         match ast_helper.get(vaddr.var_name) {
             TypedCore::Var(v) => {
                 if VarName::from(v) == VarName::Atom(var_name.to_string()) {
-                    let sub = MatchHelper::cmatch_values(&cvec, vaddr, val_store, ast_helper);
+                    let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, val_store, ast_helper);
 
                     for (_val, vec) in sub {
                         if !vec.is_empty() {
