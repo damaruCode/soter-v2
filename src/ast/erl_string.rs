@@ -9,6 +9,16 @@ pub struct ErlString {
     pub inner: String,
     pub index: MaybeIndex,
 }
+
+impl ErlString {
+    pub fn new(string: String) -> Self {
+        Self {
+            inner: string,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl Display for ErlString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}", self.index, self.inner)

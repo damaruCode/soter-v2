@@ -11,6 +11,15 @@ pub struct ErlNumber {
     pub index: MaybeIndex,
 }
 
+impl ErlNumber {
+    pub fn new(number: Number) -> Self {
+        Self {
+            inner: number,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl Display for ErlNumber {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}", self.index, self.inner)

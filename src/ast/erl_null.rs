@@ -9,6 +9,14 @@ pub struct ErlNull {
     pub index: MaybeIndex,
 }
 
+impl ErlNull {
+    pub fn new() -> Self {
+        Self {
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl Display for ErlNull {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
