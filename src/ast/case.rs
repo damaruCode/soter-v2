@@ -26,6 +26,17 @@ pub struct Case {
     pub index: MaybeIndex,
 }
 
+impl Case {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            arg: Box::new(TypedCore::new()),
+            clauses: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, serde_json::Value>> for Case {
     fn from(map: Map<String, serde_json::Value>) -> Self {
         Case {

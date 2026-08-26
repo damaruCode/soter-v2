@@ -11,6 +11,17 @@ pub struct Fun {
     pub index: MaybeIndex,
 }
 
+impl Fun {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            vars: AstList::from(TypedCore::new()),
+            body: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Fun {
     fn from(map: Map<String, Value>) -> Self {
         Fun {

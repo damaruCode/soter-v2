@@ -8,6 +8,16 @@ pub struct AstTuple<T> {
     pub index: MaybeIndex,
 }
 
+impl From<(TypedCore, TypedCore)> for AstTuple<TypedCore> {
+    fn from(tuple: (TypedCore, TypedCore)) -> Self {
+        AstTuple {
+            frst: Box::new(tuple.0),
+            scnd: Box::new(tuple.1),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Vec<Value>> for AstTuple<TypedCore> {
     fn from(tuple: Vec<Value>) -> Self {
         assert!(tuple.len() == 2);

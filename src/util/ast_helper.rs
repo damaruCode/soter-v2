@@ -214,6 +214,8 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::String(s) => {
                     s.index = MaybeIndex::Some(id);
                 }
+
+                TypedCore::Empty() => {}
             }
         }
         visit(&mut root, self);
@@ -379,6 +381,8 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::Bool(_) => {}
                 TypedCore::Number(_) => {}
                 TypedCore::String(_) => {}
+
+                TypedCore::Empty() => {}
             }
         }
         visit(root, self);

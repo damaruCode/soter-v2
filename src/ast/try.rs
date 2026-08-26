@@ -17,6 +17,20 @@ pub struct Try {
     pub index: MaybeIndex,
 }
 
+impl Try {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            arg: Box::new(TypedCore::new()),
+            vars: AstList::from(TypedCore::new()),
+            body: Box::new(TypedCore::new()),
+            evars: AstList::from(TypedCore::new()),
+            handler: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Try {
     fn from(map: Map<String, Value>) -> Self {
         Try {

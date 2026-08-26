@@ -106,6 +106,15 @@ pub enum TypedCore {
     Tuple(Tuple),
     Values(Values),
     Var(Var),
+
+    //
+    Empty(),
+}
+
+impl TypedCore {
+    pub fn new() -> Self {
+        TypedCore::Empty()
+    }
 }
 
 pub trait Index {
@@ -162,6 +171,8 @@ impl Index for TypedCore {
             TypedCore::Tuple(tuple) => tuple.index.clone().into(),
             TypedCore::Values(vals) => vals.index.clone().into(),
             TypedCore::Var(var) => var.index.clone().into(),
+
+            TypedCore::Empty() => None,
         }
     }
 }
@@ -255,6 +266,8 @@ impl Display for TypedCore {
             TypedCore::Tuple(x) => write!(f, "{}", x),
             TypedCore::Values(x) => write!(f, "{}", x),
             TypedCore::Var(x) => write!(f, "{}", x),
+
+            TypedCore::Empty() => write!(f, "{}", ""),
         }
     }
 }

@@ -9,6 +9,16 @@ pub struct Values {
     pub index: MaybeIndex,
 }
 
+impl Values {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            es: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Values {
     fn from(map: Map<String, Value>) -> Self {
         Values {

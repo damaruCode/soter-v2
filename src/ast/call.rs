@@ -13,6 +13,18 @@ pub struct Call {
     pub index: MaybeIndex,
 }
 
+impl Call {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            module: Box::new(TypedCore::new()),
+            name: Box::new(TypedCore::new()),
+            args: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Call {
     fn from(map: Map<String, Value>) -> Self {
         Call {

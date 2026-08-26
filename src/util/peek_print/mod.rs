@@ -73,6 +73,8 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::AstTuple(at) =>
                 format!("{{{}, {}}}", peek_name(&*at.frst), peek_name(&*at.scnd)),
             TypedCore::MapPair(_) => String::from("mappair ..."),
+
+            TypedCore::Empty() => String::from("empty!"),
         }
     )
 }

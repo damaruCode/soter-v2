@@ -12,6 +12,17 @@ pub struct PrimOp {
     pub index: MaybeIndex,
 }
 
+impl PrimOp {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            name: Box::new(TypedCore::new()),
+            args: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for PrimOp {
     fn from(map: Map<String, Value>) -> Self {
         PrimOp {
