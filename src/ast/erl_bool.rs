@@ -10,6 +10,15 @@ pub struct ErlBool {
     pub index: MaybeIndex,
 }
 
+impl ErlBool {
+    pub fn new(b: bool) -> Self {
+        Self {
+            inner: b,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl Display for ErlBool {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}{}", self.index, self.inner)

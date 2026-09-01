@@ -15,6 +15,18 @@ pub struct ErlMap {
     pub index: MaybeIndex,
 }
 
+impl ErlMap {
+    pub fn new(is_pat: bool) -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            arg: Box::new(TypedCore::new()),
+            es: AstList::from(TypedCore::new()),
+            is_pat,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for ErlMap {
     fn from(map: Map<String, Value>) -> Self {
         ErlMap {

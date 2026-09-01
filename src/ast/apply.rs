@@ -11,6 +11,17 @@ pub struct Apply {
     pub index: MaybeIndex,
 }
 
+impl Apply {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            op: Box::new(TypedCore::new()),
+            args: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Apply {
     fn from(map: Map<String, Value>) -> Self {
         Apply {

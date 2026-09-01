@@ -9,6 +9,16 @@ pub struct Binary {
     pub index: MaybeIndex,
 }
 
+impl Binary {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            segments: AstList::from(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Binary {
     fn from(map: Map<String, Value>) -> Self {
         Binary {

@@ -17,6 +17,20 @@ pub struct BitStr {
     pub index: MaybeIndex,
 }
 
+impl BitStr {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            val: Box::new(TypedCore::new()),
+            size: Box::new(TypedCore::new()),
+            unit: Box::new(TypedCore::new()),
+            r#type: Box::new(TypedCore::new()),
+            flags: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for BitStr {
     fn from(map: Map<String, Value>) -> Self {
         BitStr {

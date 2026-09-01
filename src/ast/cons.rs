@@ -11,6 +11,17 @@ pub struct Cons {
     pub index: MaybeIndex,
 }
 
+impl Cons {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            hd: Box::new(TypedCore::new()),
+            tl: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Cons {
     fn from(map: Map<String, Value>) -> Self {
         Cons {

@@ -10,6 +10,17 @@ pub struct Var {
     pub index: MaybeIndex,
 }
 
+impl Var {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            name: Box::new(TypedCore::new()),
+            var_id: MaybeIndex::None,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Var {
     fn from(map: Map<String, Value>) -> Self {
         Var {

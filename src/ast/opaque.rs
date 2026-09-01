@@ -9,6 +9,16 @@ pub struct Opaque {
     pub index: MaybeIndex,
 }
 
+impl Opaque {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            val: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Opaque {
     fn from(map: Map<String, Value>) -> Self {
         Opaque {

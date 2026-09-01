@@ -14,6 +14,18 @@ pub struct MapPair {
     pub index: MaybeIndex,
 }
 
+impl MapPair {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            op: Box::new(TypedCore::new()),
+            key: Box::new(TypedCore::new()),
+            val: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Value> for MapPair {
     fn from(value: Value) -> MapPair {
         MapPair::deserialize(value).unwrap()

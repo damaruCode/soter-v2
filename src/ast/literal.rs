@@ -9,6 +9,16 @@ pub struct Literal {
     pub index: MaybeIndex,
 }
 
+impl Literal {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            val: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Literal {
     fn from(map: Map<String, Value>) -> Self {
         Literal {

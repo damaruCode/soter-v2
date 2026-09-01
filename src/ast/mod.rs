@@ -107,8 +107,16 @@ pub enum TypedCore {
     Values(Values),
     Var(Var),
 
-    //Testing
+    // Testing
+    // TODO remove one of those (they probably do the same)
     Dummy,
+    Empty(),
+}
+
+impl TypedCore {
+    pub fn new() -> Self {
+        TypedCore::Empty()
+    }
 }
 
 pub trait Index {
@@ -177,6 +185,7 @@ impl Index for TypedCore {
             TypedCore::Values(vals) => vals.index.clone().into(),
             TypedCore::Var(var) => var.index.clone().into(),
             TypedCore::Dummy => panic!(),
+            TypedCore::Empty() => None,
         }
     }
 }
@@ -199,7 +208,6 @@ impl From<Value> for TypedCore {
                 inner: string,
                 index: MaybeIndex::None,
             }),
-            //NOTE This loses information if it is a tuple for example
             Value::Array(vec) => TypedCore::AstList(AstList::from(vec)),
             Value::Object(map) => TypedCore::from(map),
         }
@@ -272,6 +280,7 @@ impl Display for TypedCore {
             TypedCore::Values(x) => write!(f, "{}", x),
             TypedCore::Var(x) => write!(f, "{}", x),
             TypedCore::Dummy => write!(f, "Dummy"),
+            TypedCore::Empty() => write!(f, "..."),
         }
     }
 }

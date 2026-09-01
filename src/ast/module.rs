@@ -15,6 +15,21 @@ pub struct Module {
     pub index: MaybeIndex,
 }
 
+impl Module {
+    pub fn new() -> Self {
+        let mut list = AstList::new();
+        list.inner = vec![AstTuple::from((TypedCore::new(), TypedCore::new()))];
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            name: Box::new(TypedCore::new()),
+            exports: AstList::from(TypedCore::new()),
+            attrs: list.clone(),
+            defs: list,
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Module {
     fn from(map: Map<String, Value>) -> Self {
         Module {

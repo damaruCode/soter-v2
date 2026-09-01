@@ -12,6 +12,19 @@ pub struct LetRec {
     pub index: MaybeIndex,
 }
 
+impl LetRec {
+    pub fn new() -> Self {
+        let mut list = AstList::new();
+        list.inner = vec![AstTuple::from((TypedCore::new(), TypedCore::new()))];
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            defs: list,
+            body: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for LetRec {
     fn from(map: Map<String, Value>) -> Self {
         LetRec {

@@ -13,6 +13,18 @@ pub struct Clause {
     pub index: MaybeIndex,
 }
 
+impl Clause {
+    pub fn new() -> Self {
+        Self {
+            anno: AstList::from(TypedCore::new()),
+            pats: AstList::from(TypedCore::new()),
+            guard: Box::new(TypedCore::new()),
+            body: Box::new(TypedCore::new()),
+            index: MaybeIndex::None,
+        }
+    }
+}
+
 impl From<Map<String, Value>> for Clause {
     fn from(map: Map<String, Value>) -> Self {
         Clause {

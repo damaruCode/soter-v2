@@ -347,6 +347,7 @@ impl<'helper> AstHelper<'helper> {
                     s.index = MaybeIndex::Some(id);
                 }
                 TypedCore::Dummy => {}
+                TypedCore::Empty() => {}
             }
         }
         visit(&mut root, self);
@@ -513,6 +514,7 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::Number(_) => {}
                 TypedCore::String(_) => {}
                 TypedCore::Dummy => {}
+                TypedCore::Empty() => {}
             }
         }
         visit(root, self);
