@@ -267,7 +267,7 @@ impl Display for TypedCore {
             TypedCore::Values(x) => write!(f, "{}", x),
             TypedCore::Var(x) => write!(f, "{}", x),
 
-            TypedCore::Empty() => write!(f, "{}", ""),
+            TypedCore::Empty() => write!(f, "..."),
         }
     }
 }

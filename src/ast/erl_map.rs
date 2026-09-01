@@ -16,12 +16,12 @@ pub struct ErlMap {
 }
 
 impl ErlMap {
-    pub fn new() -> Self {
+    pub fn new(is_pat: bool) -> Self {
         Self {
             anno: AstList::from(TypedCore::new()),
             arg: Box::new(TypedCore::new()),
             es: AstList::from(TypedCore::new()),
-            is_pat: false,
+            is_pat,
             index: MaybeIndex::None,
         }
     }
