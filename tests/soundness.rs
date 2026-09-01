@@ -1,6 +1,6 @@
 use serde_json::Number;
 use soter_v2::abstraction::standard::StandardAbstraction;
-use soter_v2::abstraction::standard::VAddr;
+use soter_v2::abstraction::Abstraction;
 use soter_v2::analyzer::Analyzer;
 use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast;
@@ -15,10 +15,20 @@ use soter_v2::ast::Tuple;
 use soter_v2::ast::TypedCore;
 use soter_v2::ast::Var;
 use soter_v2::erlang;
-use soter_v2::state_space::Value;
+use soter_v2::state_space::KontinuationAddress;
+use soter_v2::state_space::Pid;
+use soter_v2::state_space::ProcState;
+use soter_v2::state_space::ProgLocOrPid;
+use soter_v2::state_space::Store;
+use soter_v2::state_space::ValueAddress;
 use soter_v2::state_space::VarName;
 use soter_v2::util::AstHelper;
 use soter_v2::util::SetMap;
+
+#[derive(Debug)]
+enum TestError {
+    Lookup(String),
+}
 
 #[derive(Debug, Clone)]
 enum P<'p> {
@@ -113,139 +123,168 @@ impl From<P<'_>> for Clause {
     }
 }
 
-fn contains(
-    pattern: P,
-    var_name: &str,
-    val_store: &SetMap<VAddr, Value<VAddr>>,
-    ast_helper: &AstHelper,
-) {
-    let cvec = vec![Clause::from(pattern.clone())];
-
-    for (vaddr, _val) in &val_store.inner {
-        match ast_helper.get(vaddr.var_name) {
-            TypedCore::Var(v) => {
-                if VarName::from(v) == VarName::Atom(var_name.to_string()) {
-                    println!("vaddr {} matches varname {}", vaddr, var_name);
-                    let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, val_store, ast_helper);
-
-                    for (_val, vec) in sub {
-                        println!("subst val {} and vec {:#?}", _val, vec);
-                        if !vec.is_empty() {
-                            return;
-                        }
-                    }
-                }
-            }
-            tc => panic!("VarId expected to point to AST Var, found {}", tc),
-        }
-    }
-    panic!("No entry {} matching {:#?} found.", var_name, pattern)
+struct AnalyzerResult<K: KontinuationAddress, V: ValueAddress> {
+    procs: SetMap<Pid, ProcState<K, V>>,
+    store: Store<K, V>,
 }
 
-fn ncontains(
-    pattern: P,
-    var_name: &str,
-    val_store: &SetMap<VAddr, Value<VAddr>>,
-    ast_helper: &AstHelper,
-) {
-    let cvec = vec![Clause::from(pattern)];
+impl<K: KontinuationAddress, V: ValueAddress> AnalyzerResult<K, V> {
+    fn contains(&self, var_name: &str, pattern: P, ast_helper: &AstHelper) {
+        let cvec = vec![Clause::from(pattern.clone())];
 
-    for (vaddr, _val) in &val_store.inner {
-        match ast_helper.get(vaddr.var_name) {
-            TypedCore::Var(v) => {
-                if VarName::from(v) == VarName::Atom(var_name.to_string()) {
-                    let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, val_store, ast_helper);
+        // 1. find the variable in the source code
+        let vars = ast_helper
+            .get_vars(&VarName::Atom(var_name.to_string()))
+            .ok_or(TestError::Lookup(var_name.to_string()))
+            .unwrap();
 
-                    for (_val, vec) in sub {
-                        if !vec.is_empty() {
-                            panic!();
+        // 2. find the variable in the proc states (by prog_loc)
+        let mut vaddrs = Vec::new();
+        for var in vars {
+            for (_, procs) in self.procs.inner.iter() {
+                for proc in procs {
+                    if let ProgLocOrPid::ProgLoc(pl) = proc.prog_loc_or_pid {
+                        if let MaybeIndex::Some(var_pl) = var.index {
+                            if pl == var_pl {
+                                if let Some(vaddr) = proc.env.inner.get(var.var_id.unwrap()) {
+                                    vaddrs.push(vaddr);
+                                }
+                            }
                         }
                     }
                 }
             }
-            tc => panic!("VarId expected to point to AST Var, found {}", tc),
+        }
+
+        // 3. match on each value bound to each vaddr
+
+        for vaddr in vaddrs {
+            let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, &self.store.value, &ast_helper);
+
+            for (_val, vec) in sub {
+                println!("subst val {} and vec {:#?}", _val, vec);
+                if !vec.is_empty() {
+                    return;
+                }
+            }
+        }
+        panic!("No entry {} matching {:#?} found.", var_name, pattern)
+    }
+
+    fn ncontains(&self, var_name: &str, pattern: P, ast_helper: &AstHelper) {
+        let cvec = vec![Clause::from(pattern)];
+
+        // 1. find the variable in the ast
+        let vars = ast_helper
+            .get_vars(&VarName::Atom(var_name.to_string()))
+            .ok_or(TestError::Lookup(var_name.to_string()))
+            .unwrap();
+
+        // 2. find the variable in the proc states (by prog_loc)
+        let mut vaddrs = Vec::new();
+        for var in vars {
+            for (_, procs) in self.procs.inner.iter() {
+                for proc in procs {
+                    if let ProgLocOrPid::ProgLoc(pl) = proc.prog_loc_or_pid {
+                        if let MaybeIndex::Some(var_pl) = var.index {
+                            if pl == var_pl {
+                                if let Some(vaddr) = proc.env.inner.get(var.var_id.unwrap()) {
+                                    vaddrs.push(vaddr);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. match on each value bound to each vaddr
+        for vaddr in vaddrs {
+            let sub = MatchHelper::cs_match_vaddr(&cvec, vaddr, &self.store.value, ast_helper);
+
+            for (_val, vec) in sub {
+                if !vec.is_empty() {
+                    panic!();
+                }
+            }
         }
     }
+}
+
+fn analyze_file<K, V, F>(filepath: &str, abstraction: Box<dyn Abstraction<K, V>>, checks: F)
+where
+    K: KontinuationAddress,
+    V: ValueAddress,
+    F: FnOnce(AnalyzerResult<K, V>, AstHelper) -> (),
+{
+    erlang::run(&filepath.to_string());
+    let core = erlang::get_core(&format!("{filepath}.json"));
+    let typed_core = ast::TypedCore::from(core);
+    let mut ast_helper = AstHelper::new();
+    let indexed_typed_core = ast_helper.build_indecies(typed_core);
+    ast_helper.build_lookup(&indexed_typed_core);
+
+    let mut analyzer = Analyzer::new(ast_helper.clone(), abstraction);
+    let (procs, _, store) = analyzer.run();
+    let res = AnalyzerResult { procs, store };
+
+    checks(res, ast_helper);
+}
+
+#[test]
+fn test_standard_id() {
+    analyze_file(
+        "tests/soundness/id.erl",
+        Box::new(StandardAbstraction::new(0)),
+        |res, ast_helper| {
+            res.contains("X", P::Literal("a"), &ast_helper);
+            res.contains("X", P::Literal("b"), &ast_helper);
+            res.ncontains("X", P::Literal("c"), &ast_helper);
+        },
+    );
 }
 
 #[test]
 fn test_standard_receive_lit() {
     //erlang::compile();
-    erlang::run(&format!("tests/soundness/receive_lit.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/receive_lit.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, s) = analyzer.run();
-
-    contains(P::Literal("a"), "X", &s.value, &ast_helper);
-    ncontains(P::Literal("M"), "X", &s.value, &ast_helper);
+    analyze_file(
+        "tests/soundness/receive_lit.erl",
+        Box::new(StandardAbstraction::new(0)),
+        |res, ast_helper| {
+            res.contains("X", P::Literal("a"), &ast_helper);
+            res.ncontains("X", P::Literal("M"), &ast_helper);
+        },
+    );
 }
 
 #[test]
 fn test_standard_concurr() {
-    //erlang::compile(); //TODO wierd bug when running from uncompiled erlang
-    erlang::run(&format!("tests/soundness/concurr.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/concurr.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, _s) = analyzer.run();
-}
-
-#[test]
-fn test_standard_id() {
-    //erlang::compile();
-    erlang::run(&format!("tests/soundness/id.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/id.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, s) = analyzer.run();
-
-    contains(P::Literal("a"), "X", &s.value, &ast_helper);
-    contains(P::Literal("b"), "X", &s.value, &ast_helper);
-    ncontains(P::Literal("c"), "X", &s.value, &ast_helper);
+    analyze_file(
+        "tests/soundness/concurr.erl",
+        Box::new(StandardAbstraction::new(0)),
+        |_, _| {},
+    );
 }
 
 #[test]
 fn test_standard_rec_id() {
-    //erlang::compile();
-    erlang::run(&format!("tests/soundness/rec_id.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/rec_id.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, s) = analyzer.run();
-
-    contains(P::Literal("a"), "X", &s.value, &ast_helper);
-    contains(P::Literal("b"), "X", &s.value, &ast_helper);
+    analyze_file(
+        "tests/soundness/rec_id.erl",
+        Box::new(StandardAbstraction::new(0)),
+        |res, ast_helper| {
+            res.contains("X", P::Literal("a"), &ast_helper);
+            res.contains("X", P::Literal("b"), &ast_helper);
+        },
+    );
 }
 
 #[test]
 fn test_pm_var_in_value() {
-    erlang::run(&format!("tests/soundness/pm_var_in_value.erl"));
-    let core = erlang::get_core(&format!("tests/soundness/pm_var_in_value.erl.json"));
-    let typed_core = ast::TypedCore::from(core);
-    let mut ast_helper = AstHelper::new();
-    let indexed_typed_core = ast_helper.build_indecies(typed_core);
-    ast_helper.build_lookup(&indexed_typed_core);
-    let mut analyzer = Analyzer::new(ast_helper.clone(), Box::new(StandardAbstraction::new(0)));
-
-    let (_ps, _m, s) = analyzer.run();
-
-    contains(P::Literal("b"), "R", &s.value, &ast_helper);
-    ncontains(P::Literal("a"), "R", &s.value, &ast_helper);
+    analyze_file(
+        "tests/soundness/pm_var_in_value.erl",
+        Box::new(StandardAbstraction::new(0)),
+        |res, ast_helper| {
+            res.contains("R", P::Literal("b"), &ast_helper);
+        },
+    );
 }

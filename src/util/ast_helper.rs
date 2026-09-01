@@ -47,6 +47,7 @@ impl SymbolTable {
 #[derive(Debug, Clone)]
 pub struct AstHelper<'helper> {
     lookup_core: HashMap<usize, &'helper TypedCore>,
+    lookup_var: HashMap<VarName, Vec<&'helper Var>>,
     symbol_table: SymbolTable,
     next_id: usize,
 }
@@ -55,6 +56,7 @@ impl<'helper> AstHelper<'helper> {
     pub fn new() -> Self {
         AstHelper {
             lookup_core: HashMap::new(),
+            lookup_var: HashMap::new(),
             next_id: 0,
             symbol_table: SymbolTable::new(),
         }
@@ -64,8 +66,8 @@ impl<'helper> AstHelper<'helper> {
         self.lookup_core[&index]
     }
 
-    fn get_var(&self, var_name: &VarName) -> Option<usize> {
-        self.symbol_table.lookup(var_name)
+    pub fn get_vars(&self, var_name: &VarName) -> Option<&Vec<&'helper Var>> {
+        self.lookup_var.get(var_name)
     }
 
     pub fn build_indecies(&mut self, mut root: TypedCore) -> TypedCore {
@@ -327,7 +329,7 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Var(v) => {
                     v.index = MaybeIndex::Some(id);
-                    v.var_id = match ctx.get_var(&VarName::from(&*v.name)) {
+                    v.var_id = match ctx.symbol_table.lookup(&VarName::from(&*v.name)) {
                         Some(var_id) => MaybeIndex::Some(var_id),
                         None => MaybeIndex::None,
                     };
@@ -506,6 +508,12 @@ impl<'helper> AstHelper<'helper> {
                     }
                 }
                 TypedCore::Var(v) => {
+                    let var_name = &VarName::from(v);
+                    if let Some(vals) = ctx.lookup_var.get_mut(var_name) {
+                        vals.push(v);
+                    } else {
+                        ctx.lookup_var.insert(var_name.clone(), vec![v]);
+                    }
                     visit(&v.name, ctx);
                 }
                 // Leaf nodes

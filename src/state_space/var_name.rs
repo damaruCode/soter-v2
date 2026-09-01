@@ -6,7 +6,7 @@ use crate::ast::Var;
 
 pub type VarIdent = usize;
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum VarName {
     Atom(String),
     Number(u128),
