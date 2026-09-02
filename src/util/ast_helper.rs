@@ -71,6 +71,9 @@ impl<'helper> AstHelper<'helper> {
     }
 
     pub fn build_indecies(&mut self, mut root: TypedCore) -> TypedCore {
+        // beginning analysis scope (covering all modules)
+        self.symbol_table.begin_scope();
+
         fn declare_var<'a>(var: &mut Var, ctx: &mut AstHelper<'a>) {
             let var_name = VarName::from(&*var.name);
             let index = match var.index {
@@ -329,6 +332,8 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Var(v) => {
                     v.index = MaybeIndex::Some(id);
+                    println!("VAR_ID BUILD INDEX: {:?}", v);
+                    println!("SYMBOL_TABLE: {:?}", ctx.symbol_table);
                     v.var_id = match ctx.symbol_table.lookup(&VarName::from(&*v.name)) {
                         Some(var_id) => MaybeIndex::Some(var_id),
                         None => MaybeIndex::None,
@@ -349,10 +354,12 @@ impl<'helper> AstHelper<'helper> {
                     s.index = MaybeIndex::Some(id);
                 }
                 TypedCore::Dummy => {}
-                TypedCore::Empty() => {}
+                TypedCore::Empty(e) => e.index = MaybeIndex::Some(id),
             }
         }
         visit(&mut root, self);
+        self.symbol_table.end_scope();
+
         root
     }
 
@@ -522,7 +529,7 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::Number(_) => {}
                 TypedCore::String(_) => {}
                 TypedCore::Dummy => {}
-                TypedCore::Empty() => {}
+                TypedCore::Empty(_) => {}
             }
         }
         visit(root, self);

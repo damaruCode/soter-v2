@@ -76,7 +76,7 @@ fn peek_name(tc: &TypedCore) -> String {
 
             // TODO probably remove one of the following (they probably do the same)
             TypedCore::Dummy => String::from("Dummy"),
-            TypedCore::Empty() => String::from("empty!"),
+            TypedCore::Empty(_) => String::from("empty!"),
         }
     )
 }

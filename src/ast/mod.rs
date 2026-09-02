@@ -29,6 +29,8 @@ pub mod tuple;
 pub mod values;
 pub mod var;
 
+pub mod empty;
+
 use std::fmt::Display;
 
 pub use alias::*;
@@ -61,6 +63,8 @@ pub use seq::*;
 pub use tuple::*;
 pub use values::*;
 pub use var::*;
+
+pub use empty::*;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Map;
@@ -110,12 +114,12 @@ pub enum TypedCore {
     // Testing
     // TODO remove one of those (they probably do the same)
     Dummy,
-    Empty(),
+    Empty(Empty),
 }
 
 impl TypedCore {
     pub fn new() -> Self {
-        TypedCore::Empty()
+        TypedCore::Empty(Empty::new())
     }
 }
 
@@ -135,7 +139,7 @@ impl MaybeIndex {
             MaybeIndex::Some(u) => {
                 return u;
             }
-            _ => panic!(),
+            _ => panic!("Could not unwrap MaybeIndex"),
         }
     }
 }
@@ -185,7 +189,7 @@ impl Index for TypedCore {
             TypedCore::Values(vals) => vals.index.clone().into(),
             TypedCore::Var(var) => var.index.clone().into(),
             TypedCore::Dummy => panic!(),
-            TypedCore::Empty() => None,
+            TypedCore::Empty(e) => e.index.clone().into(),
         }
     }
 }
@@ -280,7 +284,7 @@ impl Display for TypedCore {
             TypedCore::Values(x) => write!(f, "{}", x),
             TypedCore::Var(x) => write!(f, "{}", x),
             TypedCore::Dummy => write!(f, "Dummy"),
-            TypedCore::Empty() => write!(f, "..."),
+            TypedCore::Empty(_) => write!(f, "..."),
         }
     }
 }
