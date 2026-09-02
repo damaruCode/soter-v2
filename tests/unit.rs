@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use soter_v2::abstraction::standard::{StandardAbstraction, VAddr};
+use soter_v2::abstraction::standard::StandardAbstraction;
 use soter_v2::abstraction::Abstraction;
 use soter_v2::analyzer::MatchHelper;
 use soter_v2::ast::*;
