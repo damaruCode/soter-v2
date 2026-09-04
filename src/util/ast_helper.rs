@@ -353,7 +353,6 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::String(s) => {
                     s.index = MaybeIndex::Some(id);
                 }
-                TypedCore::Dummy => {}
                 TypedCore::Empty(e) => e.index = MaybeIndex::Some(id),
             }
         }
@@ -528,7 +527,6 @@ impl<'helper> AstHelper<'helper> {
                 TypedCore::Bool(_) => {}
                 TypedCore::Number(_) => {}
                 TypedCore::String(_) => {}
-                TypedCore::Dummy => {}
                 TypedCore::Empty(_) => {}
             }
         }

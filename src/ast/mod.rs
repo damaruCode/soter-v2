@@ -112,8 +112,6 @@ pub enum TypedCore {
     Var(Var),
 
     // Testing
-    // TODO remove one of those (they probably do the same)
-    Dummy,
     Empty(Empty),
 }
 
@@ -188,7 +186,6 @@ impl Index for TypedCore {
             TypedCore::Tuple(tuple) => tuple.index.clone().into(),
             TypedCore::Values(vals) => vals.index.clone().into(),
             TypedCore::Var(var) => var.index.clone().into(),
-            TypedCore::Dummy => panic!(),
             TypedCore::Empty(e) => e.index.clone().into(),
         }
     }
@@ -283,7 +280,6 @@ impl Display for TypedCore {
             TypedCore::Tuple(x) => write!(f, "{}", x),
             TypedCore::Values(x) => write!(f, "{}", x),
             TypedCore::Var(x) => write!(f, "{}", x),
-            TypedCore::Dummy => write!(f, "Dummy"),
             TypedCore::Empty(_) => write!(f, "..."),
         }
     }
