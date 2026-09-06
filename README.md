@@ -80,5 +80,11 @@ Runs soter-v2 on the files in the [`tests/soundness`](tests/soundness) directory
 cargo test --test soundness
 ```
 
-### Unit (upcoming)
-*Will check transitions and pattern-matching for correctness.*
+### Unit / Integration
+Checks pattern-matching for correctness:
+
+```
+cargo test --test unit
+```
+
+*Will check transitions for correctness as well.*
