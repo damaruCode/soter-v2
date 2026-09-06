@@ -1,12 +1,18 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_catch, {anno=[] :: list(), body :: cerl:cerl()}).
+/// -record(c_catch, {anno=[] :: list(), body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Catch {
     pub anno: AstList<TypedCore>,
     pub body: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Catch {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Catch {

@@ -17,7 +17,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
     store: &Store<K, V>,
     module_env: &Env<V>,
     ast_helper: &AstHelper,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
 
@@ -27,7 +27,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                 match value {
                     Value::Closure(clo) => match ast_helper.get(clo.prog_loc) {
                         TypedCore::Fun(f) => {
-                            if f.vars.inner.len() != 0 {
+                            if !f.vars.inner.is_empty() {
                                 result.new.push((
                             proc_state.fail(FailureType::Unexpected(format!("Expected a function without formal parameters, found {} parameters.", f.vars.inner.len()))),
                             "abs_spawn".to_string(),
@@ -43,8 +43,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                     ProgLocOrPid::Pid(pid) => {
                                         result.new.push((
                                             proc_state.fail(FailureType::Unexpected(format!(
-                                                "Expected a program location, found pid {}",
-                                                pid
+                                                "Expected a program location, found pid {pid}"
                                             ))),
                                             "abs_spawn".to_string(),
                                         ));
@@ -75,7 +74,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                             new_proc_state_two
                                                 .env
                                                 .inner
-                                                .insert(var_name.clone(), v_addr.clone());
+                                                .insert(*var_name, v_addr.clone());
                                         }
 
                                         result
@@ -87,8 +86,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                     tc => {
                                         result.new.push((
                                             proc_state.fail(FailureType::Unexpected(format!(
-                                                "Expected a clause, found {}",
-                                                tc
+                                                "Expected a clause, found {tc}"
                                             ))),
                                             "abs_call".to_string(),
                                         ));
@@ -97,8 +95,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                                 tc => {
                                     result.new.push((
                                         proc_state.fail(FailureType::Unexpected(format!(
-                                            "Expected a case statement, found {}",
-                                            tc
+                                            "Expected a case statement, found {tc}"
                                         ))),
                                         "abs_call".to_string(),
                                     ));
@@ -108,8 +105,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                         tc => {
                             result.new.push((
                                 proc_state.fail(FailureType::Unexpected(format!(
-                                    "Expected a function, found {}",
-                                    tc
+                                    "Expected a function, found {tc}"
                                 ))),
                                 "abs_call".to_string(),
                             ));
@@ -120,8 +116,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
                     {
                         result.new.push((
                             proc_state.fail(FailureType::Erlang(format!(
-                                "Expected a closure, found pid {}",
-                                pid
+                                "Expected a closure, found pid {pid}"
                             ))),
                             "abs_spawn".to_string(),
                         ));
@@ -135,8 +130,7 @@ pub fn abs_spawn<K: KontinuationAddress, V: ValueAddress>(
         }
         _ => result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
-                "Expected a variable, found {}",
-                tc_var
+                "Expected a variable, found {tc_var}"
             ))),
             "abs_spawn".to_string(),
         )),

@@ -16,7 +16,7 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
     mailboxes: &Mailboxes<V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -33,8 +33,8 @@ pub fn abs_receive<K: KontinuationAddress, V: ValueAddress>(
             ProgLocOrPid::ProgLoc((*clauses[index].body).get_index().unwrap());
 
         // introduce substitution into environment
-        for i in 0..substs.len() {
-            for (var_id, addr_or_value) in &substs[i].inner {
+        for subst in substs {
+            for (var_id, addr_or_value) in &subst.inner {
                 // NOTE because we use Data_0, the preliminary step of resolving the data d_i is
                 // irrelevant --- it would only have been of interest for the VAddr
                 match addr_or_value {

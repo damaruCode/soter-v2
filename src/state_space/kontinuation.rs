@@ -21,7 +21,7 @@ impl<K: KontinuationAddress, V: ValueAddress> Display for Kont<K, V> {
                     f,
                     "Let({}, {}, {}, {})",
                     vars.iter()
-                        .map(|var| { format!("{}", var) })
+                        .map(|var| { format!("{var}") })
                         .collect::<Vec<String>>()
                         .join(", "),
                     body,
@@ -30,7 +30,7 @@ impl<K: KontinuationAddress, V: ValueAddress> Display for Kont<K, V> {
                 )
             }
             Kont::Seq(next_prog_loc, env, k_addr) => {
-                write!(f, "Seq({}, {}, {})", next_prog_loc, env, k_addr)
+                write!(f, "Seq({next_prog_loc}, {env}, {k_addr})")
             }
             Kont::Stop => write!(f, "Stop"),
         }

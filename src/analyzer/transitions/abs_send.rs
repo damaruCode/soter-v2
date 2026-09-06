@@ -22,7 +22,7 @@ fn resolve_pid<K: KontinuationAddress, V: ValueAddress>(
             TypedCore::Var(v) => {
                 let var_id = v.var_id.unwrap();
                 for value in store.unpack(&clo.env, var_id) {
-                    pids.append(&mut resolve_pid(&value, store, ast_helper));
+                    pids.append(&mut resolve_pid(value, store, ast_helper));
                 }
             }
             _ => panic!(), // TODO adapt to return an erronous result
@@ -56,8 +56,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected a variable, found {}",
-                    tc
+                    "Expected a variable, found {tc}"
                 ))),
                 "abs_send".to_string(),
             ));
@@ -78,7 +77,7 @@ pub fn abs_send<K: KontinuationAddress, V: ValueAddress>(
                     env: proc_state.env.clone(),
                 })])
             }
-            tc => panic!("{:#?}", tc), // TODO adapt to return erronous result
+            tc => panic!("{tc:#?}"), // TODO adapt to return erronous result
         }
     }
 

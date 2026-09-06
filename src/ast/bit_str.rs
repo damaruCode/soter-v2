@@ -1,11 +1,11 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_bitstr, {anno=[] :: list(), val :: cerl:cerl(),
-//		   size :: cerl:cerl(),
-//		   unit :: cerl:cerl(),
-//		   type :: cerl:cerl(),
-//		   flags :: cerl:cerl()}).
+///-record(c_bitstr, {anno=[] :: list(), val :: cerl:cerl(),
+///    size :: cerl:cerl(),
+///	   unit :: cerl:cerl(),
+///	   type :: cerl:cerl(),
+///	   flags :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct BitStr {
     pub anno: AstList<TypedCore>,
@@ -15,6 +15,12 @@ pub struct BitStr {
     pub r#type: Box<TypedCore>,
     pub flags: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for BitStr {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl BitStr {

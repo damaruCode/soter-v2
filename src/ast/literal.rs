@@ -1,12 +1,18 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_literal, {anno=[] :: list(), val :: any()}).
+/// -record(c_literal, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Literal {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Literal {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Literal {
