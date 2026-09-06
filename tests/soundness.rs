@@ -216,6 +216,7 @@ where
     V: ValueAddress,
     F: FnOnce(AnalyzerResult<K, V>, AstHelper) -> (),
 {
+    erlang::compile();
     erlang::run(&filepath.to_string());
     let core = erlang::get_core(&format!("{filepath}.json"));
     let typed_core = ast::TypedCore::from(core);
@@ -245,7 +246,6 @@ fn test_standard_id() {
 
 #[test]
 fn test_standard_receive_lit() {
-    //erlang::compile();
     analyze_file(
         "tests/soundness/receive_lit.erl",
         Box::new(StandardAbstraction::new(0)),

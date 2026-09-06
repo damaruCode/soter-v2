@@ -18,38 +18,42 @@ pub fn get_core(file: &String) -> serde_json::Value {
 }
 
 pub fn compile() {
-    match fs::create_dir("erlang/ebin") {
-        Ok(()) => {}
-        Err(_e) => {
-            return;
+    // only one process at a time
+    static COMPILE: std::sync::Once = std::sync::Once::new();
+    COMPILE.call_once(|| {
+        // Ignore AlreadyExists
+        match fs::create_dir("erlang/ebin") {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(e) => panic!("failed to create erlang/ebin: {e}"),
         }
-    }
 
-    //erlc -o ebin src/jsx*.erl
-    let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
-    for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
-        match entry {
-            Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
-            Err(e) => log::debug!("{e:?}"),
+        // erlc -o ebin src/jsx*.erl
+        let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
+        for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
+            match entry {
+                Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
+                Err(e) => log::debug!("{e:?}"),
+            }
         }
-    }
 
-    let c = Command::new("erlc")
-        .args(args)
-        .output()
-        .expect("failed to compile jsx");
+        let c = Command::new("erlc")
+            .args(args)
+            .output()
+            .expect("failed to compile jsx");
 
-    log::debug!("jsx_compile_status: {}", c.status);
-    assert!(c.status.success());
+        log::debug!("jsx_compile_status: {}", c.status);
+        assert!(c.status.success());
 
-    //erlc ecorej.erl
-    let c = Command::new("erlc")
-        .arg("erlang/ecorej.erl")
-        .output()
-        .expect("failed to compile ecorej");
+        //erlc ecorej.erl
+        let c = Command::new("erlc")
+            .arg("erlang/ecorej.erl")
+            .output()
+            .expect("failed to compile ecorej");
 
-    log::debug!("ecorej_compile_status: {}", c.status);
-    assert!(c.status.success());
+        log::debug!("ecorej_compile_status: {}", c.status);
+        assert!(c.status.success());
+    });
 }
 
 pub fn run(file: &str) {
