@@ -1,7 +1,7 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_seq, {anno=[] :: list(), arg :: cerl:cerl() | any(), % todo
+/// -record(c_seq, {anno=[] :: list(), arg :: cerl:cerl() | any(), % todo
 ///		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Seq {
@@ -9,6 +9,12 @@ pub struct Seq {
     pub arg: Box<TypedCore>,
     pub body: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Seq {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Seq {

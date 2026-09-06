@@ -13,7 +13,7 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -23,7 +23,7 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     // TODO check that r#let.arg is singular value
     new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc((*r#let.arg).get_index().unwrap());
     new_item.k_addr = abstraction.new_kaddr(
-        &proc_state,
+        proc_state,
         &new_item.prog_loc_or_pid,
         &new_item.env,
         &new_item.time,
@@ -37,8 +37,8 @@ pub fn abs_push_let<K: KontinuationAddress, V: ValueAddress>(
     );
 
     for state in push_to_kont_store(
-        &ast_helper,
-        &seen_proc_states,
+        ast_helper,
+        seen_proc_states,
         store,
         new_item.k_addr.clone(),
         kont,

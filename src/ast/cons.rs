@@ -1,14 +1,20 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_cons, {anno=[] :: list(), hd :: cerl:cerl(),
-///		 tl :: cerl:cerl()}).
+/// -record(c_cons, {anno=[] :: list(), hd :: cerl:cerl(),
+///    tl :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Cons {
     pub anno: AstList<TypedCore>,
     pub hd: Box<TypedCore>, // some var or value (literal, cons, tuple)
     pub tl: Box<TypedCore>, // cons or literal []
     pub index: MaybeIndex,
+}
+
+impl Default for Cons {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Cons {

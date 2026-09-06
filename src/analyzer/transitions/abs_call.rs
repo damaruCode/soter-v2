@@ -17,7 +17,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
     module_env: &Env<V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     ast_helper: &AstHelper,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
 ) -> TransitionResult<K, V> {
     // check module name
     let mut result = TransitionResult::new();
@@ -29,8 +29,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                     // TODO implement other modules as well
                     result.new.push((
                         proc_state.fail(FailureType::NotImplemented(format!(
-                            "Modules other than \"erlang\" are not supported yet, found \"{}\"",
-                            s_mod
+                            "Modules other than \"erlang\" are not supported yet, found \"{s_mod}\""
                         ))),
                         "abs_call".to_string(),
                     ));
@@ -41,8 +40,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
             tc => {
                 result.new.push((
                     proc_state.fail(FailureType::Unexpected(format!(
-                        "Expected literal string, found literal {}",
-                        tc
+                        "Expected literal string, found literal {tc}"
                     ))),
                     "abs_call".to_string(),
                 ));
@@ -52,8 +50,7 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected literal, found {}",
-                    tc
+                    "Expected literal, found {tc}"
                 ))),
                 "abs_call".to_string(),
             ));
@@ -88,34 +85,31 @@ pub fn abs_call<K: KontinuationAddress, V: ValueAddress>(
                 name => {
                     result.new.push((
                         proc_state.fail(FailureType::NotImplemented(format!(
-                            "Unknown function \"{}\"",
-                            name
+                            "Unknown function \"{name}\""
                         ))),
                         "abs_call".to_string(),
                     ));
-                    return result;
+                    result
                 }
             },
             tc => {
                 result.new.push((
                     proc_state.fail(FailureType::Unexpected(format!(
-                        "Expected literal string, found literal {}",
-                        tc
+                        "Expected literal string, found literal {tc}"
                     ))),
                     "abs_call".to_string(),
                 ));
-                return result;
+                result
             }
         },
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected literal, found {}",
-                    tc
+                    "Expected literal, found {tc}"
                 ))),
                 "abs_call".to_string(),
             ));
-            return result;
+            result
         }
     }
 }

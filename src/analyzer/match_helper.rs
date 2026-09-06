@@ -25,29 +25,27 @@ impl MatchHelper {
     /// ## Errors
     ///
     pub fn cs_match_vaddr<V: ValueAddress>(
-        clauses: &Vec<Clause>,
+        clauses: &[Clause],
         v_addr: &V,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> BTreeMap<usize, Vec<MatchSubstitution<V>>> {
         let mut clause_matches = BTreeMap::new();
 
-        for i in 0..clauses.len() {
+        for (i, clause) in clauses.iter().enumerate() {
             let substs = Self::p_match_vaddr(
-                if clauses[i].pats.inner.len() == 1 {
-                    (*clauses[i].pats.inner)[0].as_pattern()
+                if clause.pats.inner.len() == 1 {
+                    (*clause.pats.inner)[0].as_pattern()
                 } else {
-                    clauses[i].pats.as_pattern()
+                    clause.pats.as_pattern()
                 },
                 v_addr,
                 value_store,
                 ast_helper,
             );
 
-            if substs.len() > 0 {
-                if Self::match_guard(&*clauses[i].guard, value_store, ast_helper) {
-                    clause_matches.insert(i, substs);
-                }
+            if !substs.is_empty() && Self::match_guard(&clauses[i].guard, value_store, ast_helper) {
+                clause_matches.insert(i, substs);
             }
         }
 
@@ -71,27 +69,25 @@ impl MatchHelper {
     /// ## Errors
     ///
     pub fn cs_match_value<V: ValueAddress>(
-        clauses: &Vec<Clause>,
+        clauses: &[Clause],
         value: &Value<V>,
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> BTreeMap<usize, Vec<MatchSubstitution<V>>> {
         let mut clause_matches = BTreeMap::new();
 
-        for i in 0..clauses.len() {
-            let clause_pat = if clauses[i].pats.inner.len() == 1 {
+        for (i, clause) in clauses.iter().enumerate() {
+            let clause_pat = if clause.pats.inner.len() == 1 {
                 // if pats is unary, handle it as a single expression
-                (*clauses[i].pats.inner)[0].as_pattern()
+                (*clause.pats.inner)[0].as_pattern()
             } else {
                 // otherwise handle it as a value list
-                clauses[i].pats.as_pattern()
+                clause.pats.as_pattern()
             };
             let substs = Self::p_match_value(&clause_pat, value, value_store, ast_helper);
 
-            if substs.len() > 0 {
-                if Self::match_guard(&*clauses[i].guard, value_store, ast_helper) {
-                    clause_matches.insert(i, substs);
-                }
+            if !substs.is_empty() && Self::match_guard(&clause.guard, value_store, ast_helper) {
+                clause_matches.insert(i, substs);
             }
         }
 
@@ -157,7 +153,7 @@ impl MatchHelper {
                 let mut subst = MatchSubstitution::new();
 
                 subst.inner.insert(
-                    pv.var_id.unwrap().clone(),
+                    *pv.var_id.unwrap(),
                     ValueAddressOrValue::ValueAddress(v_addr.clone()),
                 );
                 Vec::from([subst])
@@ -225,7 +221,7 @@ impl MatchHelper {
                             };
                         }
 
-                        substs.unwrap_or(Vec::new())
+                        substs.unwrap_or_default()
                     }
                     _ => Vec::new(), // can't match cons to anything other than cons
                 },
@@ -268,7 +264,7 @@ impl MatchHelper {
                             };
                         }
 
-                        substs.unwrap_or(Vec::new())
+                        substs.unwrap_or_default()
                     }
                     _ => Vec::new(), // can't match tuple to anything other than tuple
                 },
@@ -311,7 +307,7 @@ impl MatchHelper {
                             };
                         }
 
-                        substs.unwrap_or(Vec::new())
+                        substs.unwrap_or_default()
                     }
                     _ => Vec::new(), // can't match values to anything other than values
                 },
@@ -320,7 +316,7 @@ impl MatchHelper {
             PatternKind::Literal(pl) => match value {
                 Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
                     TypedCore::Literal(v_lit) => {
-                        println!("pat: {}, val: {}", pl, v_lit);
+                        println!("pat: {pl}, val: {v_lit}");
                         if Self::literal_cmp(v_lit, pl) {
                             println!("passed");
                             Vec::from([MatchSubstitution::new()])
@@ -338,7 +334,7 @@ impl MatchHelper {
                 let mut subst = MatchSubstitution::new();
 
                 subst.inner.insert(
-                    pv.var_id.unwrap().clone(),
+                    *pv.var_id.unwrap(),
                     ValueAddressOrValue::Value(value.clone()),
                 );
                 Vec::from([subst])
@@ -372,8 +368,7 @@ impl MatchHelper {
     ///
     /// ## Arguments
     /// * `typed_core` - a node of the abstract syntax tree
-    /// * `_value_store` - the current Value Store to lookup any additional values associated with
-    /// variables in `typed_core`
+    /// * `_value_store` - the current Value Store to lookup any additional values associated with variables in `typed_core`
     /// * `_ast_helper` - the AstHelper to lookup relevant nodes in the abstract syntax tree
     ///
     /// ## Returns
@@ -403,6 +398,12 @@ impl MatchHelper {
 pub struct MatchSubstitution<V: ValueAddress> {
     pub inner: BTreeMap<usize, ValueAddressOrValue<V>>,
 }
+impl<V: ValueAddress> Default for MatchSubstitution<V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<V: ValueAddress> MatchSubstitution<V> {
     pub fn new() -> Self {
         Self {
@@ -420,24 +421,24 @@ impl<V: ValueAddress> MatchSubstitution<V> {
                         return None;
                     }
                     // compatible; carry over
-                    new_subst.inner.insert(var_name.clone(), value1.clone());
+                    new_subst.inner.insert(*var_name, value1.clone());
                 }
                 None => {
                     // only in self; carry over
-                    new_subst.inner.insert(var_name.clone(), value1.clone());
+                    new_subst.inner.insert(*var_name, value1.clone());
                 }
             }
         }
         for (var_name, value) in &other_subst.inner {
             if !self.inner.contains_key(var_name) {
                 // only in other; carry over
-                new_subst.inner.insert(var_name.clone(), value.clone());
+                new_subst.inner.insert(*var_name, value.clone());
             }
         }
         Some(new_subst)
     }
 
-    pub fn mult_with(&self, other_substs: &Vec<Self>) -> Vec<Self> {
+    pub fn mult_with(&self, other_substs: &[Self]) -> Vec<Self> {
         // join self with all other_substs
         other_substs
             .iter()
@@ -549,7 +550,10 @@ mod tests {
     #[test]
     fn literal_val_eq_bool() {
         assert!(MatchHelper::literal_val_eq(&boolean(true), &boolean(true)));
-        assert!(!MatchHelper::literal_val_eq(&boolean(true), &boolean(false)));
+        assert!(!MatchHelper::literal_val_eq(
+            &boolean(true),
+            &boolean(false)
+        ));
     }
 
     #[test]

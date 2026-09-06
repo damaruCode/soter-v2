@@ -18,7 +18,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
     module_env: &Env<V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
     store: &mut Store<K, V>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -39,8 +39,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                     _ => {
                                         let fail_state =
                                             proc_state.fail(FailureType::Unexpected(format!(
-                                                "Expected a formal parameter variable, found {}",
-                                                tc
+                                                "Expected a formal parameter variable, found {tc}"
                                             )));
                                         result.new.push((fail_state, "abs_apply".to_string()));
                                         continue;
@@ -66,15 +65,15 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                 continue;
                             }
 
-                            if fn_var_names.len() > 0 {
-                                for i in 0..fn_var_names.len() {
+                            if !fn_var_names.is_empty() {
+                                for (i, &fn_var_name) in fn_var_names.iter().enumerate() {
                                     // check the type of the arg
                                     match &apply.args.inner[i] {
                                         // for vars, we simply add a binding to the existent v_addr
                                         TypedCore::Var(v) => {
                                             
                                                 new_item.env.inner.insert(
-                                                    fn_var_names[i].clone(),
+                                                    *fn_var_name,
                                                     proc_state
                                                         .env
                                                         .inner
@@ -99,7 +98,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                             new_item
                                                 .env
                                                 .inner
-                                                .insert(fn_var_names[i].clone(), new_v_addr.clone());
+                                                .insert(*fn_var_names[i], new_v_addr.clone());
 
                                             for state in push_to_value_store(
                                                 ast_helper,
@@ -115,7 +114,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                                             }
                                         }
                                         tc => {
-                                            result.new.push((proc_state.fail(FailureType::NotImplemented(format!("No behaviour implemented for {}", tc))), "abs_apply".to_string()));
+                                            result.new.push((proc_state.fail(FailureType::NotImplemented(format!("No behaviour implemented for {tc}"))), "abs_apply".to_string()));
                                             continue;
                                         },
                                     }
@@ -126,8 +125,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                         tc => {
                             result.new.push((
                                 proc_state.fail(FailureType::Erlang(format!(
-                                    "Function expected, found {}",
-                                    tc
+                                    "Function expected, found {tc}"
                                 ))),
                                 "abs_apply".to_string(),
                             ));
@@ -137,8 +135,7 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
                     Value::Pid(pid) => {
                         result.new.push((
                             proc_state.fail(FailureType::Erlang(format!(
-                                "Expected closure, found pid {}",
-                                pid
+                                "Expected closure, found pid {pid}"
                             ))),
                             "abs_apply".to_string(),
                         ));
@@ -150,13 +147,12 @@ pub fn abs_apply<K: KontinuationAddress, V: ValueAddress>(
         tc => {
             result.new.push((
                 proc_state.fail(FailureType::Erlang(format!(
-                    "Expected variable name, found {}",
-                    tc
+                    "Expected variable name, found {tc}"
                 ))),
                 "abs_apply".to_string(),
             ));
         }
     }
 
-    return result;
+    result
 }

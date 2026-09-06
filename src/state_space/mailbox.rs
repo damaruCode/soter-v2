@@ -21,7 +21,7 @@ impl<V: ValueAddress> Mailbox<V> {
 
     pub fn mmatch(
         &self,
-        clauses: &Vec<Clause>,
+        clauses: &[Clause],
         value_store: &SetMap<V, Value<V>>,
         ast_helper: &AstHelper,
     ) -> BTreeMap<usize, Vec<MatchSubstitution<V>>> {
@@ -33,7 +33,7 @@ impl<V: ValueAddress> Mailbox<V> {
             for (clause_idx, mut substs) in clause_matches {
                 matched_msgs
                     .entry(clause_idx)
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .append(&mut substs);
             }
         }
@@ -72,7 +72,7 @@ impl<V: ValueAddress> Display for Mailbox<V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut strs = Vec::new();
         for msg in &self.inner {
-            strs.push(format!("{}", msg));
+            strs.push(format!("{msg}"));
         }
         write!(f, "{}", strs.join(","))
     }

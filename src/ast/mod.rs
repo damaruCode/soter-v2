@@ -115,6 +115,12 @@ pub enum TypedCore {
     Empty(Empty),
 }
 
+impl Default for TypedCore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TypedCore {
     pub fn new() -> Self {
         TypedCore::Empty(Empty::new())
@@ -135,7 +141,7 @@ impl MaybeIndex {
     pub fn unwrap(&self) -> &usize {
         match self {
             MaybeIndex::Some(u) => {
-                return u;
+                u
             }
             _ => panic!("Could not unwrap MaybeIndex"),
         }
@@ -242,7 +248,7 @@ impl From<Map<String, Value>> for TypedCore {
             "c_tuple" => TypedCore::Tuple(Tuple::from(map)),
             "c_values" => TypedCore::Values(Values::from(map)),
             "c_var" => TypedCore::Var(Var::from(map)),
-            type_name => panic!("{} not impled", type_name),
+            type_name => panic!("{type_name} not impled"),
         }
     }
 }
@@ -250,36 +256,36 @@ impl From<Map<String, Value>> for TypedCore {
 impl Display for TypedCore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            TypedCore::AstList(x) => write!(f, "{}", x),
-            TypedCore::AstTuple(x) => write!(f, "{}", x),
-            TypedCore::Null(x) => write!(f, "{}", x),
-            TypedCore::Bool(x) => write!(f, "{}", x),
-            TypedCore::Number(x) => write!(f, "{}", x),
-            TypedCore::String(x) => write!(f, "{}", x),
-            TypedCore::Alias(x) => write!(f, "{}", x),
-            TypedCore::Apply(x) => write!(f, "{}", x),
-            TypedCore::Binary(x) => write!(f, "{}", x),
-            TypedCore::BitStr(x) => write!(f, "{}", x),
-            TypedCore::Call(x) => write!(f, "{}", x),
-            TypedCore::Case(x) => write!(f, "{}", x),
-            TypedCore::Catch(x) => write!(f, "{}", x),
-            TypedCore::Clause(x) => write!(f, "{}", x),
-            TypedCore::Cons(x) => write!(f, "{}", x),
-            TypedCore::Fun(x) => write!(f, "{}", x),
-            TypedCore::Let(x) => write!(f, "{}", x),
-            TypedCore::LetRec(x) => write!(f, "{}", x),
-            TypedCore::Literal(x) => write!(f, "{}", x),
-            TypedCore::Map(x) => write!(f, "{}", x),
-            TypedCore::MapPair(x) => write!(f, "{}", x),
-            TypedCore::Module(x) => write!(f, "{}", x),
-            TypedCore::Opaque(x) => write!(f, "{}", x),
-            TypedCore::PrimOp(x) => write!(f, "{}", x),
-            TypedCore::Receive(x) => write!(f, "{}", x),
-            TypedCore::Seq(x) => write!(f, "{}", x),
-            TypedCore::Try(x) => write!(f, "{}", x),
-            TypedCore::Tuple(x) => write!(f, "{}", x),
-            TypedCore::Values(x) => write!(f, "{}", x),
-            TypedCore::Var(x) => write!(f, "{}", x),
+            TypedCore::AstList(x) => write!(f, "{x}"),
+            TypedCore::AstTuple(x) => write!(f, "{x}"),
+            TypedCore::Null(x) => write!(f, "{x}"),
+            TypedCore::Bool(x) => write!(f, "{x}"),
+            TypedCore::Number(x) => write!(f, "{x}"),
+            TypedCore::String(x) => write!(f, "{x}"),
+            TypedCore::Alias(x) => write!(f, "{x}"),
+            TypedCore::Apply(x) => write!(f, "{x}"),
+            TypedCore::Binary(x) => write!(f, "{x}"),
+            TypedCore::BitStr(x) => write!(f, "{x}"),
+            TypedCore::Call(x) => write!(f, "{x}"),
+            TypedCore::Case(x) => write!(f, "{x}"),
+            TypedCore::Catch(x) => write!(f, "{x}"),
+            TypedCore::Clause(x) => write!(f, "{x}"),
+            TypedCore::Cons(x) => write!(f, "{x}"),
+            TypedCore::Fun(x) => write!(f, "{x}"),
+            TypedCore::Let(x) => write!(f, "{x}"),
+            TypedCore::LetRec(x) => write!(f, "{x}"),
+            TypedCore::Literal(x) => write!(f, "{x}"),
+            TypedCore::Map(x) => write!(f, "{x}"),
+            TypedCore::MapPair(x) => write!(f, "{x}"),
+            TypedCore::Module(x) => write!(f, "{x}"),
+            TypedCore::Opaque(x) => write!(f, "{x}"),
+            TypedCore::PrimOp(x) => write!(f, "{x}"),
+            TypedCore::Receive(x) => write!(f, "{x}"),
+            TypedCore::Seq(x) => write!(f, "{x}"),
+            TypedCore::Try(x) => write!(f, "{x}"),
+            TypedCore::Tuple(x) => write!(f, "{x}"),
+            TypedCore::Values(x) => write!(f, "{x}"),
+            TypedCore::Var(x) => write!(f, "{x}"),
             TypedCore::Empty(_) => write!(f, "..."),
         }
     }
@@ -288,7 +294,7 @@ impl Display for TypedCore {
 impl Display for MaybeIndex {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            MaybeIndex::Some(i) => write!(f, "{}: ", i),
+            MaybeIndex::Some(i) => write!(f, "{i}: "),
             MaybeIndex::None => write!(f, ""),
         }
     }

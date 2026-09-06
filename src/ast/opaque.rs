@@ -1,12 +1,18 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_opaque, {anno=[] :: list(), val :: any()}).
+/// -record(c_opaque, {anno=[] :: list(), val :: any()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Opaque {
     pub anno: AstList<TypedCore>,
     pub val: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Opaque {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Opaque {

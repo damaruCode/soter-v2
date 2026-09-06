@@ -1,8 +1,8 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
-///		   args :: [cerl:cerl()]}).
+/// -record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
+///    args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct PrimOp {
     pub anno: AstList<TypedCore>,
@@ -10,6 +10,12 @@ pub struct PrimOp {
     pub args: AstList<TypedCore>, // NOTE We could probably be more precise here; rogers2018
     // enforces that PrimOp is always applied to names
     pub index: MaybeIndex,
+}
+
+impl Default for PrimOp {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PrimOp {

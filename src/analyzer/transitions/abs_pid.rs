@@ -12,7 +12,7 @@ pub fn abs_pid<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let konts = store.kont.get(&proc_state.k_addr).unwrap().clone();
@@ -39,5 +39,5 @@ pub fn abs_pid<K: KontinuationAddress, V: ValueAddress>(
         };
     }
 
-    return TransitionResult::new();
+    TransitionResult::new()
 }

@@ -16,29 +16,28 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
 
     let clauses: Vec<Clause> = Vec::from(&case.clauses);
 
-    let mats;
-    match &*case.arg {
+    let mats = match &*case.arg {
         TypedCore::Var(v) => {
             let v_addr = proc_state.env.inner.get(v.var_id.unwrap()).unwrap();
-            mats = MatchHelper::cs_match_vaddr(&clauses, v_addr, &store.value, ast_helper);
+            MatchHelper::cs_match_vaddr(&clauses, v_addr, &store.value, ast_helper)
         }
         tc => {
             let value = Value::Closure(Closure {
                 prog_loc: tc.get_index().unwrap(),
                 env: proc_state.env.clone(),
             });
-            mats = MatchHelper::cs_match_value(&clauses, &value, &store.value, ast_helper);
+            MatchHelper::cs_match_value(&clauses, &value, &store.value, ast_helper)
         }
-    }
+    };
 
-    if mats.len() == 0 {
+    if mats.is_empty() {
         result.new.push((
             proc_state.fail(FailureType::Erlang("No matches.".to_string())),
             "abs_case".to_string(),
@@ -52,8 +51,8 @@ pub fn abs_case<K: KontinuationAddress, V: ValueAddress>(
         new_item.prog_loc_or_pid =
             ProgLocOrPid::ProgLoc((*(clauses[index].body)).get_index().unwrap());
 
-        for i in 0..substs.len() {
-            for (var_id, addr_or_value) in &substs[i].inner {
+        for subst in substs {
+            for (var_id, addr_or_value) in &subst.inner {
                 match addr_or_value {
                     ValueAddressOrValue::Value(v) => {
                         // produce new v_addr, add to env and push into value store

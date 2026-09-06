@@ -9,6 +9,12 @@ pub struct Tuple {
     pub index: MaybeIndex,
 }
 
+impl Default for Tuple {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Tuple {
     pub fn new() -> Self {
         Self {

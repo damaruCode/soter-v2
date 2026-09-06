@@ -1,7 +1,7 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_try, {anno=[] :: list(), arg :: cerl:cerl(),
+/// -record(c_try, {anno=[] :: list(), arg :: cerl:cerl(),
 ///		vars :: [cerl:cerl()],
 ///		body :: cerl:cerl(),
 ///		evars :: [cerl:cerl()],
@@ -15,6 +15,12 @@ pub struct Try {
     pub evars: AstList<TypedCore>,
     pub handler: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Try {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Try {

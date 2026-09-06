@@ -1,12 +1,18 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_binary, {anno=[] :: list(), segments :: [cerl:c_bitstr()]}).
+/// -record(c_binary, {anno=[] :: list(), segments :: [cerl:c_bitstr()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Binary {
     pub anno: AstList<TypedCore>,
     pub segments: AstList<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Binary {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Binary {

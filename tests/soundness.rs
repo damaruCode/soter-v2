@@ -7,6 +7,7 @@ use soter_v2::ast;
 use soter_v2::ast::AstList;
 use soter_v2::ast::Clause;
 use soter_v2::ast::Cons;
+use soter_v2::ast::Empty;
 use soter_v2::ast::ErlBool;
 use soter_v2::ast::ErlNumber;
 use soter_v2::ast::ErlString;
@@ -114,7 +115,7 @@ impl From<P<'_>> for Clause {
                 val: Box::new(TypedCore::Bool(ErlBool::new(true))),
                 index: MaybeIndex::None,
             })),
-            body: Box::new(TypedCore::Dummy),
+            body: Box::new(TypedCore::Empty(Empty::new())),
             index: MaybeIndex::None,
         };
         clause

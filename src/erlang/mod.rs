@@ -6,12 +6,12 @@ use std::io::BufReader;
 use std::process::Command;
 
 pub fn get_core(file: &String) -> serde_json::Value {
-    let json = File::open(file).expect(&format!("{} could not be opened", file));
+    let json = File::open(file).unwrap_or_else(|_| panic!("{file} could not be opened"));
     let mut buf_reader = BufReader::new(json);
     let mut contents = String::new();
     buf_reader
         .read_to_string(&mut contents)
-        .expect(&format!("{} could not be read", file));
+        .unwrap_or_else(|_| panic!("{file} could not be read"));
 
     serde_json::from_str(&contents)
         .expect("input json could not be parsed into serde_json::Value enum")
@@ -30,7 +30,7 @@ pub fn compile() {
     for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
         match entry {
             Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
-            Err(e) => log::debug!("{:?}", e),
+            Err(e) => log::debug!("{e:?}"),
         }
     }
 
@@ -52,7 +52,7 @@ pub fn compile() {
     assert!(c.status.success());
 }
 
-pub fn run(file: &String) {
+pub fn run(file: &str) {
     //erl -noshell -s ecorej to_core <file_path> -s init stop
     let r = Command::new("erl")
         .args([

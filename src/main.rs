@@ -62,10 +62,9 @@ fn main() {
     // Logging
     if args.log {
         let now = Utc::now();
-        let logfile_path = args.output_dir.join(format!(
-            "logs/{}.log",
-            now.format("%Y-%m-%d_%H-%M-%S").to_string()
-        ));
+        let logfile_path = args
+            .output_dir
+            .join(format!("logs/{}.log", now.format("%Y-%m-%d_%H-%M-%S")));
 
         let logfile = FileAppender::builder()
             .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
@@ -124,9 +123,9 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         let execution_time = instance.elapsed().as_nanos();
         let mut sum_states = 0;
         for (_, states) in &seen.inner {
-            sum_states = sum_states + states.len();
+            sum_states += states.len();
         }
-        println!("Time: {}, States: {}", execution_time, sum_states);
+        println!("Time: {execution_time}, States: {sum_states}");
     } else {
         (seen, mailboxes, store) = analyzer.run();
     }
@@ -162,7 +161,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
             |proc_state| {
                 let mut node_attr = NodeAttributes::new();
                 node_attr.label = match &proc_state.prog_loc_or_pid {
-                    ProgLocOrPid::Pid(pid) => format!("{}", pid),
+                    ProgLocOrPid::Pid(pid) => format!("{pid}"),
                     ProgLocOrPid::ProgLoc(prog_loc) => {
                         let tc = ast_helper.get(*prog_loc);
                         peek_print::print(tc)
@@ -204,7 +203,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
             },
         );
         let mut graph_file = File::create(&graph_path).unwrap();
-        write!(graph_file, "{}", dot_graph).unwrap();
+        write!(graph_file, "{dot_graph}").unwrap();
 
         process::Command::new("sh")
             .arg("-c")
@@ -226,7 +225,7 @@ fn run_analysis_with<K: KontinuationAddress, V: ValueAddress>(
         log::debug!("Seen: {}, {}", pid, states.len());
     }
     for (pid, mailbox) in mailboxes.inner {
-        log::debug!("Mailbox: {}, {}", pid, mailbox);
+        log::debug!("Mailbox: {pid}, {mailbox}");
     }
     log::debug!("KontStore:\n{}", store.kont);
     log::debug!("ValueStore:\n{}", store.value);

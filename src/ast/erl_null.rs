@@ -9,6 +9,12 @@ pub struct ErlNull {
     pub index: MaybeIndex,
 }
 
+impl Default for ErlNull {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ErlNull {
     pub fn new() -> Self {
         Self {

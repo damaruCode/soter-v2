@@ -1,9 +1,9 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-///-record(c_call, {anno=[] :: list(), module :: cerl:cerl(),
-///		 name :: cerl:cerl(),
-///		 args :: [cerl:cerl()]}).
+/// -record(c_call, {anno=[] :: list(), module :: cerl:cerl(),
+///    name :: cerl:cerl(),
+///	   args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Call {
     pub anno: AstList<TypedCore>,
@@ -11,6 +11,12 @@ pub struct Call {
     pub name: Box<TypedCore>,
     pub args: AstList<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Call {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Call {
