@@ -15,14 +15,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: actions-rs/toolchain@v1
+      - uses: cachix/install-nix-action@v25
         with:
-          toolchain: stable
-      - name: Install Erlang/OTP
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: "22"
-      - name: Run build
-        run: cargo build --verbose
+          nix_path: nixpkgs=channel:nixos-unstable
+      # using nix mainly for erlang v22
+      - name: Build
+        run: nix develop --command cargo build --verbose
       - name: Run tests
-        run: cargo test --all-targets --verbose
+        run: nix develop --command cargo test --all-targets --verbose
