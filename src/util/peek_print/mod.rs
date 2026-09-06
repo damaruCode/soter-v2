@@ -75,7 +75,6 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::MapPair(_) => String::from("mappair ..."),
 
             // TODO probably remove one of the following (they probably do the same)
-            TypedCore::Dummy => String::from("Dummy"),
             TypedCore::Empty(_) => String::from("empty!"),
         }
     )
