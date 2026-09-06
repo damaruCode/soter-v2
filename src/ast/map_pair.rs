@@ -1,10 +1,10 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_map_pair, {anno=[] :: list(),
-//	       op :: #c_literal{val::'assoc'} | #c_literal{val::'exact'},
-//		     key :: any(),              % todo
-//		     val :: any()}).            % todo
+///-record(c_map_pair, {anno=[] :: list(),
+///	       op :: #c_literal{val::'assoc'} | #c_literal{val::'exact'},
+///		     key :: any(),              % todo
+///		     val :: any()}).            % todo
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct MapPair {
     pub anno: AstList<TypedCore>,

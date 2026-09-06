@@ -1,7 +1,7 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_values, {anno=[] :: list(), es :: [cerl:cerl()]}).
+///-record(c_values, {anno=[] :: list(), es :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Values {
     pub anno: AstList<TypedCore>,

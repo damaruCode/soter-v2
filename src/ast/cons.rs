@@ -1,8 +1,8 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_cons, {anno=[] :: list(), hd :: cerl:cerl(),
-//		 tl :: cerl:cerl()}).
+///-record(c_cons, {anno=[] :: list(), hd :: cerl:cerl(),
+///		 tl :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Cons {
     pub anno: AstList<TypedCore>,

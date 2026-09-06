@@ -1,10 +1,10 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_module, {anno=[] :: list(), name :: cerl:cerl(),
-//		   exports :: [cerl:cerl()],
-//		   attrs :: [{cerl:cerl(), cerl:cerl()}],
-//		   defs :: [{cerl:cerl(), cerl:cerl()}]}).
+///-record(c_module, {anno=[] :: list(), name :: cerl:cerl(),
+///		   exports :: [cerl:cerl()],
+///		   attrs :: [{cerl:cerl(), cerl:cerl()}],
+///		   defs :: [{cerl:cerl(), cerl:cerl()}]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Module {
     pub anno: AstList<TypedCore>,

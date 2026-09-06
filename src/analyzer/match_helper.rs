@@ -320,9 +320,12 @@ impl MatchHelper {
             PatternKind::Literal(pl) => match value {
                 Value::Closure(v_clo) => match ast_helper.get(v_clo.prog_loc) {
                     TypedCore::Literal(v_lit) => {
+                        println!("pat: {}, val: {}", pl, v_lit);
                         if Self::literal_cmp(v_lit, pl) {
+                            println!("passed");
                             Vec::from([MatchSubstitution::new()])
                         } else {
+                            println!("did not pass");
                             Vec::new()
                         }
                     }
@@ -388,13 +391,6 @@ impl MatchHelper {
     ) -> bool {
         match typed_core {
             TypedCore::Literal(l) => match *l.val.clone() {
-                TypedCore::String(s) => {
-                    if s.inner.as_str() == "true" {
-                        true
-                    } else {
-                        todo!("{:#?}", typed_core)
-                    }
-                }
                 TypedCore::Bool(b) => b.inner,
                 _ => todo!("{:#?}", typed_core),
             },
@@ -488,5 +484,248 @@ impl TypedCore {
 impl AstList<TypedCore> {
     pub fn as_pattern(&self) -> PatternKind {
         PatternKind::Values(self.clone())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{MatchHelper, MatchSubstitution, PatternKind};
+    use crate::abstraction::standard::VAddr;
+    use crate::ast::{
+        AstList, ErlBool, ErlNull, ErlNumber, ErlString, Literal, MaybeIndex, TypedCore,
+        ValueAddressOrValue, Var,
+    };
+    use crate::state_space::{Pid, Time, Value};
+    use crate::util::{AstHelper, SetMap};
+    use serde_json::Number;
+
+    // ---------------
+    // construction helpers
+    // ---------------
+
+    fn null() -> TypedCore {
+        TypedCore::Null(ErlNull::new())
+    }
+
+    fn boolean(b: bool) -> TypedCore {
+        TypedCore::Bool(ErlBool::new(b))
+    }
+
+    fn number(n: i64) -> TypedCore {
+        TypedCore::Number(ErlNumber::new(Number::from(n)))
+    }
+
+    fn string(s: &str) -> TypedCore {
+        TypedCore::String(ErlString::new(s.to_string()))
+    }
+
+    fn ast_list(elems: Vec<TypedCore>) -> TypedCore {
+        let mut list = AstList::new();
+        for elem in elems {
+            list.inner.push(elem);
+        }
+        TypedCore::AstList(list)
+    }
+
+    fn literal(val: TypedCore) -> Literal {
+        let mut lit = Literal::new();
+        lit.val = Box::new(val);
+        lit
+    }
+
+    fn empty_store() -> SetMap<VAddr, Value<VAddr>> {
+        SetMap::new()
+    }
+
+    // ---------------
+    // literal_val_eq
+    // ---------------
+
+    #[test]
+    fn literal_val_eq_null() {
+        assert!(MatchHelper::literal_val_eq(&null(), &null()));
+    }
+
+    #[test]
+    fn literal_val_eq_bool() {
+        assert!(MatchHelper::literal_val_eq(&boolean(true), &boolean(true)));
+        assert!(!MatchHelper::literal_val_eq(&boolean(true), &boolean(false)));
+    }
+
+    #[test]
+    fn literal_val_eq_number() {
+        assert!(MatchHelper::literal_val_eq(&number(1), &number(1)));
+        assert!(!MatchHelper::literal_val_eq(&number(1), &number(2)));
+    }
+
+    #[test]
+    fn literal_val_eq_string() {
+        assert!(MatchHelper::literal_val_eq(&string("a"), &string("a")));
+        assert!(!MatchHelper::literal_val_eq(&string("a"), &string("b")));
+    }
+
+    #[test]
+    fn literal_val_eq_nested_list() {
+        // Equal lists compare element-wise, recursively.
+        let a = ast_list(vec![number(1), string("x")]);
+        let b = ast_list(vec![number(1), string("x")]);
+        assert!(MatchHelper::literal_val_eq(&a, &b));
+
+        let c = ast_list(vec![number(1), string("y")]);
+        assert!(!MatchHelper::literal_val_eq(&a, &c));
+    }
+
+    #[test]
+    fn literal_val_eq_list_length_differs() {
+        let a = ast_list(vec![number(1)]);
+        let b = ast_list(vec![number(1), number(2)]);
+        assert!(!MatchHelper::literal_val_eq(&a, &b));
+    }
+
+    #[test]
+    fn literal_val_eq_type_mismatch() {
+        assert!(!MatchHelper::literal_val_eq(&string("1"), &number(1)));
+        assert!(!MatchHelper::literal_val_eq(&null(), &boolean(true)));
+    }
+
+    // ---------------
+    // literal_cmp
+    // ---------------
+
+    #[test]
+    fn literal_cmp_delegates_to_val_eq() {
+        assert!(MatchHelper::literal_cmp(
+            &literal(number(1)),
+            &literal(number(1))
+        ));
+        assert!(!MatchHelper::literal_cmp(
+            &literal(number(1)),
+            &literal(number(2))
+        ));
+    }
+
+    // ---------------
+    // p_match_value: arms reachable without an AST lookup
+    // ---------------
+
+    fn var_pattern(id: usize) -> PatternKind {
+        let mut v = Var::new();
+        v.var_id = MaybeIndex::Some(id);
+        PatternKind::Var(v)
+    }
+
+    #[test]
+    fn p_match_value_var_binds_value() {
+        // A variable pattern matches any value, binding it directly.
+        let store = empty_store();
+        let ast_helper = AstHelper::new();
+        let value = Value::Pid(Pid::init());
+
+        let substs = MatchHelper::p_match_value(&var_pattern(7), &value, &store, &ast_helper);
+
+        assert_eq!(substs.len(), 1);
+        assert_eq!(
+            substs[0].inner.get(&7),
+            Some(&ValueAddressOrValue::Value(value))
+        );
+    }
+
+    #[test]
+    fn p_match_value_literal_vs_pid_no_match() {
+        // A literal pattern can never match a pid.
+        let store = empty_store();
+        let ast_helper = AstHelper::new();
+        let pattern = PatternKind::Literal(literal(string("a")));
+
+        let substs =
+            MatchHelper::p_match_value(&pattern, &Value::Pid(Pid::init()), &store, &ast_helper);
+
+        assert!(substs.is_empty());
+    }
+
+    // ---------------
+    // match_guard
+    // ---------------
+
+    #[test]
+    fn match_guard_bool_true() {
+        let store = empty_store();
+        let ast_helper = AstHelper::new();
+        assert!(MatchHelper::match_guard(
+            &TypedCore::Literal(literal(boolean(true))),
+            &store,
+            &ast_helper
+        ));
+    }
+
+    #[test]
+    fn match_guard_bool_false() {
+        let store = empty_store();
+        let ast_helper = AstHelper::new();
+        assert!(!MatchHelper::match_guard(
+            &TypedCore::Literal(literal(boolean(false))),
+            &store,
+            &ast_helper
+        ));
+    }
+
+    // ---------------
+    // MatchSubstitution: join_with / mult_with
+    // ---------------
+
+    fn val(pid_loc: usize) -> ValueAddressOrValue<VAddr> {
+        ValueAddressOrValue::Value(Value::Pid(Pid {
+            prog_loc: pid_loc,
+            time: Time::init(),
+        }))
+    }
+
+    fn subst_of(pairs: Vec<(usize, ValueAddressOrValue<VAddr>)>) -> MatchSubstitution<VAddr> {
+        let mut subst = MatchSubstitution::new();
+        for (var_id, value) in pairs {
+            subst.inner.insert(var_id, value);
+        }
+        subst
+    }
+
+    #[test]
+    fn match_substitution_join_disjoint() {
+        let a = subst_of(vec![(0, val(0))]);
+        let b = subst_of(vec![(1, val(1))]);
+        let joined = a.join_with(&b).expect("disjoint substitutions should join");
+        assert_eq!(joined.inner.get(&0), Some(&val(0)));
+        assert_eq!(joined.inner.get(&1), Some(&val(1)));
+        assert_eq!(joined.inner.len(), 2);
+    }
+
+    #[test]
+    fn match_substitution_join_compatible() {
+        // Overlapping key `0` carries the same value in both, so the join succeeds.
+        let a = subst_of(vec![(0, val(0)), (1, val(1))]);
+        let b = subst_of(vec![(0, val(0)), (2, val(2))]);
+        let joined = a
+            .join_with(&b)
+            .expect("compatible substitutions should join");
+        assert_eq!(joined.inner.len(), 3);
+    }
+
+    #[test]
+    fn match_substitution_join_incompatible() {
+        // Key `0` binds to conflicting values, so there is no viable join.
+        let a = subst_of(vec![(0, val(0))]);
+        let b = subst_of(vec![(0, val(1))]);
+        assert!(a.join_with(&b).is_none());
+    }
+
+    #[test]
+    fn match_substitution_mult_with() {
+        let a = subst_of(vec![(0, val(0))]);
+        let others = vec![
+            subst_of(vec![(1, val(1))]), // compatible -> kept
+            subst_of(vec![(0, val(9))]), // conflicts on key 0 -> filtered out
+        ];
+        let result = a.mult_with(&others);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].inner.len(), 2);
     }
 }

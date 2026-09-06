@@ -1,9 +1,9 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
-//		    timeout :: cerl:cerl(),
-//		    action :: cerl:cerl()}).
+///-record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
+///		    timeout :: cerl:cerl(),
+///		    action :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Receive {
     pub anno: AstList<TypedCore>,

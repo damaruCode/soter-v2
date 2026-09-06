@@ -1,11 +1,11 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_try, {anno=[] :: list(), arg :: cerl:cerl(),
-//		vars :: [cerl:cerl()],
-//		body :: cerl:cerl(),
-//		evars :: [cerl:cerl()],
-//		handler :: cerl:cerl()}).
+///-record(c_try, {anno=[] :: list(), arg :: cerl:cerl(),
+///		vars :: [cerl:cerl()],
+///		body :: cerl:cerl(),
+///		evars :: [cerl:cerl()],
+///		handler :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Try {
     pub anno: AstList<TypedCore>,

@@ -17,8 +17,8 @@ pub enum ValueAddressOrValue<V: ValueAddress> {
     Value(Value<V>),
 }
 
-//-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
-//		 clauses :: [cerl:cerl()]}).
+///-record(c_case, {anno=[] :: list(), arg :: cerl:cerl(),
+///		 clauses :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Case {
     pub anno: AstList<TypedCore>,

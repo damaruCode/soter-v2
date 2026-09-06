@@ -20,7 +20,7 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::Bool(b) => b.inner.to_string(),
             TypedCore::Call(_) => String::from("call ..."),
             TypedCore::Case(c) => format!(
-                "case <{}>\n\t{}\nend",
+                "case <{}> of\n\t{}\nend",
                 peek_name(&*c.arg),
                 c.clauses
                     .inner

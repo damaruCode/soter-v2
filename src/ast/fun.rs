@@ -1,8 +1,8 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_fun, {anno=[] :: list(), vars :: [cerl:cerl()],
-//		body :: cerl:cerl()}).
+///-record(c_fun, {anno=[] :: list(), vars :: [cerl:cerl()],
+///		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Fun {
     pub anno: AstList<TypedCore>,

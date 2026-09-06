@@ -1,8 +1,8 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
-//		   args :: [cerl:cerl()]}).
+///-record(c_primop, {anno=[] :: list(), name :: cerl:cerl(),
+///		   args :: [cerl:cerl()]}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct PrimOp {
     pub anno: AstList<TypedCore>,

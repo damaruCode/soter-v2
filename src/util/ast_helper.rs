@@ -332,8 +332,6 @@ impl<'helper> AstHelper<'helper> {
                 }
                 TypedCore::Var(v) => {
                     v.index = MaybeIndex::Some(id);
-                    println!("VAR_ID BUILD INDEX: {:?}", v);
-                    println!("SYMBOL_TABLE: {:?}", ctx.symbol_table);
                     v.var_id = match ctx.symbol_table.lookup(&VarName::from(&*v.name)) {
                         Some(var_id) => MaybeIndex::Some(var_id),
                         None => MaybeIndex::None,

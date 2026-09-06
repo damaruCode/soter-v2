@@ -1,8 +1,8 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_seq, {anno=[] :: list(), arg :: cerl:cerl() | any(), % todo
-//		body :: cerl:cerl()}).
+///-record(c_seq, {anno=[] :: list(), arg :: cerl:cerl() | any(), % todo
+///		body :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Seq {
     pub anno: AstList<TypedCore>,
