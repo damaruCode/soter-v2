@@ -344,6 +344,7 @@ impl MatchHelper {
 
     fn literal_val_eq(a: &TypedCore, b: &TypedCore) -> bool {
         match (a, b) {
+            (TypedCore::Literal(a), TypedCore::Literal(b)) => Self::literal_val_eq(&a.val, &b.val),
             (TypedCore::Null(_), TypedCore::Null(_)) => true,
             (TypedCore::Bool(a), TypedCore::Bool(b)) => a.inner == b.inner,
             (TypedCore::Number(a), TypedCore::Number(b)) => a.inner == b.inner,
@@ -364,7 +365,7 @@ impl MatchHelper {
     }
 
     /// Checks a guard of a clause
-    /// **NOTE** right now only a literal `true`
+    /// **NOTE** right now only a literal booleans `true` and `false`
     ///
     /// ## Arguments
     /// * `typed_core` - a node of the abstract syntax tree
@@ -372,9 +373,11 @@ impl MatchHelper {
     /// * `_ast_helper` - the AstHelper to lookup relevant nodes in the abstract syntax tree
     ///
     /// ## Returns
+    /// `true` if the guard is "true"
+    /// `false` if the guard is "false"
     ///
     /// ## Panics
-    /// Panics if `typed_core` is not a literal string "true"
+    /// Panics if `typed_core` is not a literal boolean
     ///
     /// ## Errors
     /// None

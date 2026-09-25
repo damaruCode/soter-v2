@@ -7,66 +7,7 @@ use soter_v2::ast::*;
 use soter_v2::state_space::{Closure, Env, Pid, ProcState, ProgLocOrPid, Store, Time, Value};
 use soter_v2::util::AstHelper;
 
-// ---------------
-// Small AST constructors to keep the tests below readable
-// ---------------
-
-fn str_lit(s: &str) -> TypedCore {
-    let mut lit = Literal::new();
-    lit.val = Box::new(TypedCore::String(ErlString::new(s.to_string())));
-    TypedCore::Literal(lit)
-}
-
-fn bool_lit(b: bool) -> TypedCore {
-    let mut lit = Literal::new();
-    lit.val = Box::new(TypedCore::Bool(ErlBool::new(b)));
-    TypedCore::Literal(lit)
-}
-
-fn empty_list_lit() -> TypedCore {
-    let mut lit = Literal::new();
-    lit.val = Box::new(TypedCore::AstList(AstList::new()));
-    TypedCore::Literal(lit)
-}
-
-fn var(name: &str) -> TypedCore {
-    let mut v = Var::new();
-    v.name = Box::new(TypedCore::String(ErlString::new(name.to_string())));
-    TypedCore::Var(v)
-}
-
-/// A proper list `[e_1, ..., e_n]` built from nested `Cons` cells ending in the literal empty list `[]`.
-fn list_of(elems: Vec<TypedCore>) -> TypedCore {
-    let mut acc = empty_list_lit();
-    for elem in elems.into_iter().rev() {
-        let mut cons = Cons::new();
-        cons.hd = Box::new(elem);
-        cons.tl = Box::new(acc);
-        acc = TypedCore::Cons(cons);
-    }
-    acc
-}
-
-fn tuple_of(elems: Vec<TypedCore>) -> TypedCore {
-    let mut tuple = Tuple::new();
-    tuple.es = AstList::new();
-    for elem in elems {
-        tuple.es.inner.push(elem);
-    }
-    TypedCore::Tuple(tuple)
-}
-
-fn clause(pat: TypedCore, guard: TypedCore) -> Clause {
-    let mut clause = Clause::new();
-    clause.pats = AstList::new();
-    clause.pats.inner.push(pat);
-    clause.guard = Box::new(guard);
-    clause
-}
-
-fn true_clause(pat: TypedCore) -> Clause {
-    clause(pat, bool_lit(true))
-}
+use crate::utils::*;
 
 // ---------------
 // cs_match_vaddr
@@ -308,30 +249,6 @@ fn run_cs_match_vaddr(
             }
 
             MatchHelper::cs_match_vaddr(clauses, &source_vaddr, &store.value, ast_helper)
-        },
-    )
-}
-
-/// Runs cs_match_value on the closure (S, {}) with AST
-/// `let S = <source_arg> in case S of <clauses> end`,
-/// StandardAbstraction(time_depth=10) and the initial store
-fn run_cs_match_value(
-    source_arg: TypedCore,
-    clauses: Vec<Clause>,
-) -> BTreeMap<usize, Vec<MatchSubstitution<VAddr>>> {
-    with_indexed_case(
-        source_arg,
-        clauses,
-        |ast_helper, clauses, arg_index, _source_var_id| {
-            let abstraction = StandardAbstraction::new(10);
-            let store = Store::init(abstraction.stop_kaddr());
-
-            let value = Value::Closure(Closure {
-                prog_loc: arg_index,
-                env: Env::init(),
-            });
-
-            MatchHelper::cs_match_value(clauses, &value, &store.value, ast_helper)
         },
     )
 }
@@ -609,15 +526,98 @@ fn test_cs_match_vaddr_cons_with_var_head() {
 // ---------------
 // cs_match_value
 // ---------------
+/// Runs cs_match_value on the closure (S, {}) with AST
+/// `let S = <source_arg> in case S of <clauses> end`,
+/// StandardAbstraction(time_depth=10) and the initial store
+fn run_cs_match_value(
+    source_arg: TypedCore,
+    clauses: Vec<Clause>,
+) -> BTreeMap<usize, Vec<MatchSubstitution<VAddr>>> {
+    with_indexed_case(
+        source_arg,
+        clauses,
+        |ast_helper, clauses, arg_index, _source_var_id| {
+            let abstraction = StandardAbstraction::new(10);
+            let store = Store::init(abstraction.stop_kaddr());
+
+            let value = Value::Closure(Closure {
+                prog_loc: arg_index,
+                env: Env::init(),
+            });
+
+            MatchHelper::cs_match_value(clauses, &value, &store.value, ast_helper)
+        },
+    )
+}
 
 #[test]
-fn test_cs_match_value_lit() {
+fn test_cs_match_value_lit_str() {
     let substs = run_cs_match_value(str_lit("a"), vec![true_clause(str_lit("a"))]);
     assert_eq!(matched(&substs), vec![0]);
 }
 
 #[test]
-fn test_cs_match_value_mismatch() {
+fn test_cs_match_value_lit_str_mismatch() {
     let substs = run_cs_match_value(str_lit("a"), vec![true_clause(str_lit("b"))]);
+    assert!(substs.is_empty());
+}
+
+#[test]
+fn test_cs_match_value_lit_bool() {
+    let substs = run_cs_match_value(bool_lit(true), vec![true_clause(bool_lit(true))]);
+    assert_eq!(matched(&substs), vec![0]);
+}
+
+#[test]
+fn test_cs_match_value_lit_bool_mismatch() {
+    let substs = run_cs_match_value(bool_lit(true), vec![true_clause(bool_lit(false))]);
+    assert!(substs.is_empty());
+}
+
+#[test]
+fn test_cs_match_value_lit_list() {
+    let substs = run_cs_match_value(
+        list_lit(vec![str_lit("a"), str_lit("b")]),
+        vec![true_clause(list_lit(vec![str_lit("a"), str_lit("b")]))],
+    );
+    assert_eq!(matched(&substs), vec![0]);
+}
+
+#[test]
+fn test_cs_match_value_lit_list_mismatch() {
+    let substs = run_cs_match_value(
+        list_lit(vec![str_lit("a"), str_lit("b")]),
+        vec![true_clause(list_lit(vec![str_lit("b"), str_lit("a")]))],
+    );
+    assert!(substs.is_empty());
+}
+
+#[test]
+fn test_cs_match_value_lit_list_rec() {
+    let substs = run_cs_match_value(
+        list_lit(vec![
+            str_lit("a"),
+            list_lit(vec![str_lit("b"), bool_lit(true)]),
+        ]),
+        vec![true_clause(list_lit(vec![
+            str_lit("a"),
+            list_lit(vec![str_lit("b"), bool_lit(true)]),
+        ]))],
+    );
+    assert_eq!(matched(&substs), vec![0]);
+}
+
+#[test]
+fn test_cs_match_value_lit_list_rec_mismatch() {
+    let substs = run_cs_match_value(
+        list_lit(vec![
+            str_lit("a"),
+            list_lit(vec![str_lit("b"), bool_lit(true)]),
+        ]),
+        vec![true_clause(list_lit(vec![
+            str_lit("a"),
+            list_lit(vec![str_lit("b"), bool_lit(false)]),
+        ]))],
+    );
     assert!(substs.is_empty());
 }
