@@ -9,6 +9,12 @@ where
     pub inner: Vec<(K, Vec<V>)>,
 }
 
+impl<K: Clone + Eq, V: Clone + Eq> Default for SetMap<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
     pub fn new() -> Self {
         SetMap { inner: Vec::new() }
@@ -27,7 +33,7 @@ impl<K: Clone + Eq, V: Clone + Eq> SetMap<K, V> {
             }
         }
         self.inner.push((key, vec![value]));
-        return true;
+        true
     }
 
     /// Returns a reference to the set of values associated with a given key, if the key exists
@@ -60,7 +66,7 @@ impl<K: Eq + Display, V: Eq + Display> Display for SetMap<K, V> {
                 "<|{}|>\n ==> <|{}|>",
                 key,
                 set.iter()
-                    .map(|value| format!("{}", value))
+                    .map(|value| format!("{value}"))
                     .collect::<Vec<String>>()
                     .join(", ")
             ));

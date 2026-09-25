@@ -17,24 +17,15 @@ pub fn push_to_mailboxes<K: KontinuationAddress, V: ValueAddress>(
     mailboxes.push(pid.clone(), value);
 
     let mut dependencies = Vec::new();
-    match seen.get(&pid) {
-        Some(set) => {
-            for state in set {
-                match state.prog_loc_or_pid {
-                    ProgLocOrPid::ProgLoc(location) => {
-                        match ast_helper.get(location) {
-                            TypedCore::Receive(_) => {
-                                // NOTE cloning here might become a memory issue
-                                dependencies.push(state.clone());
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
+    if let Some(set) = seen.get(&pid) {
+        for state in set {
+            if let ProgLocOrPid::ProgLoc(location) = state.prog_loc_or_pid {
+                if let TypedCore::Receive(_) = ast_helper.get(location) {
+                    // NOTE cloning here might become a memory issue
+                    dependencies.push(state.clone());
                 }
             }
         }
-        _ => {}
     }
     dependencies
 }
@@ -54,24 +45,15 @@ pub fn push_to_value_store<K: KontinuationAddress, V: ValueAddress>(
     let mut dependencies = Vec::new();
     for (_pid, states) in &seen.inner {
         for state in states {
-            match state.prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(location) => match ast_helper.get(location) {
-                    TypedCore::Var(pl_var) => {
-                        let var_id = pl_var.var_id.unwrap();
-                        match state.env.inner.get(var_id) {
-                            Some(pl_vaddr) => {
-                                if pl_vaddr == &v_addr {
-                                    // NOTE cloning here might become a memory issue
-                                    dependencies.push(state.clone());
-                                }
-                            }
-                            _ => {}
-                        }
+            if let ProgLocOrPid::ProgLoc(location) = state.prog_loc_or_pid { if let TypedCore::Var(pl_var) = ast_helper.get(location) {
+                let var_id = pl_var.var_id.unwrap();
+                if let Some(pl_vaddr) = state.env.inner.get(var_id) {
+                    if pl_vaddr == &v_addr {
+                        // NOTE cloning here might become a memory issue
+                        dependencies.push(state.clone());
                     }
-                    _ => {}
-                },
-                _ => {}
-            }
+                }
+            } }
         }
     }
     dependencies

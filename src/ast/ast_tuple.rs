@@ -22,7 +22,7 @@ impl From<Vec<Value>> for AstTuple<TypedCore> {
     fn from(tuple: Vec<Value>) -> Self {
         assert!(tuple.len() == 2);
         AstTuple {
-            frst: Box::new(TypedCore::from(tuple.get(0).unwrap().clone())),
+            frst: Box::new(TypedCore::from(tuple.first().unwrap().clone())),
             scnd: Box::new(TypedCore::from(tuple.get(1).unwrap().clone())),
             index: MaybeIndex::None,
         }

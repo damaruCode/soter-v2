@@ -23,12 +23,12 @@ impl Display for Time {
         let mut output = self
             .inner
             .iter()
-            .map(|prog_loc| format!("{}", prog_loc))
+            .map(|prog_loc| format!("{prog_loc}"))
             .collect::<Vec<String>>()
             .join(" ");
         if output.is_empty() {
             output = "ε".to_string();
         }
-        write!(f, "{}", output)
+        write!(f, "{output}")
     }
 }

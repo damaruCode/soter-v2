@@ -4,9 +4,7 @@ use crate::{
 };
 
 fn peek_name(tc: &TypedCore) -> String {
-    format!(
-        "{}",
-        match tc {
+    (match tc {
             TypedCore::Let(_) => String::from("let ..."),
             TypedCore::Seq(_) => String::from("seq ..."),
             TypedCore::Fun(_) => String::from("fun (...)"),
@@ -20,12 +18,12 @@ fn peek_name(tc: &TypedCore) -> String {
             TypedCore::Bool(b) => b.inner.to_string(),
             TypedCore::Call(_) => String::from("call ..."),
             TypedCore::Case(c) => format!(
-                "case <{}>\n\t{}\nend",
-                peek_name(&*c.arg),
+                "case <{}> of\n\t{}\nend",
+                peek_name(&c.arg),
                 c.clauses
                     .inner
                     .iter()
-                    .map(|e| peek_name(e))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join("\n")
             ),
@@ -37,7 +35,7 @@ fn peek_name(tc: &TypedCore) -> String {
                 tup.es
                     .inner
                     .iter()
-                    .map(|e| peek_name(e))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", ")
             ),
@@ -49,11 +47,11 @@ fn peek_name(tc: &TypedCore) -> String {
                 c.pats
                     .inner
                     .iter()
-                    .map(|e| peek_name(e))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", "),
-                peek_name(&*c.guard),
-                peek_name(&*c.body)
+                peek_name(&c.guard),
+                peek_name(&c.body)
             ),
             TypedCore::LetRec(_) => String::from("letrec ..."),
             TypedCore::Module(_) => String::from("module ..."),
@@ -65,19 +63,18 @@ fn peek_name(tc: &TypedCore) -> String {
                 "|{}|",
                 al.inner
                     .iter()
-                    .map(|e| peek_name(e))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", ")
             ),
-            TypedCore::Literal(l) => peek_name(&*l.val),
+            TypedCore::Literal(l) => peek_name(&l.val),
             TypedCore::AstTuple(at) =>
-                format!("{{{}, {}}}", peek_name(&*at.frst), peek_name(&*at.scnd)),
+                format!("{{{}, {}}}", peek_name(&at.frst), peek_name(&at.scnd)),
             TypedCore::MapPair(_) => String::from("mappair ..."),
 
             // TODO probably remove one of the following (they probably do the same)
             TypedCore::Empty(_) => String::from("empty!"),
-        }
-    )
+        }).to_string()
 }
 
 pub fn print(tc: &TypedCore) -> String {
@@ -85,40 +82,40 @@ pub fn print(tc: &TypedCore) -> String {
         "{} : {}",
         tc.get_index().unwrap(),
         match tc {
-            TypedCore::Module(module) => format!("module {} [...] ...", peek_name(&*module.name)),
+            TypedCore::Module(module) => format!("module {} [...] ...", peek_name(&module.name)),
             TypedCore::Apply(apply) => format!(
                 "apply {} ({})",
-                peek_name(&*apply.op),
+                peek_name(&apply.op),
                 apply
                     .args
                     .inner
                     .iter()
-                    .map(|e| peek_name(e))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", ")
             ),
             TypedCore::Seq(seq) => {
-                format!("{}, {}", peek_name(&*seq.arg), peek_name(&*seq.body))
+                format!("{}, {}", peek_name(&seq.arg), peek_name(&seq.body))
             }
             TypedCore::Let(clet) => format!(
                 "let <{}> = {} in {}",
                 clet.vars
                     .inner
                     .iter()
-                    .map(|v| peek_name(v))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", "),
-                peek_name(&*clet.arg),
-                peek_name(&*clet.body)
+                peek_name(&clet.arg),
+                peek_name(&clet.body)
             ),
             TypedCore::Call(call) => format!(
                 "{}:{}({})",
-                peek_name(&*call.module),
-                peek_name(&*call.name),
+                peek_name(&call.module),
+                peek_name(&call.name),
                 call.args
                     .inner
                     .iter()
-                    .map(|v| peek_name(v))
+                    .map(peek_name)
                     .collect::<Vec<String>>()
                     .join(", ")
             ),

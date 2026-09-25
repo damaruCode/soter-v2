@@ -13,8 +13,7 @@ pub fn abs_primop<K: KontinuationAddress, V: ValueAddress>(
     TransitionResult {
         new: Vec::from([(
             proc_state.fail(FailureType::NotImplemented(format!(
-                "ABS_PRIMOP {:#?}",
-                prim_op
+                "ABS_PRIMOP {prim_op:#?}"
             ))),
             "abs_primop".to_string(),
         )]),

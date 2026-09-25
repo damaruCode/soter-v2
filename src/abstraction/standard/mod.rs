@@ -39,7 +39,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
         KAddr {
             pid: curr_proc_state.pid.clone(),
             prog_loc: match &next_prog_loc_or_pid {
-                ProgLocOrPid::ProgLoc(prog_loc) => prog_loc.clone(),
+                ProgLocOrPid::ProgLoc(prog_loc) => *prog_loc,
                 _ => panic!("ProgLoc expected"),
             },
             env: curr_proc_state.env.clone(),
@@ -58,7 +58,7 @@ impl Abstraction<KAddr, VAddr> for StandardAbstraction {
     ) -> VAddr {
         VAddr {
             pid: curr_proc_state.pid.clone(),
-            var_name: var_name.clone(),
+            var_name,
             time: curr_proc_state.time.clone(),
         }
     }

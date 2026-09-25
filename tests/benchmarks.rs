@@ -6,8 +6,8 @@ use soter_v2::util::AstHelper;
 
 fn run_and_analyze(erl_file: &str) {
     erlang::compile();
-    erlang::run(&format!("tests/benchmarks/{}.erl", erl_file));
-    let core = erlang::get_core(&format!("tests/benchmarks/{}.erl.json", erl_file));
+    erlang::run(&format!("tests/benchmarks/{erl_file}.erl"));
+    let core = erlang::get_core(&format!("tests/benchmarks/{erl_file}.erl.json"));
     let typed_core = ast::TypedCore::from(core);
     let mut ast_helper = AstHelper::new();
     let indexed_typed_core = ast_helper.build_indecies(typed_core);

@@ -42,7 +42,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
         }
     }
 
-    // Start fixpoint computation with WorkList-Algorithm
+    /// Start fixpoint computation with WorkList-Algorithm
     pub fn run(&mut self) -> (SetMap<Pid, ProcState<K, V>>, Mailboxes<V>, Store<K, V>) {
         // This terminates because it assumes a fixpoint implementation
         for node in self.queue.clone() {
@@ -55,7 +55,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 &self.ast_helper,
                 &mut self.mailboxes,
                 &mut self.store,
-                &self.abstraction,
+                &*self.abstraction,
                 &mut self.module_env,
                 &self.seen,
             );
@@ -90,7 +90,7 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
                 self.transition_graph.add_edge(
                     item.clone(),
                     revisit_state.clone(),
-                    format!("{} - revisit", transition_name),
+                    format!("{transition_name} - revisit"),
                 );
 
                 // Update queue otherwise
@@ -98,11 +98,11 @@ impl<'analyzer, K: KontinuationAddress, V: ValueAddress> Analyzer<'analyzer, K, 
             }
         }
 
-        return (
+        (
             self.seen.clone(),
             self.mailboxes.clone(),
             self.store.clone(),
-        );
+        )
     }
 
     pub fn get_transition_graph(&self) -> Graph<ProcState<K, V>, String> {
@@ -116,7 +116,7 @@ pub trait WorkItem<K: KontinuationAddress, V: ValueAddress>: Eq + Clone {
         ast_helper: &AstHelper,
         mailboxes: &mut Mailboxes<V>,
         store: &mut Store<K, V>,
-        abstraction: &Box<dyn Abstraction<K, V>>,
+        abstraction: &dyn Abstraction<K, V>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> TransitionResult<K, V>;
@@ -129,7 +129,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
         ast_helper: &AstHelper,
         mailboxes: &mut Mailboxes<V>,
         store: &mut Store<K, V>,
-        abstraction: &Box<dyn Abstraction<K, V>>,
+        abstraction: &dyn Abstraction<K, V>,
         module_env: &mut Env<V>,
         seen: &SetMap<Pid, ProcState<K, V>>,
     ) -> TransitionResult<K, V> {
@@ -138,7 +138,7 @@ impl<K: KontinuationAddress, V: ValueAddress> WorkItem<K, V> for ProcState<K, V>
             ProgLocOrPid::ProgLoc(pl) => {
                 log::debug!("{:#?}\nAst:{}", self, ast_helper.get(pl))
             }
-            ProgLocOrPid::Pid(_) => log::debug!("{:#?}", self),
+            ProgLocOrPid::Pid(_) => log::debug!("{self:#?}"),
         }
 
         if self.failure_type != FailureType::None {

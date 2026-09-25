@@ -1,14 +1,20 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_alias, {anno=[] :: list(), var :: cerl:cerl(),
-//		  pat :: cerl:cerl()}).
+/// -record(c_alias, {anno=[] :: list(), var :: cerl:cerl(),
+///    pat :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Alias {
     pub anno: AstList<TypedCore>,
     pub var: Box<TypedCore>,
     pub pat: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Alias {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Alias {

@@ -13,7 +13,7 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -28,7 +28,7 @@ pub fn abs_push_seq<K: KontinuationAddress, V: ValueAddress>(
     );
 
     let new_k_addr = abstraction.new_kaddr(
-        &proc_state,
+        proc_state,
         &new_item.prog_loc_or_pid,
         &new_item.env,
         &new_item.time,

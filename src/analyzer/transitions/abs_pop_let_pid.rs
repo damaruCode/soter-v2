@@ -13,14 +13,14 @@ use super::TransitionResult;
 
 pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
     pid: &Pid,
-    kont_var_list: &Vec<ProgLoc>,
+    kont_var_list: &[ProgLoc],
     kont_body: ProgLoc,
     kont_env: &Env<V>,
     kont_k_addr: &K,
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -69,8 +69,7 @@ pub fn abs_pop_let_pid<K: KontinuationAddress, V: ValueAddress>(
         }
         tc => result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
-                "Expected a variable, found {}",
-                tc
+                "Expected a variable, found {tc}"
             ))),
             "abs_pop_let_pid".to_string(),
         )),

@@ -6,53 +6,57 @@ use std::io::BufReader;
 use std::process::Command;
 
 pub fn get_core(file: &String) -> serde_json::Value {
-    let json = File::open(file).expect(&format!("{} could not be opened", file));
+    let json = File::open(file).unwrap_or_else(|_| panic!("{file} could not be opened"));
     let mut buf_reader = BufReader::new(json);
     let mut contents = String::new();
     buf_reader
         .read_to_string(&mut contents)
-        .expect(&format!("{} could not be read", file));
+        .unwrap_or_else(|_| panic!("{file} could not be read"));
 
     serde_json::from_str(&contents)
         .expect("input json could not be parsed into serde_json::Value enum")
 }
 
 pub fn compile() {
-    match fs::create_dir("erlang/ebin") {
-        Ok(()) => {}
-        Err(_e) => {
-            return;
+    // only one process at a time
+    static COMPILE: std::sync::Once = std::sync::Once::new();
+    COMPILE.call_once(|| {
+        // Ignore AlreadyExists
+        match fs::create_dir("erlang/ebin") {
+            Ok(()) => {}
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(e) => panic!("failed to create erlang/ebin: {e}"),
         }
-    }
 
-    //erlc -o ebin src/jsx*.erl
-    let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
-    for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
-        match entry {
-            Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
-            Err(e) => log::debug!("{:?}", e),
+        // erlc -o ebin src/jsx*.erl
+        let mut args = vec!["-o".to_string(), "erlang/ebin".to_string()];
+        for entry in glob("erlang/jsx/src/jsx*.erl").expect("Failed to read glob pattern") {
+            match entry {
+                Ok(path_buf) => args.push(path_buf.to_str().unwrap().to_string()),
+                Err(e) => log::debug!("{e:?}"),
+            }
         }
-    }
 
-    let c = Command::new("erlc")
-        .args(args)
-        .output()
-        .expect("failed to compile jsx");
+        let c = Command::new("erlc")
+            .args(args)
+            .output()
+            .expect("failed to compile jsx");
 
-    log::debug!("jsx_compile_status: {}", c.status);
-    assert!(c.status.success());
+        log::debug!("jsx_compile_status: {}", c.status);
+        assert!(c.status.success());
 
-    //erlc ecorej.erl
-    let c = Command::new("erlc")
-        .arg("erlang/ecorej.erl")
-        .output()
-        .expect("failed to compile ecorej");
+        //erlc ecorej.erl
+        let c = Command::new("erlc")
+            .arg("erlang/ecorej.erl")
+            .output()
+            .expect("failed to compile ecorej");
 
-    log::debug!("ecorej_compile_status: {}", c.status);
-    assert!(c.status.success());
+        log::debug!("ecorej_compile_status: {}", c.status);
+        assert!(c.status.success());
+    });
 }
 
-pub fn run(file: &String) {
+pub fn run(file: &str) {
     //erl -noshell -s ecorej to_core <file_path> -s init stop
     let r = Command::new("erl")
         .args([

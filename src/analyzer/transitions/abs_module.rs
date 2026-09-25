@@ -15,7 +15,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     store: &mut Store<K, V>,
     module_env: &mut Env<V>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -30,16 +30,14 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
             TypedCore::Var(v) => {
                 let var_id = v.var_id.unwrap();
                 // ... check if it is main/0 for later reference
-                if &VarName::try_from(&*v.name).unwrap() == &VarName::FnAtom("main".to_string(), 0)
-                {
+                if VarName::from(&*v.name) == VarName::FnAtom("main".to_string(), 0) {
                     // NOTE the compiler already rules out multiple declarations of main/0
                     // so the if block is a kind of sanity check, that should never
                     // actually execute (by assumption)
                     if let MaybeIndex::Some(_) = main_var_id {
                         result.new.push((
                             proc_state.fail(FailureType::Unexpected(format!(
-                                "Expected only one declaration of main/0, found another: {}",
-                                v
+                                "Expected only one declaration of main/0, found another: {v}"
                             ))),
                             "abs_module".to_string(),
                         ));
@@ -75,8 +73,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                     tc => {
                         result.new.push((
                             proc_state.fail(FailureType::Erlang(format!(
-                                "Expected a function, found {}",
-                                tc
+                                "Expected a function, found {tc}"
                             ))),
                             "abs_module".to_string(),
                         ));
@@ -87,8 +84,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
             tc => {
                 result.new.push((
                     proc_state.fail(FailureType::Erlang(format!(
-                        "Expected a variable name, found {}",
-                        tc
+                        "Expected a variable name, found {tc}"
                     ))),
                     "abs_module".to_string(),
                 ));
@@ -129,8 +125,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                             tc => {
                                 result.new.push((
                                     proc_state.fail(FailureType::Unexpected(format!(
-                                        "Expected a clause, found {}",
-                                        tc
+                                        "Expected a clause, found {tc}"
                                     ))),
                                     "abs_module".to_string(),
                                 ));
@@ -139,8 +134,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                         tc => {
                             result.new.push((
                                 proc_state.fail(FailureType::Unexpected(format!(
-                                    "Expected a case statement, found {}",
-                                    tc
+                                    "Expected a case statement, found {tc}"
                                 ))),
                                 "abs_module".to_string(),
                             ));
@@ -149,8 +143,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                     tc => {
                         result.new.push((
                             proc_state.fail(FailureType::Unexpected(format!(
-                                "Expected a function, found {}",
-                                tc
+                                "Expected a function, found {tc}"
                             ))),
                             "abs_module".to_string(),
                         ));
@@ -159,8 +152,7 @@ pub fn abs_module<K: KontinuationAddress, V: ValueAddress>(
                 Value::Pid(pid) => {
                     result.new.push((
                         proc_state.fail(FailureType::Unexpected(format!(
-                            "Expected a closure, found pid {}",
-                            pid
+                            "Expected a closure, found pid {pid}"
                         ))),
                         "abs_module".to_string(),
                     ));

@@ -7,6 +7,12 @@ pub struct Empty {
     pub index: MaybeIndex,
 }
 
+impl Default for Empty {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Empty {
     pub fn new() -> Self {
         Self {

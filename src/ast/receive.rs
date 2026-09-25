@@ -1,9 +1,9 @@
 use crate::ast::*;
 use serde::{Deserialize, Serialize};
 
-//-record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
-//		    timeout :: cerl:cerl(),
-//		    action :: cerl:cerl()}).
+/// -record(c_receive, {anno=[] :: list(), clauses :: [cerl:cerl()],
+///    timeout :: cerl:cerl(),
+///    action :: cerl:cerl()}).
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Hash, Clone)]
 pub struct Receive {
     pub anno: AstList<TypedCore>,
@@ -11,6 +11,12 @@ pub struct Receive {
     pub timeout: Box<TypedCore>,
     pub action: Box<TypedCore>,
     pub index: MaybeIndex,
+}
+
+impl Default for Receive {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Receive {

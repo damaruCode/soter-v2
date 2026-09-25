@@ -13,7 +13,7 @@ pub fn abs_pop_seq<K: KontinuationAddress, V: ValueAddress>(
     let mut result = TransitionResult::new();
 
     let mut new_item = proc_state.clone();
-    new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(kont_prog_loc.clone());
+    new_item.prog_loc_or_pid = ProgLocOrPid::ProgLoc(kont_prog_loc);
     new_item.env = kont_env.clone();
     new_item.k_addr = kont_k_addr.clone();
 
