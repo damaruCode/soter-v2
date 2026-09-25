@@ -89,16 +89,14 @@ fn test_cs_match_vaddr_id(source_val: TypedCore) {
 }
 
 #[test]
+/// `case S of <D> -> ...` must capture whatever `S` holds, so `source_val` has to flow into `D`
 pub fn test_cs_match_vaddr_var_to_var() {
-    // `case S of <D> -> ...`: the variable pattern `D` must capture whatever `S`
-    // holds, so `source_val` has to flow into `D`.
     let source_val = Value::Closure(Closure {
         prog_loc: 0,
         env: Env::init(),
     });
 
     with_indexed_case(
-        // The `let` argument is irrelevant here; the source address is seeded directly.
         str_lit("a"),
         vec![true_clause(var("D"))],
         |ast_helper, clauses, _arg_index, source_var_id| {
@@ -168,12 +166,14 @@ pub fn test_cs_match_vaddr_tuple() {
 }
 
 #[test]
+/// The source address abstracts *two* distinct values, `'a'` and `'b'`. The clauses match
+/// exactly one of them respectively, so both must be returned as matching by the match_helper.
 fn test_cs_match_vaddr_multiple_values_partial() {
-    // The source address abstracts *two* distinct values, `'a'` and `'b'`. Each of
-    // the two literal clauses matches exactly one of them, so both must be selected.
-    // The tuple argument is only a convenient holder of two indexed literals to point
-    // the seeded closures at.
     with_indexed_case(
+        // The tuple argument is only a convenient holder of two indexed literals to point
+        // the seeded closures at. (so we construct `let S = ('a', 'b'), case S of ...` but use it as
+        // `let S = 'a' | 'b', case S of ...` (where "|" is supposed to mean that both flow into S
+        // at some point in the abstract execution)
         tuple_of(vec![str_lit("a"), str_lit("b")]),
         vec![true_clause(str_lit("a")), true_clause(str_lit("b"))],
         |ast_helper, clauses, arg_index, source_var_id| {
@@ -220,10 +220,8 @@ fn test_cs_match_vaddr_multiple_values_partial() {
     );
 }
 
-// ---------------
-// Shared driver: builds `let S = <source_arg> in case S of <clauses> end`, indexes
-// it, and hands the indexed pieces to a callback that performs the actual match.
-// ---------------
+/// Constructs a `let S = <source_arg> in case S of <clauses> end`, indexes it and hands the indexed
+/// AST to f, a callback that perfoms the actual match and any tests on the result
 fn with_indexed_case<R>(
     source_arg: TypedCore,
     clauses: Vec<Clause>,
@@ -277,6 +275,11 @@ fn simple_closure(arg_index: usize) -> Vec<Value<VAddr>> {
     })]
 }
 
+/// Runs cs_match_vaddr on the closure (S, {}) with AST
+/// `let S = <source_arg> in case S of <clauses> end`,
+/// StandardAbstraction(time_depth=10) and the store with
+/// a generated source address pointing to the values computed
+/// by `make_values`
 fn run_cs_match_vaddr(
     source_arg: TypedCore,
     clauses: Vec<Clause>,
@@ -309,6 +312,9 @@ fn run_cs_match_vaddr(
     )
 }
 
+/// Runs cs_match_value on the closure (S, {}) with AST
+/// `let S = <source_arg> in case S of <clauses> end`,
+/// StandardAbstraction(time_depth=10) and the initial store
 fn run_cs_match_value(
     source_arg: TypedCore,
     clauses: Vec<Clause>,
