@@ -5,6 +5,12 @@ pub struct TransitionResult<K: KontinuationAddress, V: ValueAddress> {
     pub new: Vec<TransitionPair<K, V>>,
     pub revisit: Vec<TransitionPair<K, V>>,
 }
+impl<K: KontinuationAddress, V: ValueAddress> Default for TransitionResult<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K: KontinuationAddress, V: ValueAddress> TransitionResult<K, V> {
     pub fn new() -> Self {
         Self {

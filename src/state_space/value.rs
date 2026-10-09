@@ -12,8 +12,8 @@ pub enum Value<V: ValueAddress> {
 impl<V: ValueAddress> Display for Value<V> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            Value::Closure(clo) => write!(f, "{}", clo),
-            Value::Pid(pid) => write!(f, "{}", pid),
+            Value::Closure(clo) => write!(f, "{clo}"),
+            Value::Pid(pid) => write!(f, "{pid}"),
         }
     }
 }

@@ -14,13 +14,13 @@ use super::TransitionResult;
 pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
     proc_state_prog_loc: usize,
-    kont_var_list: &Vec<usize>,
+    kont_var_list: &[usize],
     kont_body_prog_loc: usize,
     kont_env: &Env<V>,
     kont_k_addr: &K,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
@@ -46,7 +46,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
         TypedCore::Var(v) => {
             let var_id = v.var_id.unwrap();
             let new_v_addr = abstraction.new_vaddr(
-                &proc_state,
+                proc_state,
                 *var_id,
                 &new_item.prog_loc_or_pid,
                 &new_item.env,
@@ -55,7 +55,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
             new_item.env.inner.insert(*var_id, new_v_addr.clone());
 
             for state in push_to_value_store(
-                &ast_helper,
+                ast_helper,
                 seen_proc_states,
                 store,
                 new_v_addr,
@@ -74,8 +74,7 @@ pub fn abs_pop_let_closure<K: KontinuationAddress, V: ValueAddress>(
         }
         tc => result.new.push((
             proc_state.fail(FailureType::Unexpected(format!(
-                "Expected a variable, found {}",
-                tc
+                "Expected a variable, found {tc}"
             ))),
             "abs_pop_let_closure".to_string(),
         )),

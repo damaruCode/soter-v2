@@ -13,21 +13,21 @@ use super::TransitionResult;
 
 pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
     proc_state: &ProcState<K, V>,
-    kont_var_list: &Vec<usize>,
+    kont_var_list: &[usize],
     kont_body_prog_loc: usize,
     kont_env: &Env<V>,
     kont_k_addr: &K,
     store: &mut Store<K, V>,
     seen_proc_states: &SetMap<Pid, ProcState<K, V>>,
-    abstraction: &Box<dyn Abstraction<K, V>>,
+    abstraction: &dyn Abstraction<K, V>,
     ast_helper: &AstHelper,
 ) -> TransitionResult<K, V> {
     let mut result = TransitionResult::new();
-    if kont_var_list.len() == 0 {
+    if kont_var_list.is_empty() {
         result.new.push((
-            proc_state.fail(FailureType::Unexpected(format!(
-                "Expected var list of atleast 1, found length 0"
-            ))),
+            proc_state.fail(FailureType::Unexpected(
+                "Expected var list of atleast 1, found length 0".to_string(),
+            )),
             "abs_pop_let_value_list".to_string(),
         ));
         return result;
@@ -53,8 +53,7 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
                 tc => {
                     result.new.push((
                         proc_state.fail(FailureType::Unexpected(format!(
-                            "Expected a value list but found : {}.",
-                            tc
+                            "Expected a value list but found : {tc}."
                         ))),
                         "abs_pop_let_value_list".to_string(),
                     ));
@@ -65,8 +64,7 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
         ProgLocOrPid::Pid(pid) => {
             result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected a value list but found a pid: {}.",
-                    pid
+                    "Expected a value list but found a pid: {pid}."
                 ))),
                 "abs_pop_let_value_list".to_string(),
             ));
@@ -120,8 +118,7 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
                             }
                             MaybeIndex::None => result.new.push((
                                 proc_state.fail(FailureType::Unexpected(format!(
-                                    "Found variable without var id: {}",
-                                    rvalue_var
+                                    "Found variable without var id: {rvalue_var}"
                                 ))),
                                 "abs_pop_let_value_list".to_string(),
                             )),
@@ -129,7 +126,7 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
                         _ => {
                             // for any other rvalue (literal value), create a new v_addr and push the literal value in the value store
                             let new_v_addr = abstraction.new_vaddr(
-                                &proc_state,
+                                proc_state,
                                 *lvalue_var_id,
                                 &new_item.prog_loc_or_pid,
                                 &new_item.env,
@@ -141,7 +138,7 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
                                 .insert(*lvalue_var_id, new_v_addr.clone());
 
                             for state in push_to_value_store(
-                                &ast_helper,
+                                ast_helper,
                                 seen_proc_states,
                                 store,
                                 new_v_addr,
@@ -159,16 +156,14 @@ pub fn abs_pop_let_value_list<K: KontinuationAddress, V: ValueAddress>(
                 }
                 MaybeIndex::None => result.new.push((
                     proc_state.fail(FailureType::Unexpected(format!(
-                        "Found variable without var id: {}",
-                        lvalue_var
+                        "Found variable without var id: {lvalue_var}"
                     ))),
                     "abs_pop_let_value_list".to_string(),
                 )),
             },
             tc => result.new.push((
                 proc_state.fail(FailureType::Unexpected(format!(
-                    "Expected a variable, found {}",
-                    tc
+                    "Expected a variable, found {tc}"
                 ))),
                 "abs_pop_let_value_list".to_string(),
             )),

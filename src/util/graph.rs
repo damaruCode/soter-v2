@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, usize};
+use std::collections::BTreeMap;
 
 pub trait NodeData: Eq + Clone + Ord {}
 impl<T: Eq + Clone + Ord> NodeData for T {}
@@ -19,6 +19,12 @@ pub struct NodeAttributes {
     pub tooltip: String,
     pub group: String,
 }
+impl Default for NodeAttributes {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl NodeAttributes {
     pub fn new() -> Self {
         Self {
@@ -47,6 +53,12 @@ impl<E: EdgeData> ToEdge<E> {
 pub struct EdgeAttributes {
     pub label: String,
 }
+impl Default for EdgeAttributes {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EdgeAttributes {
     pub fn new() -> Self {
         Self {
@@ -60,6 +72,12 @@ pub struct Graph<N: NodeData, E: EdgeData> {
     map: BTreeMap<N, Node<N, E>>,
 
     counter: usize,
+}
+
+impl<N: NodeData, E: EdgeData> Default for Graph<N, E> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<N: NodeData, E: EdgeData> Graph<N, E> {
@@ -81,7 +99,7 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
         );
         self.counter += 1;
 
-        return self.counter - 1;
+        self.counter - 1
     }
 
     pub fn add_edge(&mut self, from: N, to: N, edge_data: E) {
@@ -92,14 +110,13 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
         };
 
         // check if from node already exists
-        let from_node;
-        match self.map.get_mut(&from) {
-            Some(node) => from_node = node,
+        let from_node = match self.map.get_mut(&from) {
+            Some(node) => node,
             None => {
                 self.add_node(from.clone());
-                from_node = self.map.get_mut(&from).unwrap()
+                self.map.get_mut(&from).unwrap()
             }
-        }
+        };
 
         // only add to edge if it doesn't already exist
         let to_edge = ToEdge {
@@ -118,7 +135,7 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
     {
         let mut dot_code = String::from("digraph {");
         dot_code.push_str("node [style=\"filled\"]");
-        for (_, node) in &self.map {
+        for node in self.map.values() {
             let node_attr = format_node(&node.data);
             dot_code.push_str(
                 format!(
@@ -138,7 +155,7 @@ impl<N: NodeData, E: EdgeData> Graph<N, E> {
                 );
             }
         }
-        dot_code.push_str("}");
+        dot_code.push('}');
 
         dot_code
     }

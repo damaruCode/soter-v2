@@ -7,6 +7,8 @@ use soter_v2::ast;
 use soter_v2::ast::AstList;
 use soter_v2::ast::Clause;
 use soter_v2::ast::Cons;
+use soter_v2::ast::Empty;
+use soter_v2::ast::ErlBool;
 use soter_v2::ast::ErlNumber;
 use soter_v2::ast::ErlString;
 use soter_v2::ast::Literal;
@@ -110,13 +112,10 @@ impl From<P<'_>> for Clause {
             pats: AstList::from(pattern),
             guard: Box::new(TypedCore::Literal(Literal {
                 anno: AstList::new(),
-                val: Box::new(TypedCore::String(ErlString {
-                    inner: "true".to_string(),
-                    index: MaybeIndex::None,
-                })),
+                val: Box::new(TypedCore::Bool(ErlBool::new(true))),
                 index: MaybeIndex::None,
             })),
-            body: Box::new(TypedCore::Dummy),
+            body: Box::new(TypedCore::Empty(Empty::new())),
             index: MaybeIndex::None,
         };
         clause
@@ -217,6 +216,7 @@ where
     V: ValueAddress,
     F: FnOnce(AnalyzerResult<K, V>, AstHelper) -> (),
 {
+    erlang::compile();
     erlang::run(&filepath.to_string());
     let core = erlang::get_core(&format!("{filepath}.json"));
     let typed_core = ast::TypedCore::from(core);
@@ -246,7 +246,6 @@ fn test_standard_id() {
 
 #[test]
 fn test_standard_receive_lit() {
-    //erlang::compile();
     analyze_file(
         "tests/soundness/receive_lit.erl",
         Box::new(StandardAbstraction::new(0)),

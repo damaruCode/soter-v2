@@ -7,6 +7,12 @@ pub struct AstList<T> {
     pub index: MaybeIndex,
 }
 
+impl<T> Default for AstList<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> AstList<T> {
     pub fn new() -> Self {
         AstList {
@@ -57,7 +63,7 @@ impl From<Vec<TypedCore>> for AstList<TypedCore> {
     fn from(vec: Vec<TypedCore>) -> AstList<TypedCore> {
         let mut list = Vec::new();
         for val in vec {
-            list.push(TypedCore::from(val));
+            list.push(val);
         }
         AstList {
             inner: list,
@@ -78,7 +84,7 @@ impl From<&AstList<TypedCore>> for Vec<usize> {
 
 impl<T: Display> Display for AstList<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let items: Vec<String> = self.inner.iter().map(|item| format!("{}", item)).collect();
+        let items: Vec<String> = self.inner.iter().map(|item| format!("{item}")).collect();
         write!(f, "{}ast_list [{}]", self.index, items.join(", "))
     }
 }

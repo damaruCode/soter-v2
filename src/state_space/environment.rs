@@ -28,10 +28,10 @@ impl<V: ValueAddress> Display for Env<V> {
         let output = self
             .inner
             .iter()
-            .map(|(var_id, v_addr)| format!("{} |-> {}", var_id, v_addr))
+            .map(|(var_id, v_addr)| format!("{var_id} |-> {v_addr}"))
             .collect::<Vec<String>>()
             .join(", ");
 
-        write!(f, "[{}]", output)
+        write!(f, "[{output}]")
     }
 }

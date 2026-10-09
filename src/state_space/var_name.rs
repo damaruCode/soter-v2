@@ -31,7 +31,7 @@ impl From<&TypedCore> for VarName {
                 };
                 VarName::FnAtom(s, n)
             }
-            _ => panic!("{:#?}", tc), // TODO adapt from into try_from and return an erronous
+            _ => panic!("{tc:#?}"), // TODO adapt from into try_from and return an erronous
                                       // result
         }
     }
@@ -57,9 +57,9 @@ impl From<&AstList<TypedCore>> for Vec<VarName> {
 impl Display for VarName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self {
-            Self::Atom(s) => write!(f, "'{}'", s),
-            Self::Number(n) => write!(f, "{}", n),
-            Self::FnAtom(s, n) => write!(f, "'{}'/{}", s, n),
+            Self::Atom(s) => write!(f, "'{s}'"),
+            Self::Number(n) => write!(f, "{n}"),
+            Self::FnAtom(s, n) => write!(f, "'{s}'/{n}"),
         }
     }
 }
